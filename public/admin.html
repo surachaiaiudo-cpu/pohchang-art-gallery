@@ -32,6 +32,18 @@
             <div><button class="btn" type="submit">สร้างนิทรรศการ</button> <span class="error-text" id="ne-err"></span></div>
           </form>
         </div>
+        <div class="card">
+          <h2>นำเข้างานจากระบบเดิม</h2>
+          <p class="small muted">ใส่ลิงก์ของงานในระบบเดิม เช่น <code>https://sirikit.pages.dev</code> ระบบจะดึงเฉพาะผลงานที่จัดแสดงอยู่
+            มาสร้างเป็นนิทรรศการ<strong>ฉบับร่าง</strong> (คนทั่วไปยังไม่เห็น) รูปใช้ลิงก์ Cloudinary เดิม อีเมลศิลปินเก็บไว้ให้ผู้ดูแลเห็นเท่านั้น
+            ระบบเดิมไม่ถูกแก้ไขใดๆ</p>
+          <form id="imp-check" class="row" novalidate>
+            <label class="sr-only" for="imp-src">ลิงก์งานเดิม</label>
+            <input id="imp-src" type="url" placeholder="https://sirikit.pages.dev" style="flex:1;min-width:240px">
+            <button class="btn btn-ghost" type="submit">ตรวจข้อมูล</button> <span class="error-text" id="imp-err"></span>
+          </form>
+          <div id="imp-preview" hidden></div>
+        </div>
         <div class="table-wrap"><table>
           <thead><tr><th>นิทรรศการ</th><th>สถานะ</th><th>ผลงาน (แสดง/ทั้งหมด)</th><th>ที่เก็บรูป</th><th>ผู้ดูแล</th><th></th></tr></thead>
           <tbody id="ex-rows"></tbody>

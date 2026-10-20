@@ -151,6 +151,73 @@ async function main() {
   await load();
 }
 
+// ---------------------------------------------------------------- import from the old system
+let imp = null;
+function previewHtml(d) {
+  const s = d.summary;
+  const unknown = Object.entries(s.unknownNationalities);
+  const clouds = Object.entries(s.clouds).map(([c, n]) => `${esc(c)} (${n})`).join(', ');
+  return `<div class="card" style="margin:16px 0 0">
+    <p style="margin-top:0"><strong>${esc(d.title || d.source)}</strong></p>
+    <p>พบผลงานที่จัดแสดง <strong>${s.works}</strong> ชิ้น จากศิลปิน <strong>${s.artists}</strong> คน · มีอีเมล ${s.withEmail} คน · รูปอยู่ที่ Cloudinary: ${clouds || '-'}</p>
+    <div class="row" style="gap:8px;margin:8px 0">${s.sample.map((w) => `<img src="${esc(w.image.replace('/image/upload/', '/image/upload/f_auto,q_auto,c_limit,w_400/'))}" alt="${esc(w.title)}" title="${esc(w.title)} — ${esc(w.artist)}" style="width:72px;height:72px;object-fit:cover;border-radius:6px">`).join('')}</div>
+    ${s.skipped.length ? `<p class="error-text">ข้ามได้ ${s.skipped.length} ชิ้น: ${s.skipped.map(esc).join(' · ')}</p>` : ''}
+    ${unknown.length ? `<p class="small">สัญชาติที่แปลงเป็นประเทศไม่ได้ (จะเก็บข้อความเดิมไว้ ให้ภัณฑารักษ์แก้ภายหลัง): ${unknown.map(([t, n]) => `<span class="tag">${esc(t)} ×${n}</span>`).join(' ')}</p>` : ''}
+    ${s.nationalityWasEmail.length ? `<p class="small">ช่องสัญชาติที่กรอกเป็นอีเมล (จะเว้นว่าง ไม่เผยแพร่): ${s.nationalityWasEmail.map(esc).join(', ')}</p>` : ''}
+    <form id="imp-run" novalidate>
+      <div class="grid-3">
+        <div class="field"><label for="imp-title">ชื่อนิทรรศการ</label><input id="imp-title" type="text" value="${esc(d.title)}"></div>
+        <div class="field"><label for="imp-title-en">ชื่อภาษาอังกฤษ</label><input id="imp-title-en" type="text"></div>
+        <div class="field"><label for="imp-slug">slug</label><input id="imp-slug" type="text" placeholder="เช่น sirikit"><span class="hint">ส่วนท้าย URL: /e/&lt;slug&gt;</span></div>
+        <div class="field"><label for="imp-theme">ธีม</label><select id="imp-theme">${$('ne-theme').innerHTML}</select></div>
+      </div>
+      <button class="btn" type="submit">นำเข้าเป็นฉบับร่าง</button> <span class="error-text" id="imp-run-err"></span>
+      <div class="meter" id="imp-meter" hidden style="margin-top:12px"><span style="width:0"></span></div>
+      <p class="small" id="imp-state"></p>
+    </form></div>`;
+}
+$('imp-check').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  $('imp-err').textContent = '';
+  $('imp-preview').hidden = true;
+  try {
+    const d = await api('/api/admin/import', { method: 'POST', body: { step: 'preview', source: $('imp-src').value.trim() } });
+    imp = d;
+    $('imp-preview').innerHTML = previewHtml(d);
+    $('imp-preview').hidden = false;
+    $('imp-theme').value = 'heritage';
+  } catch (err) { $('imp-err').textContent = err.message; }
+});
+document.addEventListener('submit', async (e) => {
+  if (e.target.id !== 'imp-run') return;
+  e.preventDefault();
+  const btn = e.target.querySelector('button[type=submit]');
+  $('imp-run-err').textContent = '';
+  if (!confirm(`นำเข้า ${imp.summary.works} ผลงานเป็นนิทรรศการฉบับร่าง?`)) return;
+  btn.disabled = true;
+  try {
+    const c = await api('/api/admin/import', {
+      method: 'POST',
+      body: { step: 'create', source: imp.source, slug: $('imp-slug').value.trim(), title_th: $('imp-title').value, title_en: $('imp-title-en').value, theme_preset: $('imp-theme').value }
+    });
+    $('imp-meter').hidden = false;
+    let offset = 0, imported = 0, skipped = [];
+    for (;;) {
+      const r = await api('/api/admin/import', { method: 'POST', body: { step: 'chunk', source: imp.source, exhibition_id: c.exhibition.id, offset, imported } });
+      offset = r.next; imported = r.imported; skipped = skipped.concat(r.skipped);
+      $('imp-meter').firstElementChild.style.width = `${Math.min(100, Math.round((offset / Math.max(1, c.total)) * 100))}%`;
+      $('imp-state').textContent = `นำเข้าแล้ว ${imported} / ${c.total} ชิ้น`;
+      if (r.done) break;
+    }
+    $('imp-state').innerHTML = `นำเข้าเสร็จ ${imported} ชิ้น${skipped.length ? ` (ข้าม ${skipped.length})` : ''} ·
+      <a href="/manage/${encodeURIComponent(c.exhibition.slug)}">ตรวจในหน้าจัดการ</a> เมื่อพร้อมเผยแพร่ ให้กด "สถานะ/ผู้ดูแล" ของงานนี้แล้วเลือก "คลังนิทรรศการ"`;
+    toast('นำเข้าเสร็จแล้ว', 'ok');
+    await load();
+  } catch (err) {
+    $('imp-run-err').textContent = err.message;
+  } finally { btn.disabled = false; }
+});
+
 $('ne-slug').addEventListener('input', (e) => { $('ne-url').textContent = e.target.value ? `${location.origin}/e/${e.target.value}` : ''; });
 $('new-ex').addEventListener('submit', async (e) => {
   e.preventDefault();
