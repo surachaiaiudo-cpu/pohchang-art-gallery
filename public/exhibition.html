@@ -4,34 +4,46 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>นิทรรศการ</title>
-  <link rel="stylesheet" href="/css/themes.css?v=2">
-  <link rel="stylesheet" href="/css/base.css?v=2">
-  <script type="module" src="/js/exhibition.js"></script>
+  <link rel="stylesheet" href="/css/themes.css?v=3">
+  <link rel="stylesheet" href="/css/base.css?v=3">
+  <script type="module" src="/js/exhibition.js?v=3"></script>
 </head>
 <body>
   <a class="sr-only" href="#works" data-i18n="skipWorks">ข้ามไปที่ผลงาน</a>
   <header class="site-head">
     <div class="wrap">
-      <a class="brand" href="/" data-i18n="siteName">หอศิลป์ออนไลน์</a>
+      <a class="brand" href="/"><span class="brand-mark" aria-hidden="true"></span><span class="brand-name"><b data-i18n="siteName">หอศิลป์ออนไลน์</b></span></a>
       <div class="head-right"><nav class="nav" aria-label="เมนูนิทรรศการ" data-i18n-aria="exNav" id="ex-nav"></nav><span id="lang"></span></div>
     </div>
   </header>
   <div class="ornament" aria-hidden="true"></div>
-  <main class="wrap" id="main">
-    <section class="hero"><div class="hero-grid" id="hero"><p class="muted" data-i18n="loading">กำลังโหลด…</p></div></section>
-    <div id="statement"></div>
-    <div class="toolbar" role="region" aria-label="ตัวกรองผลงาน" data-i18n-aria="filters">
-      <div class="seg" role="group" aria-label="แสดงผลงาน" data-i18n-aria="show">
-        <button type="button" data-filter="all" aria-pressed="true"><span data-i18n="all">ทั้งหมด</span> <span id="n-all"></span></button>
-        <button type="button" data-filter="endorsed" aria-pressed="false" id="f-endorsed"><span data-i18n="endorsedFilter">ผ่านผู้ทรงคุณวุฒิ</span> <span id="n-end"></span></button>
-      </div>
-      <label class="sr-only" for="cat" data-i18n="category">กลุ่มงาน</label>
-      <select class="search" id="cat" hidden style="width:auto"><option value="">ทุกกลุ่มงาน</option></select>
-      <label class="sr-only" for="q" data-i18n="search">ค้นหาผลงานหรือศิลปิน</label>
-      <input class="search" id="q" type="search" placeholder="ค้นหาชื่อผลงานหรือศิลปิน" data-i18n-ph="search">
+  <main id="main">
+    <div class="wrap">
+      <section class="hero"><div class="hero-grid" id="hero"><p class="muted" data-i18n="loading">กำลังโหลด…</p></div></section>
+      <div id="statement"></div>
     </div>
-    <section id="works" class="works" aria-live="polite"></section>
+    <div class="toolbar-band">
+      <div class="wrap toolbar" role="region" aria-label="ตัวกรองผลงาน" data-i18n-aria="filters">
+        <div class="seg" role="group" aria-label="แสดงผลงาน" data-i18n-aria="show">
+          <button type="button" data-filter="all" aria-pressed="true"><span data-i18n="all">ทั้งหมด</span> <span id="n-all"></span></button>
+          <button type="button" data-filter="endorsed" aria-pressed="false" id="f-endorsed"><span data-i18n="endorsedFilter">ผ่านผู้ทรงคุณวุฒิ</span> <span id="n-end"></span></button>
+        </div>
+        <div class="toolbar-right">
+          <label class="sr-only" for="cat" data-i18n="category">กลุ่มงาน</label>
+          <select class="search" id="cat" hidden><option value="">ทุกกลุ่มงาน</option></select>
+          <label class="sr-only" for="sort" data-i18n="sortBy">เรียงลำดับ</label>
+          <select class="search" id="sort">
+            <option value="order" data-i18n="sortOrder">ตามลำดับนิทรรศการ</option>
+            <option value="artist" data-i18n="sortArtist">ชื่อศิลปิน</option>
+            <option value="title" data-i18n="sortTitle">ชื่อผลงาน</option>
+          </select>
+          <label class="sr-only" for="q" data-i18n="search">ค้นหาผลงานหรือศิลปิน</label>
+          <input class="search" id="q" type="search" placeholder="ค้นหาชื่อผลงานหรือศิลปิน" data-i18n-ph="search">
+        </div>
+      </div>
+    </div>
+    <div class="wrap"><section id="works" class="works" aria-live="polite"></section></div>
   </main>
-  <footer class="site-foot"><div class="wrap"><a href="/" data-i18n="backGalleryArrow">← กลับหอศิลป์</a></div></footer>
+  <footer class="site-foot"><div class="wrap"><a href="/" data-i18n="backGalleryArrow">← กลับหอศิลป์</a><span data-i18n="copyright">ภาพผลงานสงวนลิขสิทธิ์โดยศิลปิน</span></div></footer>
 </body>
 </html>

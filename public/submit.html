@@ -4,21 +4,24 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ส่งผลงาน</title>
-  <link rel="stylesheet" href="/css/themes.css?v=2">
-  <link rel="stylesheet" href="/css/base.css?v=2">
+  <link rel="stylesheet" href="/css/themes.css?v=3">
+  <link rel="stylesheet" href="/css/base.css?v=3">
   <script type="module" src="/js/submit.js"></script>
 </head>
 <body>
   <header class="site-head">
-    <div class="wrap"><a class="brand" id="back" href="/">หอศิลป์ออนไลน์</a><span id="lang"></span></div>
+    <div class="wrap"><a class="back-link" id="back" href="/">หอศิลป์ออนไลน์</a><span id="lang"></span></div>
   </header>
   <div class="ornament" aria-hidden="true"></div>
   <main class="wrap form-page" id="main">
+   <div class="form-layout">
+    <div class="form-main">
+    <p class="muted" style="margin:0 0 6px" data-i18n="submitTo">ส่งผลงานเข้าร่วม</p>
     <h1 id="title">ส่งผลงาน</h1>
     <div id="intro"><p class="muted" data-i18n="loading">กำลังโหลด…</p></div>
     <form id="form" hidden novalidate>
       <fieldset>
-        <legend data-i18n="artistInfo">ข้อมูลศิลปิน</legend>
+        <legend><span class="step-no">1</span><span data-i18n="artistInfo">ข้อมูลศิลปิน</span></legend>
         <div class="grid-2">
           <div class="field"><label for="name_th"><span data-i18n="fullName">ชื่อ-นามสกุล</span> <span class="req">*</span></label><input id="name_th" type="text" required maxlength="200" autocomplete="name"></div>
           <div class="field"><label for="academic_title_th" data-i18n="academicTitle">ตำแหน่งทางวิชาการ / คำนำหน้า</label><input id="academic_title_th" type="text" maxlength="200" data-i18n-ph="academicPh"></div>
@@ -45,20 +48,23 @@
         </div>
       </fieldset>
       <div id="works"></div>
-      <p><button type="button" class="btn btn-ghost" id="add-work" data-i18n="addWork">+ เพิ่มผลงานอีกชิ้น</button></p>
+      <button type="button" class="add-work" id="add-work" data-i18n="addWork">+ เพิ่มผลงานอีกชิ้น</button>
       <fieldset>
-        <legend data-i18n="consent">การยินยอม</legend>
+        <legend><span class="step-no">3</span><span data-i18n="stepConfirm">ยืนยันและส่ง</span></legend>
         <label class="check"><input type="checkbox" id="consent">
           <span data-i18n="consentText">ข้าพเจ้ายืนยันว่าเป็นเจ้าของผลงาน และยินยอมให้ผู้จัดเผยแพร่ภาพและข้อมูลผลงานในนิทรรศการออนไลน์และสูจิบัตร</span></label>
+        <div id="turnstile" style="margin-top:16px"></div>
+        <p id="form-error" class="error-text" role="alert"></p>
+        <button type="submit" class="btn btn-lg" id="send" data-i18n="send">ส่งผลงาน</button>
       </fieldset>
-      <div id="turnstile" style="margin-bottom:16px"></div>
-      <p id="form-error" class="error-text" role="alert"></p>
-      <button type="submit" class="btn" id="send" data-i18n="send">ส่งผลงาน</button>
     </form>
     <section id="done" hidden>
       <div class="notice"><h2 style="margin-top:0" data-i18n="doneTitle">ส่งผลงานเรียบร้อย</h2><p id="done-text"></p></div>
       <a class="btn btn-ghost" id="done-back" href="/" data-i18n="backToEx">กลับหน้านิทรรศการ</a>
     </section>
+    </div>
+    <aside class="form-aside" id="aside" aria-label="สรุปการรับผลงาน" hidden></aside>
+   </div>
   </main>
   <input type="file" id="picker" accept="image/jpeg,image/png,image/webp" hidden>
 </body>

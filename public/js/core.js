@@ -100,17 +100,21 @@ const FONT_QUERY = {
   'Mitr': 'Mitr:wght@400;500;600',
   'Mali': 'Mali:wght@400;500;600',
   'Charm': 'Charm:wght@400;700',
-  'Srisakdi': 'Srisakdi:wght@400;700'
+  'Srisakdi': 'Srisakdi:wght@400;700',
+  'IBM Plex Mono': 'IBM+Plex+Mono:wght@500'
 };
+// Body text is IBM Plex Sans Thai everywhere; each preset brings its heading font.
+const BASE_FONTS = ['IBM Plex Sans Thai', 'IBM Plex Mono'];
 const PRESET_FONTS = {
-  'thai-classic': ['Noto Serif Thai', 'Sarabun'],
-  'thai-contemporary': ['Chonburi', 'Sarabun'],
-  'white-cube': ['IBM Plex Sans Thai'],
-  'monochrome': ['Taviraj', 'Anuphan'],
+  'thai-classic': ['Noto Serif Thai'],
+  'thai-contemporary': ['Chonburi'],
+  'white-cube': ['Anuphan'],
+  'monochrome': ['Taviraj'],
   'pop': ['Kanit'],
-  'craft': ['Mitr', 'Mali'],
-  'heritage': ['Noto Serif Thai', 'Sarabun']
+  'craft': ['Mitr'],
+  'heritage': ['Noto Serif Thai']
 };
+export const presetFonts = (key) => [...BASE_FONTS, ...(PRESET_FONTS[key] || PRESET_FONTS['white-cube'])];
 
 export function loadFonts(names) {
   const fams = [...new Set(names.filter((n) => FONT_QUERY[n]))].map((n) => `family=${FONT_QUERY[n]}`);
@@ -130,10 +134,10 @@ export function applyTheme(ex) {
   const o = ex.theme_overrides || {};
   root.dataset.ornament = o.ornament || 'light';
   root.dataset.layout = ex.layout || 'grid';
-  const fonts = [...(PRESET_FONTS[root.dataset.theme] || [])];
+  const fonts = presetFonts(root.dataset.theme);
   if (o.headingFont) {
     fonts.push(o.headingFont);
-    root.style.setProperty('--font-head', `'${o.headingFont}', var(--font-body)`);
+    root.style.setProperty('--font-head', `'${o.headingFont}', 'IBM Plex Sans Thai', sans-serif`);
   }
   if (o.accent) {
     root.style.setProperty('--accent', o.accent);

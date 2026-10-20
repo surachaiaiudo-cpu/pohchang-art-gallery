@@ -23,39 +23,46 @@ async function main() {
     document.title = `${title} — ${exTitle}`;
     const back = document.getElementById('back');
     back.href = base;
-    back.textContent = `← ${exTitle}`;
-    document.getElementById('pos').textContent = `${d.position} / ${d.total}`;
+    back.innerHTML = `${icons.arrowLeft}<span>${esc(exTitle)}</span>`;
+    const no = String(d.position).padStart(3, '0');
+    document.getElementById('pos').textContent = `${no} / ${String(d.total).padStart(3, '0')}`;
     const artist = [w.academic_title_th, name].filter(Boolean).join(' ');
     const titleOther = pickOther(w, 'title'), nameOther = pickOther(w, 'artist_name');
     const concept = pick(w, 'concept'), bio = pick(w, 'bio');
+    const country = countryName(w.nationality, locale);
     el.innerHTML = `
-      <figure class="work-figure" style="margin:0">
-        <img id="main-img" src="${esc(img(w.image_url, 1600))}" alt="${esc(t('by', { title, artist: name }))}">
+      <figure class="work-figure">
+        <div class="wall"><img id="main-img" src="${esc(img(w.image_url, 1600))}" alt="${esc(t('by', { title, artist: name }))}"></div>
+        <figcaption>${esc(t('figHint'))}</figcaption>
       </figure>
-      <article>
-        ${w.endorsed ? `<p style="margin:0 0 14px">${badgeHtml(pick(ex, 'badge_label'))}</p>` : ''}
-        <h1 style="font-size:clamp(1.6rem,3.4vw,2.4rem)">${esc(title)}</h1>
-        ${titleOther ? `<p class="muted" style="margin-top:-4px">${esc(titleOther)}</p>` : ''}
+      <article class="work-info" aria-labelledby="w-title">
+        ${w.endorsed ? `<p style="margin:0">${badgeHtml(pick(ex, 'badge_label'))}</p>` : ''}
+        <div class="label">
+          <span class="no">No. ${no}</span>
+          <h1 id="w-title">${esc(title)}</h1>
+          ${titleOther ? `<span class="muted">${esc(titleOther)}</span>` : ''}
+          <span class="artist-line">${flagImg(w.nationality, { alt: country }, esc)}${esc(artist)}</span>
+        </div>
         <dl class="facts">
-          ${fact(t('artist'), artist)}
           ${fact(t('category'), catLabel(ex.categories, w))}
           ${fact(t('technique'), pick(w, 'technique'))}
           ${fact(t('size'), w.dimensions)}
           ${fact(t('year'), w.year_created)}
+          ${fact(t('nationality'), country, flagImg(w.nationality))}
           ${fact(t('affiliation'), w.affiliation)}
-          ${fact(t('nationality'), countryName(w.nationality, locale), flagImg(w.nationality))}
+          <dt>${esc(t('exhibitionLabel'))}</dt><dd><a href="${base}">${esc(exTitle)}</a></dd>
         </dl>
-        ${w.video_url ? `<p><a class="btn btn-ghost" href="${esc(w.video_url)}" target="_blank" rel="noopener noreferrer">${esc(t('watchVideo'))} ↗</a></p>` : ''}
-        ${concept ? `<h2 style="font-size:1.15rem">${esc(t('concept'))}</h2>${paras(concept)}` : ''}
+        ${w.video_url ? `<p style="margin:0"><a class="btn btn-ghost" href="${esc(w.video_url)}" target="_blank" rel="noopener noreferrer">${esc(t('watchVideo'))} ↗</a></p>` : ''}
+        ${concept ? `<section class="concept"><h2>${esc(t('concept'))}</h2>${paras(concept)}</section>` : ''}
         ${bio || w.avatar_url ? `
-          <div class="artist-box">
-            ${w.avatar_url ? `<img src="${esc(img(w.avatar_url, 160))}" alt="">` : ''}
-            <div><strong>${esc(artist)}</strong>${nameOther ? `<div class="muted">${esc(nameOther)}</div>` : ''}</div>
-          </div>
-          ${bio ? `<div class="muted">${paras(bio)}</div>` : ''}` : ''}
+          <section class="artist-box" aria-label="${esc(t('artist'))}">
+            ${w.avatar_url ? `<img src="${esc(img(w.avatar_url, 400))}" alt="">` : ''}
+            <div><strong>${esc(artist)}</strong>${nameOther ? `<div class="muted">${esc(nameOther)}</div>` : ''}
+              ${bio ? `<div class="muted" style="font-size:.95rem">${paras(bio)}</div>` : ''}</div>
+          </section>` : ''}
         <nav class="pager" aria-label="${esc(t('pager'))}">
-          ${d.prev ? `<a class="btn btn-ghost" href="${base}/work/${d.prev}">${icons.arrowLeft} ${esc(t('prev'))}</a>` : '<span></span>'}
-          ${d.next ? `<a class="btn btn-ghost" href="${base}/work/${d.next}">${esc(t('next'))} ${icons.arrowRight}</a>` : ''}
+          ${d.prev ? `<a href="${base}/work/${d.prev.id}"><small>← ${esc(t('prev'))}</small><b>${esc(pick(d.prev, 'title'))}</b></a>` : ''}
+          ${d.next ? `<a class="next" href="${base}/work/${d.next.id}"><small>${esc(t('next'))} →</small><b>${esc(pick(d.next, 'title'))}</b></a>` : ''}
         </nav>
       </article>`;
     const lb = document.getElementById('lightbox');
@@ -69,8 +76,8 @@ async function main() {
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') lb.classList.remove('open');
       if (e.target.closest('input, textarea')) return;
-      if (e.key === 'ArrowLeft' && d.prev) location.href = `${base}/work/${d.prev}`;
-      if (e.key === 'ArrowRight' && d.next) location.href = `${base}/work/${d.next}`;
+      if (e.key === 'ArrowLeft' && d.prev) location.href = `${base}/work/${d.prev.id}`;
+      if (e.key === 'ArrowRight' && d.next) location.href = `${base}/work/${d.next.id}`;
     });
   } catch (e) {
     el.innerHTML = `<div><h1>${esc(t('notFoundWork'))}</h1><p class="muted">${esc(localError(e.message))}</p><a class="btn btn-ghost" href="${base}">${esc(t('backExhibition'))}</a></div>`;

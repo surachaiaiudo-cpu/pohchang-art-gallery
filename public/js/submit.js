@@ -1,6 +1,6 @@
 import { api, esc, applyTheme, toast, icons, slugFromPath } from './core.js';
 import { imageProblem, uploadImage, fitForUpload } from './upload.js';
-import { t, pick, fmtDate, catName, subName, applyStatic, mountSwitcher, localError, lang, locale } from './i18n.js';
+import { t, pick, fmtDate, fmtTime, catName, subName, applyStatic, mountSwitcher, localError, lang, locale } from './i18n.js';
 import { countryOptions, flagUrl, canShowFlagEmoji } from './countries.js';
 
 applyStatic();
@@ -18,33 +18,38 @@ const $ = (id) => document.getElementById(id);
 const needsVideo = (cat, sub) => /วิดีโอ|วีดิทัศน์|video|录像|视频/i.test(`${cat} ${sub}`);
 const req = '<span class="req">*</span>';
 
+const checked = (name) => (document.querySelector(`input[name="${name}"]:checked`) || {}).value || '';
+
+// Categories are chips (radio buttons): one tap, all options visible at once.
 function categoryFields(k) {
   const cats = ex.categories || [];
   if (!cats.length) return '';
-  return `<div class="grid-2">
-      <div class="field"><label for="${k}-category">${esc(t('category'))} ${req}</label>
-        <select id="${k}-category" data-cat="${k}"><option value="">${esc(t('pickCategory'))}</option>
-          ${cats.map((c) => `<option value="${esc(c.name)}">${esc(catName(cats, c.name))}</option>`).join('')}</select></div>
-      <div class="field" id="${k}-sub-field" hidden><label for="${k}-subcategory">${esc(t('subtype'))} ${req}</label>
-        <select id="${k}-subcategory" data-sub="${k}"></select></div>
-    </div>
-    <div class="field" id="${k}-video-field" hidden><label for="${k}-video_url">${esc(t('videoUrl'))} ${req}</label>
-      <input id="${k}-video_url" type="url" inputmode="url" maxlength="1000" placeholder="https://youtu.be/…">
-      <span class="hint">${esc(t('videoHint'))}</span></div>`;
+  return `<div class="field"><span class="label-text" id="${k}-cat-l">${esc(t('category'))} ${req}</span>
+      <div class="chips" role="radiogroup" aria-labelledby="${k}-cat-l" id="${k}-category">
+        ${cats.map((c) => `<label class="chip"><input type="radio" name="${k}-cat" value="${esc(c.name)}" data-cat="${k}">${esc(catName(cats, c.name))}</label>`).join('')}
+      </div></div>
+    <div class="sub-box" id="${k}-sub-wrap" hidden>
+      <div class="field" id="${k}-sub-field" hidden><span class="label-text" id="${k}-sub-l"></span>
+        <div class="chips sub" role="radiogroup" aria-labelledby="${k}-sub-l" id="${k}-subcategory"></div></div>
+      <div class="field" id="${k}-video-field" hidden><label for="${k}-video_url">${esc(t('videoUrl'))} ${req}</label>
+        <input id="${k}-video_url" type="url" inputmode="url" maxlength="1000" placeholder="https://youtu.be/…">
+        <span class="hint">${esc(t('videoHint'))}</span></div>
+    </div>`;
 }
 
 function syncCategory(k) {
-  const cat = $(`${k}-category`);
-  if (!cat) return;
+  if (!$(`${k}-category`)) return;
   const cats = ex.categories || [];
-  const c = cats.find((x) => x.name === cat.value);
+  const cat = checked(`${k}-cat`);
+  const c = cats.find((x) => x.name === cat);
   const subs = c ? c.subs : [];
-  const subSel = $(`${k}-subcategory`);
-  const keep = subSel.value;
+  const keep = checked(`${k}-sub`);
   $(`${k}-sub-field`).hidden = !subs.length;
-  subSel.innerHTML = `<option value="">${esc(t('pickSubtype'))}</option>${subs.map((s) => `<option value="${esc(s)}">${esc(subName(cats, c.name, s))}</option>`).join('')}`;
-  if (subs.includes(keep)) subSel.value = keep;
-  $(`${k}-video-field`).hidden = !needsVideo(cat.value, subSel.value);
+  if (c) $(`${k}-sub-l`).innerHTML = `${esc(t('subtypeOf', { cat: catName(cats, c.name) }))} ${req}`;
+  $(`${k}-subcategory`).innerHTML = subs.map((s) => `<label class="chip"><input type="radio" name="${k}-sub" value="${esc(s)}" data-sub="${k}"${s === keep ? ' checked' : ''}>${esc(subName(cats, c.name, s))}</label>`).join('');
+  const video = needsVideo(cat, subs.includes(keep) ? keep : '');
+  $(`${k}-video-field`).hidden = !video;
+  $(`${k}-sub-wrap`).hidden = !subs.length && !video;
 }
 
 function workBlock(n) {
@@ -55,10 +60,10 @@ function workBlock(n) {
   const area = (f, label, lang = '') =>
     `<div class="field"><label for="${k}-${f}">${esc(t(label))}</label><textarea id="${k}-${f}" maxlength="4000"${lang ? ` lang="${lang}"` : ''}></textarea></div>`;
   return `<fieldset class="work-block" data-key="${k}">
-    <legend>${esc(t('workN'))} <span class="wnum"></span></legend>
+    <legend><span class="step-no">2</span><span>${esc(t('workN'))} <span class="wnum"></span></span><span class="muted wof" style="margin-left:auto;font-family:var(--font-body);font-weight:500;font-size:.9rem"></span></legend>
     ${categoryFields(k)}
     <div class="field">
-      <span style="font-weight:600;font-size:.95rem" id="${k}-img-label">${esc(t('image'))} ${req}</span>
+      <span class="label-text" id="${k}-img-label">${esc(t('image'))} ${req}</span>
       <div class="drop" data-kind="work" data-target="${k}" tabindex="0" role="button" aria-labelledby="${k}-img-label">
         ${icons.upload}<span class="drop-text">${esc(t('tapImage'))}</span>
       </div>
@@ -82,15 +87,20 @@ function workBlock(n) {
       ${area('concept_en', 'conceptEn', 'en')}
       ${area('concept_zh', 'conceptZh', 'zh-Hans')}
     </details>
-    <p><button type="button" class="btn btn-ghost remove-work">${esc(t('removeWork'))}</button></p>
+    <p style="margin:0"><button type="button" class="btn btn-ghost remove-work">${esc(t('removeWork'))}</button></p>
   </fieldset>`;
 }
 
 function renumber() {
   const blocks = [...document.querySelectorAll('.work-block')];
-  blocks.forEach((b, i) => { b.querySelector('.wnum').textContent = i + 1; });
+  const max = Number(ex.max_works_per_artist);
+  blocks.forEach((b, i) => {
+    b.querySelector('.wnum').textContent = i + 1;
+    b.querySelector('.wof').textContent = t('nOfMax', { n: i + 1, max });
+  });
   blocks.forEach((b) => { b.querySelector('.remove-work').hidden = blocks.length === 1; });
-  $('add-work').hidden = blocks.length >= ex.max_works_per_artist;
+  $('add-work').hidden = blocks.length >= max;
+  $('add-work').textContent = t('addWorkLeft', { n: max - blocks.length });
 }
 
 function addWork() {
@@ -176,7 +186,7 @@ function collect() {
     const k = b.dataset.key;
     const f = (name) => val(`${k}-${name}`);
     return {
-      category: f('category'), subcategory: f('subcategory'), video_url: f('video_url'),
+      category: checked(`${k}-cat`), subcategory: checked(`${k}-sub`), video_url: f('video_url'),
       title_th: f('title_th'), title_en: f('title_en'), title_zh: f('title_zh'),
       technique_th: f('technique_th'), technique_en: f('technique_en'), technique_zh: f('technique_zh'),
       dimensions: f('dimensions'), year_created: f('year_created'),
@@ -217,7 +227,11 @@ async function onSubmit(e) {
   const problem = validate(data);
   $('form-error').textContent = problem ? problem[1] : '';
   if (problem) {
-    if (problem[0]) $(problem[0]).focus();
+    if (problem[0]) {
+      const el = $(problem[0]);
+      const target = el && (el.matches('input, select, textarea') ? el : el.querySelector('input, select, textarea'));
+      if (target) { target.focus(); target.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+    }
     return;
   }
   $('send').disabled = true;
@@ -248,8 +262,8 @@ async function main() {
     const title = pick(ex, 'title');
     document.title = `${t('submit')} — ${title}`;
     $('back').href = base;
-    $('back').textContent = t('backTo', { title });
-    $('title').textContent = t('submitTitle', { title });
+    $('back').innerHTML = `${icons.arrowLeft}<span>${esc(title)}</span>`;
+    $('title').textContent = title;
     if (!ex.submission.open) {
       $('intro').innerHTML = `<div class="notice">${esc(lang === 'th' ? ex.submission.reason : t('closedReason'))}</div><a class="btn btn-ghost" href="${base}">${esc(t('backToEx'))}</a>`;
       return;
@@ -258,11 +272,25 @@ async function main() {
     const catList = cats.map((c) => (c.subs.length
       ? `${catName(cats, c.name)} (${c.subs.map((s) => subName(cats, c.name, s)).join(', ')})`
       : catName(cats, c.name))).join(' · ');
-    $('intro').innerHTML = `<div class="notice">
-      <p style="margin:0">${t('maxWorks', { n: Number(ex.max_works_per_artist) })}
-      ${ex.submission_closes_at ? ` · ${t('closesAt', { d: esc(fmtDate(ex.submission_closes_at, true)) })}` : ''}</p>
-      ${cats.length ? `<p style="margin:6px 0 0">${esc(t('categoriesLine', { list: catList }))}</p>` : ''}
-      <p style="margin:6px 0 0" class="muted">${esc(t('fileNote'))}</p></div>`;
+    $('intro').innerHTML = '';
+    $('aside').innerHTML = `
+      <div class="aside-card aside-dark">
+        <span class="status-pill" style="justify-self:start">${esc(t('acceptingNow'))}</span>
+        ${ex.submission_closes_at ? `<span class="soft">${esc(t('closesLabel'))}</span>
+          <span class="big">${esc(fmtDate(ex.submission_closes_at))}</span>
+          <span class="soft">${esc(t('atTime', { time: fmtTime(ex.submission_closes_at) }))}</span>` : ''}
+      </div>
+      <div class="aside-card">
+        <h2>${esc(t('rulesTitle'))}</h2>
+        <ul>
+          <li>${esc(t('ruleMax', { n: Number(ex.max_works_per_artist) }))}</li>
+          <li>${esc(t('fileNote'))}</li>
+          <li>${esc(t('ruleScreen'))}</li>
+          ${ex.review_panel_size ? `<li>${esc(t('ruleBadge', { k: ex.review_threshold, n: ex.review_panel_size, badge: pick(ex, 'badge_label') }))}</li>` : ''}
+        </ul>
+      </div>
+      ${cats.length ? `<div class="aside-card"><h2>${esc(t('category'))}</h2><span>${esc(catList)}</span></div>` : ''}`;
+    $('aside').hidden = false;
     // Flags inside the list where the system draws flag emoji; otherwise a flag image beside it.
     const emoji = canShowFlagEmoji();
     $('nationality').innerHTML = `<option value="">${esc(t('pickCountry'))}</option>${countryOptions(locale, '', esc, { emoji })}`;

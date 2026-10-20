@@ -1,135 +1,144 @@
-/* Exhibition looks. Each preset only sets variables; layout lives in base.css.
-   The artwork is always the hero: surroundings stay calm, character goes into type,
-   headings, frames and the cover. */
+/* Exhibition looks. Each preset sets colours and the heading font only; layout lives in
+   base.css and the body text is IBM Plex Sans Thai everywhere. The artwork is the hero:
+   --wall is the surface works hang on, --art-shadow / --art-frame how they hang. */
 
 :root,
 [data-theme="white-cube"] {
-  --bg: #fafaf8;
+  --bg: #ffffff;
   --surface: #ffffff;
-  --ink: #1b1b1a;
-  --muted: #5f5e5a;
-  --line: #e4e2dc;
-  --accent: #9a3b12;
+  --wall: #f4f3f0;
+  --ink: #141414;
+  --muted: #5e5d59;
+  --line: #e4e2dd;
+  --line-strong: #c9c6bf;
+  --accent: #b4321f;
   --accent-ink: #ffffff;
-  --frame: transparent;
-  --font-head: 'IBM Plex Sans Thai', system-ui, sans-serif;
+  --font-head: 'Anuphan', 'IBM Plex Sans Thai', system-ui, sans-serif;
   --font-body: 'IBM Plex Sans Thai', system-ui, sans-serif;
-  --head-weight: 500;
-  --head-tracking: -0.01em;
-  --radius: 2px;
-  --card-shadow: none;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --head-weight: 700;
+  --head-tracking: -0.015em;
+  --radius: 4px;
+  --art-shadow: 0 10px 24px rgba(20, 20, 20, 0.14);
+  --art-frame: none;
   --ornament: none;
 }
 
 [data-theme="thai-classic"] {
-  --bg: #f6f0e2;
-  --surface: #fffaf0;
+  --bg: #fbf8f2;
+  --surface: #fffdf8;
+  --wall: #f0e8d8;
   --ink: #2b1b12;
   --muted: #6b5747;
-  --line: #e2d4b8;
-  --accent: #9d2b25;
+  --line: #e5dac6;
+  --line-strong: #cbb894;
+  --accent: #8e2a1e;
   --accent-ink: #ffffff;
   --gold: #a47a24;
-  --frame: #c9a75a;
   --font-head: 'Noto Serif Thai', serif;
-  --font-body: 'Sarabun', system-ui, sans-serif;
   --head-weight: 700;
   --head-tracking: 0;
-  --radius: 1px;
-  --card-shadow: 0 1px 0 rgba(43, 27, 18, 0.06);
+  --radius: 2px;
+  --art-shadow: 0 6px 16px rgba(43, 27, 18, 0.18);
+  --art-frame: 3px solid #b08a3e;
   --ornament: repeating-linear-gradient(90deg, var(--gold) 0 10px, transparent 10px 14px, var(--gold) 14px 16px, transparent 16px 20px);
 }
 
 [data-theme="thai-contemporary"] {
-  --bg: #f2ebe2;
-  --surface: #fbf7f1;
-  --ink: #2a2420;
-  --muted: #6a5d53;
-  --line: #ddd0c2;
-  --accent: #a64b25;
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --wall: #eeeae4;
+  --ink: #1f1b18;
+  --muted: #645a52;
+  --line: #e2dcd4;
+  --line-strong: #c8c0b5;
+  --accent: #27406b;
   --accent-ink: #ffffff;
-  --frame: transparent;
   --font-head: 'Chonburi', serif;
-  --font-body: 'Sarabun', system-ui, sans-serif;
   --head-weight: 400;
   --head-tracking: 0;
   --radius: 0;
-  --card-shadow: none;
+  --art-shadow: 0 8px 20px rgba(31, 27, 24, 0.16);
+  --art-frame: none;
   --ornament: linear-gradient(135deg, var(--accent) 25%, transparent 25%) 0 0 / 14px 14px;
 }
 
 [data-theme="monochrome"] {
   --bg: #ffffff;
   --surface: #ffffff;
+  --wall: #f2f2f2;
   --ink: #000000;
   --muted: #4a4a4a;
-  --line: #000000;
+  --line: #1a1a1a;
+  --line-strong: #000000;
   --accent: #000000;
   --accent-ink: #ffffff;
-  --frame: transparent;
   --font-head: 'Taviraj', serif;
-  --font-body: 'Anuphan', system-ui, sans-serif;
   --head-weight: 600;
   --head-tracking: -0.02em;
   --radius: 0;
-  --card-shadow: none;
+  --art-shadow: none;
+  --art-frame: 1px solid #000000;
   --ornament: linear-gradient(#000, #000) 0 50% / 100% 2px no-repeat;
 }
 
 [data-theme="pop"] {
-  --bg: #fff7e6;
+  --bg: #ffffff;
   --surface: #ffffff;
+  --wall: #fff1d6;
   --ink: #1d1035;
   --muted: #55486b;
   --line: #1d1035;
-  --accent: #cc1256;
+  --line-strong: #1d1035;
+  --accent: #d1135a;
   --accent-ink: #ffffff;
   --accent-2: #2649e8;
-  --frame: transparent;
   --font-head: 'Kanit', system-ui, sans-serif;
-  --font-body: 'Kanit', system-ui, sans-serif;
   --head-weight: 800;
   --head-tracking: -0.02em;
-  --radius: 16px;
-  --card-shadow: 5px 5px 0 var(--ink);
+  --radius: 14px;
+  --art-shadow: 5px 5px 0 #1d1035;
+  --art-frame: 2px solid #1d1035;
   --ornament: radial-gradient(circle, var(--accent) 3px, transparent 3.5px) 0 0 / 16px 16px;
 }
 
 [data-theme="craft"] {
-  --bg: #efe6d5;
-  --surface: #f8f2e6;
+  --bg: #faf7f1;
+  --surface: #fffdf9;
+  --wall: #ece4d4;
   --ink: #34291f;
   --muted: #6b5a49;
-  --line: #d6c7ad;
-  --accent: #4f7a58;
+  --line: #ddd1bc;
+  --line-strong: #c4b394;
+  --accent: #3f6e4a;
   --accent-ink: #ffffff;
-  --frame: transparent;
   --font-head: 'Mitr', system-ui, sans-serif;
-  --font-body: 'Mali', system-ui, sans-serif;
   --head-weight: 500;
   --head-tracking: 0;
-  --radius: 6px;
-  --card-shadow: 0 2px 0 rgba(52, 41, 31, 0.12);
+  --radius: 8px;
+  --art-shadow: 0 4px 0 rgba(52, 41, 31, 0.16);
+  --art-frame: none;
   --ornament: repeating-linear-gradient(-45deg, var(--accent) 0 6px, transparent 6px 12px);
 }
 
 [data-theme="heritage"] {
-  --bg: #14070a;
-  --surface: #1e0c10;
+  --bg: #120a0b;
+  --surface: #1c1113;
+  --wall: #22161a;
   --ink: #f2e6d2;
   --muted: #c4b19a;
-  --line: #4a2a22;
+  --line: #3d2a26;
+  --line-strong: #6b4e3e;
   --accent: #d4af37;
   --accent-ink: #1a0a00;
-  --frame: #8f6d1f;
   --font-head: 'Noto Serif Thai', serif;
-  --font-body: 'Sarabun', system-ui, sans-serif;
   --head-weight: 700;
   --head-tracking: 0.01em;
-  --radius: 1px;
-  --card-shadow: none;
+  --radius: 2px;
+  --art-shadow: 0 10px 28px rgba(0, 0, 0, 0.5);
+  --art-frame: 3px solid #8f6d1f;
   --ornament: repeating-linear-gradient(90deg, var(--accent) 0 18px, transparent 18px 22px, var(--accent) 22px 24px, transparent 24px 28px);
 }
 
 /* Ornament level chosen per exhibition */
-[data-ornament="none"] { --ornament: none; --frame: transparent; }
+[data-ornament="none"] { --ornament: none; --art-frame: none; }

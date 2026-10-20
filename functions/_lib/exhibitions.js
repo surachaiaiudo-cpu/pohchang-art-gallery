@@ -91,6 +91,8 @@ export function publicExhibition(ex) {
     badge_label_th: ex.badge_label_th,
     badge_label_en: ex.badge_label_en,
     badge_label_zh: ex.badge_label_zh || '',
+    review_threshold: ex.review_threshold,
+    review_panel_size: ex.review_panel_size,
     categories: parseCategories(ex.categories),
     submission: submissionWindow(ex)
   };

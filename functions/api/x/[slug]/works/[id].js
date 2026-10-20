@@ -10,17 +10,18 @@ export const onRequestGet = handle(async ({ env, params }) => {
   const work = await env.DB.prepare(`${PUBLIC_WORK_SQL} AND w.id = ?`).bind(ex.id, id).first();
   if (!work) throw notFound('ไม่พบผลงาน');
   const { results } = await env.DB.prepare(
-    "SELECT id FROM works WHERE exhibition_id = ? AND status = 'shown' AND deleted_at IS NULL ORDER BY display_order, id"
+    "SELECT id, title_th, title_en, title_zh FROM works WHERE exhibition_id = ? AND status = 'shown' AND deleted_at IS NULL ORDER BY display_order, id"
   ).bind(ex.id).all();
-  const ids = (results || []).map((r) => r.id);
-  const i = ids.indexOf(id);
+  const rows = results || [];
+  const i = rows.findIndex((r) => r.id === id);
   return publicJson({
     ok: true,
     exhibition: publicExhibition(ex),
     work,
-    prev: i > 0 ? ids[i - 1] : null,
-    next: i >= 0 && i < ids.length - 1 ? ids[i + 1] : null,
+    // Neighbours carry their titles so the pager can name them.
+    prev: i > 0 ? rows[i - 1] : null,
+    next: i >= 0 && i < rows.length - 1 ? rows[i + 1] : null,
     position: i + 1,
-    total: ids.length
+    total: rows.length
   }, 60);
 });
