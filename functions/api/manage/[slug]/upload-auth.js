@@ -1,6 +1,6 @@
 import { handle, json, readJson } from '../../../_lib/http.js';
 import { requireManager } from '../../../_lib/exhibitions.js';
-import { uploadAuth } from '../../../_lib/imagekit.js';
+import { uploadAuth } from '../../../_lib/storage.js';
 import * as v from '../../../_lib/validate.js';
 
 // POST /api/manage/:slug/upload-auth { kind: 'work' | 'artist' | 'hero' } - for staff edits.

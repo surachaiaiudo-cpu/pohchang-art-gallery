@@ -1,6 +1,6 @@
 # Art Gallery Platform - one Cloudflare Pages project for every exhibition.
 # Secrets (never in this file) - set with `npx wrangler pages secret put <NAME>`:
-#   APP_ENCRYPTION_KEY         long random string; encrypts each exhibition's ImageKit private key
+#   APP_ENCRYPTION_KEY         long random string; encrypts each exhibition's Cloudinary API secret
 #   BOOTSTRAP_ADMIN_EMAIL      first admin account (used only while the users table is empty)
 #   BOOTSTRAP_ADMIN_PASSWORD   its first password (must be changed at first login)
 #   TURNSTILE_SECRET_KEY       optional; enables the anti-spam check on the public submission form

@@ -1,7 +1,7 @@
 import { api, esc, img, bytes, thDate, toast, toLocalInput, fromLocalInput, slugFromPath } from './core.js';
 import { requireLogin, tabs, copyText, STATUS_TH } from './backoffice.js';
 import { PRESETS } from './presets.js';
-import { checkImageFile, uploadImage } from './upload.js';
+import { checkImageFile, uploadImage, fitForUpload } from './upload.js';
 
 const slug = slugFromPath(1);
 const M = `/api/manage/${encodeURIComponent(slug)}`;
@@ -31,7 +31,8 @@ async function uploadFor(kind, file, onProgress) {
   const problem = checkImageFile(file);
   if (problem) throw new Error(problem);
   const { upload } = await api(`${M}/upload-auth`, { method: 'POST', body: { kind } });
-  return uploadImage(file, upload, onProgress);
+  const fitted = await fitForUpload(file, upload.maxBytes, upload.maxPixels);
+  return uploadImage(fitted.file, upload, onProgress);
 }
 
 function statusTag(w) {
@@ -172,7 +173,7 @@ function workEditor(w) {
     try {
       toast('กำลังอัปโหลด…');
       const r = await uploadFor('work', file, () => {});
-      await api(`${M}/works/${w.id}`, { method: 'PUT', body: { file_id: r.fileId } });
+      await api(`${M}/works/${w.id}`, { method: 'PUT', body: { file: r } });
       toast('เปลี่ยนภาพแล้ว', 'ok');
       closeDrawer();
       await loadWorks();
@@ -263,12 +264,29 @@ function fillSettings() {
   $('hero-img').hidden = !ex.hero_url;
   $('hero-remove').hidden = !ex.hero_url;
   if (ex.hero_url) $('hero-img').src = img(ex.hero_url, 400);
-  const pct = Math.min(100, Math.round((ex.storage_bytes / (ex.storage_quota_bytes || 1)) * 100));
-  $('storage-meter').innerHTML = `<p class="small">${ex.has_private_key ? `เชื่อมต่อแล้ว: <strong>${esc(ex.imagekit_url_endpoint)}</strong>` : '<strong>ยังไม่ได้เชื่อมต่อ</strong> — ต้องตั้งค่าก่อนเปิดรับผลงาน'}</p>
-    <div class="meter ${pct > 90 ? 'bad' : pct > 75 ? 'warn' : ''}"><span style="width:${pct}%"></span></div>
-    <p class="small muted">ใช้ไป ${bytes(ex.storage_bytes)} จากโควตา ${bytes(ex.storage_quota_bytes)} (แผนฟรี ImageKit เก็บได้ 5 GB)</p>`;
-  $('ik-url').value = ex.imagekit_url_endpoint || '';
-  $('ik-pub').value = ex.imagekit_public_key || '';
+  $('cl-cloud').value = ex.cloudinary_cloud_name || '';
+  $('cl-key').value = ex.cloudinary_api_key || '';
+  renderStorage(null);
+  loadStorage();
+}
+
+function renderStorage(u) {
+  const ex = S.ex;
+  const own = `ผลงานของนิทรรศการนี้ใช้พื้นที่ ${bytes(ex.storage_bytes)}`;
+  let html = `<p class="small">${ex.has_private_key ? `เชื่อมต่อแล้ว: <strong>${esc(ex.cloudinary_cloud_name)}</strong>` : '<strong>ยังไม่ได้เชื่อมต่อ</strong> — ต้องตั้งค่าก่อนเปิดรับผลงาน'}</p>`;
+  if (u && u.creditsLimit) {
+    const pct = Math.min(100, Math.round(u.creditsPercent ?? (u.creditsUsed / u.creditsLimit) * 100));
+    html += `<div class="meter ${pct > 90 ? 'bad' : pct > 75 ? 'warn' : ''}"><span style="width:${pct}%"></span></div>
+      <p class="small muted">บัญชี Cloudinary ใช้ไป ${u.creditsUsed} จาก ${u.creditsLimit} credits (${pct}%) · พื้นที่ ${bytes(u.storageBytes)} · ส่งภาพ ${bytes(u.bandwidthBytes)} · แปลงภาพ ${u.transformations} ครั้ง ใน 30 วัน<br>${own} (1 credit = พื้นที่ 1 GB หรือการส่งภาพ 1 GB หรือแปลงภาพ 1,000 ครั้ง)</p>`;
+  } else {
+    html += `<p class="small muted">${own}</p>`;
+  }
+  $('storage-meter').innerHTML = html;
+}
+
+async function loadStorage() {
+  if (!S.ex.has_private_key) return;
+  try { const d = await api(`${M}/storage`); renderStorage(d.usage); } catch { /* usage is optional */ }
 }
 
 let chosenPreset = '';
@@ -394,22 +412,23 @@ $('rv-add').addEventListener('submit', async (e) => {
     await loadOverview();
   } catch (err) { $('ra-err').textContent = err.message; }
 });
-$('ik-form').addEventListener('submit', async (e) => {
+$('cl-form').addEventListener('submit', async (e) => {
   e.preventDefault();
-  $('ik-err').textContent = '';
+  $('cl-err').textContent = '';
   try {
-    await api(`${M}/imagekit`, { method: 'PUT', body: { url_endpoint: $('ik-url').value.trim(), public_key: $('ik-pub').value.trim(), private_key: $('ik-priv').value.trim() } });
-    $('ik-priv').value = '';
-    toast('เชื่อมต่อ ImageKit แล้ว', 'ok');
+    const d = await api(`${M}/storage`, { method: 'PUT', body: { cloud_name: $('cl-cloud').value.trim(), api_key: $('cl-key').value.trim(), api_secret: $('cl-secret').value.trim() } });
+    $('cl-secret').value = '';
+    toast('เชื่อมต่อ Cloudinary แล้ว', 'ok');
     await loadOverview();
     fillSettings();
-  } catch (err) { $('ik-err').textContent = err.message; }
+    renderStorage(d.usage);
+  } catch (err) { $('cl-err').textContent = err.message; }
 });
 $('hero-pick').addEventListener('click', () => pickImage(async (file) => {
   try {
     $('hero-state').textContent = 'กำลังอัปโหลด…';
     const r = await uploadFor('hero', file, (p) => { $('hero-state').textContent = `กำลังอัปโหลด ${p}%`; });
-    await api(`${M}/hero`, { method: 'PUT', body: { file_id: r.fileId } });
+    await api(`${M}/hero`, { method: 'PUT', body: { file: r } });
     $('hero-state').textContent = '';
     toast('เปลี่ยนภาพปกแล้ว', 'ok');
     await loadOverview();
@@ -417,7 +436,7 @@ $('hero-pick').addEventListener('click', () => pickImage(async (file) => {
   } catch (err) { $('hero-state').textContent = ''; toast(err.message, 'error'); }
 }));
 $('hero-remove').addEventListener('click', async () => {
-  await api(`${M}/hero`, { method: 'PUT', body: { file_id: '' } });
+  await api(`${M}/hero`, { method: 'PUT', body: { file: null } });
   await loadOverview();
   fillSettings();
 });

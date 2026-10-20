@@ -33,7 +33,7 @@ function renderExRows() {
       <td><a href="/manage/${encodeURIComponent(e.slug)}"><strong>${esc(e.title_th)}</strong></a><div class="small muted">/e/${esc(e.slug)} · ${esc(presetName(e.theme_preset))}</div></td>
       <td><span class="tag">${esc(STATUS_TH[e.status] || e.status)}</span></td>
       <td>${e.shown} / ${e.works}</td>
-      <td>${e.has_storage ? `ImageKit · ${bytes(e.storage_bytes)}` : '<span class="muted">ยังไม่ตั้งค่า</span>'}</td>
+      <td>${e.has_storage ? `Cloudinary · ${bytes(e.storage_bytes)}` : '<span class="muted">ยังไม่ตั้งค่า</span>'}</td>
       <td class="small">${e.staff.map((s) => esc(s.name)).join(', ') || '<span class="muted">—</span>'}</td>
       <td><div class="row">
         <a class="btn btn-sm" href="/manage/${encodeURIComponent(e.slug)}">จัดการ</a>

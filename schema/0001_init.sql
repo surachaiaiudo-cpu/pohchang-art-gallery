@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS exhibitions (
   theme_overrides        TEXT NOT NULL DEFAULT '{}',   -- JSON: accent, headingFont, ornament
   hero_url               TEXT NOT NULL DEFAULT '',
   hero_file_id           TEXT NOT NULL DEFAULT '',
-  -- image storage: one ImageKit account per exhibition
+  -- image storage (renamed to cloudinary_* by 0002_cloudinary.sql)
   imagekit_url_endpoint  TEXT NOT NULL DEFAULT '',
   imagekit_public_key    TEXT NOT NULL DEFAULT '',
   imagekit_private_enc   TEXT NOT NULL DEFAULT '',     -- AES-GCM, key = APP_ENCRYPTION_KEY secret

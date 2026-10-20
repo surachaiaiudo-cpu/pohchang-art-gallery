@@ -27,15 +27,20 @@ export async function api(path, { method = 'GET', body } = {}) {
   return data;
 }
 
-// ImageKit transforms through the URL; other URLs (local dev placeholders) pass through.
+// Cloudinary delivers resized, auto-format copies through the URL. Widths are snapped to a few
+// sizes so each image only ever produces a handful of transformations (they count toward credits).
+const WIDTHS = [400, 800, 1600, 2400];
+const isCloudinary = (url) => /^https:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\//.test(url || '');
+
 export function img(url, width) {
   if (!url) return '';
-  if (!/^https:\/\/ik\.imagekit\.io\//.test(url)) return url;
-  return `${url}${url.includes('?') ? '&' : '?'}tr=w-${width}`;
+  if (!isCloudinary(url)) return url;
+  const w = WIDTHS.find((x) => x >= width) || WIDTHS[WIDTHS.length - 1];
+  return url.replace('/image/upload/', `/image/upload/f_auto,q_auto,c_limit,w_${w}/`);
 }
 
 export function srcset(url) {
-  if (!/^https:\/\/ik\.imagekit\.io\//.test(url || '')) return '';
+  if (!isCloudinary(url)) return '';
   return [400, 800, 1600].map((w) => `${img(url, w)} ${w}w`).join(', ');
 }
 

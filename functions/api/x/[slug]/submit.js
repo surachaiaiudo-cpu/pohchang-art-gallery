@@ -1,11 +1,12 @@
 import { handle, json, readJson, clientIp, bad, HttpError } from '../../../_lib/http.js';
 import { loadPublicExhibition, submissionWindow, audit } from '../../../_lib/exhibitions.js';
-import { verifyUploadedFile, deleteFile } from '../../../_lib/imagekit.js';
+import { verifyUploadedFile, deleteFile } from '../../../_lib/storage.js';
 import { checkTicket } from '../../../_lib/ticket.js';
 import { enforce } from '../../../_lib/ratelimit.js';
 import * as v from '../../../_lib/validate.js';
 
-// POST /api/x/:slug/submit { ticket, consent, artist: {...}, works: [{..., file_id}] }
+// POST /api/x/:slug/submit { ticket, consent, artist: {...}, works: [{..., file}], artist: {..., avatar_file?} }
+// file = the JSON Cloudinary returned for that upload (public_id, version, signature, format, bytes, width, height)
 export const onRequestPost = handle(async ({ request, env, params }) => {
   const db = env.DB;
   const ex = await loadPublicExhibition(db, params.slug);
@@ -39,7 +40,7 @@ export const onRequestPost = handle(async ({ request, env, params }) => {
     year_created: v.text(w.year_created, { field: 'ปีที่สร้าง', max: 20 }),
     concept_th: v.longText(w.concept_th, { field: 'แนวคิด', max: 4000 }),
     concept_en: v.longText(w.concept_en, { field: 'แนวคิดภาษาอังกฤษ', max: 4000 }),
-    file_id: w.file_id
+    file: w.file && typeof w.file === 'object' ? w.file : {}
   }));
 
   // Respect the per-artist limit across several submissions with the same email.
@@ -51,18 +52,18 @@ export const onRequestPost = handle(async ({ request, env, params }) => {
     throw bad(`อีเมลนี้ส่งผลงานไว้แล้ว ${prior.n} ชิ้น (สูงสุด ${ex.max_works_per_artist} ชิ้น)`);
   }
 
-  const ids = works.map((w) => String(w.file_id || ''));
+  const ids = works.map((w) => String(w.file.public_id || ''));
   if (new Set(ids).size !== ids.length) throw bad('มีรูปผลงานซ้ำกัน กรุณาใช้รูปแยกสำหรับแต่ละผลงาน');
   const reused = await db.prepare(
     `SELECT 1 FROM works WHERE exhibition_id = ? AND image_file_id IN (${ids.map(() => '?').join(',')}) LIMIT 1`
   ).bind(ex.id, ...ids).first();
   if (reused) throw bad('รูปนี้ถูกใช้ส่งผลงานไปแล้ว กรุณาอัปโหลดใหม่');
 
-  // Confirm every image really sits in this exhibition's ImageKit folder.
+  // Confirm every image was really uploaded to this exhibition's Cloudinary folder.
   const files = [];
-  for (const w of works) files.push(await verifyUploadedFile(ex, env, w.file_id, 'work'));
+  for (const w of works) files.push(await verifyUploadedFile(ex, env, w.file, 'work'));
   let avatar = null;
-  if (a.avatar_file_id) avatar = await verifyUploadedFile(ex, env, a.avatar_file_id, 'artist');
+  if (a.avatar_file && a.avatar_file.public_id) avatar = await verifyUploadedFile(ex, env, a.avatar_file, 'artist');
   const added = files.reduce((s, f) => s + f.size, 0) + (avatar ? avatar.size : 0);
   if (ex.storage_bytes + added > ex.storage_quota_bytes) {
     for (const f of files) await deleteFile(ex, env, f.fileId);

@@ -1,12 +1,12 @@
 import { handle, json, readJson, clientIp, HttpError } from '../../../_lib/http.js';
 import { loadPublicExhibition, submissionWindow } from '../../../_lib/exhibitions.js';
-import { uploadAuth } from '../../../_lib/imagekit.js';
+import { uploadAuth } from '../../../_lib/storage.js';
 import { checkTicket } from '../../../_lib/ticket.js';
 import { enforce } from '../../../_lib/ratelimit.js';
 import * as v from '../../../_lib/validate.js';
 
 // POST /api/x/:slug/upload-auth { ticket, kind: 'work' | 'artist' }
-// Signs one direct browser upload to this exhibition's ImageKit account.
+// Signs one direct browser upload to this exhibition's Cloudinary folder.
 export const onRequestPost = handle(async ({ request, env, params }) => {
   const ex = await loadPublicExhibition(env.DB, params.slug);
   const win = submissionWindow(ex);

@@ -1,7 +1,8 @@
 # หอศิลป์ออนไลน์ (ระบบใหม่)
 
 ระบบเดียวสำหรับทุกนิทรรศการ: Cloudflare Pages + Functions + D1 ฐานเดียว แยกนิทรรศการด้วย slug
-รูปของแต่ละนิทรรศการเก็บในบัญชี ImageKit ฟรีของนิทรรศการนั้น (1 บัญชีต่อ 1 งาน)
+รูปเก็บที่ Cloudinary (แผนฟรี) แต่ละนิทรรศการตั้งค่าบัญชีของตัวเองได้ หรือใช้บัญชีเดียวร่วมกันก็ได้
+เพราะรูปถูกแยกโฟลเดอร์ตาม slug (`<slug>/works`, `<slug>/artists`, `<slug>/site`)
 
 | หน้า | URL |
 | --- | --- |
@@ -33,6 +34,8 @@
    ```bash
    npm run db:init:remote
    ```
+   ฐานข้อมูลที่สร้างไว้ก่อนเปลี่ยนเป็น Cloudinary ระบบจะปรับคอลัมน์ให้เองตอนเรียก API ครั้งแรก
+   (`functions/_lib/migrate.js`, เทียบเท่า `schema/0002_cloudinary.sql`) ไม่ต้องรันเอง
 
 2. **สร้าง Pages project** ใน Cloudflare Dashboard → Workers & Pages → Create → Pages → Connect to Git
    - Repository: `surachaiaiudo-cpu/pohchang-art-gallery`, branch `main`
@@ -47,12 +50,12 @@
    npx wrangler pages secret put BOOTSTRAP_ADMIN_EMAIL --project-name art-gallery-platform
    npx wrangler pages secret put BOOTSTRAP_ADMIN_PASSWORD --project-name art-gallery-platform
    ```
-   - `APP_ENCRYPTION_KEY` ข้อความสุ่มยาวอย่างน้อย 32 ตัวอักษร ใช้เข้ารหัส Private key ของ ImageKit
-     **ห้ามเปลี่ยนภายหลัง** ถ้าเปลี่ยน ต้องใส่กุญแจ ImageKit ของทุกนิทรรศการใหม่
+   - `APP_ENCRYPTION_KEY` ข้อความสุ่มยาวอย่างน้อย 32 ตัวอักษร ใช้เข้ารหัส API secret ของ Cloudinary
+     **ห้ามเปลี่ยนภายหลัง** ถ้าเปลี่ยน ต้องใส่กุญแจ Cloudinary ของทุกนิทรรศการใหม่
    - `BOOTSTRAP_ADMIN_EMAIL` / `BOOTSTRAP_ADMIN_PASSWORD` ใช้สร้างบัญชีผู้ดูแลหอศิลป์คนแรก
      ใช้ได้เฉพาะตอนที่ยังไม่มีผู้ใช้ในระบบเลย และระบบจะบังคับให้เปลี่ยนรหัสผ่านทันที
    - ไม่บังคับ: `TURNSTILE_SECRET_KEY` (secret) และ `TURNSTILE_SITE_KEY` (variable) เพื่อเปิดระบบกันสแปมในฟอร์มส่งผลงาน
-   - **ห้ามตั้ง `DEV_FAKE_IMAGEKIT` บนระบบจริง** ค่านี้ใช้ทดสอบในเครื่องเท่านั้น
+   - **ห้ามตั้ง `DEV_FAKE_STORAGE` บนระบบจริง** ค่านี้ใช้ทดสอบในเครื่องเท่านั้น
 
 4. Deploy (push ขึ้น `main` หรือกด Retry deployment) แล้วเข้า `/login` ด้วยอีเมลและรหัสจากข้อ 3
 
@@ -60,10 +63,11 @@
 
 1. **admin**: `/admin` → เปิดนิทรรศการใหม่ (ใส่ชื่อ + slug เช่น `poh-chang-20`)
 2. **admin**: แท็บผู้ใช้ → เพิ่มผู้ดูแลนิทรรศการ เลือกงานที่ดูแล → ส่งรหัสผ่านชั่วคราวให้ผู้ดูแล
-3. **สมัคร ImageKit ฟรี** ด้วยอีเมลของงาน (เช่น `surachai.ai.udo+pohchang20@gmail.com`)
-   แล้วเปิดเมนู Developer options คัดลอก URL endpoint, Public key, Private key
+3. **Cloudinary** (สมัครฟรีครั้งเดียว ใช้ได้ทุกนิทรรศการ) → Console → Settings → API Keys
+   ดู Cloud name, API Key และ API Secret
 4. **ผู้ดูแลนิทรรศการ**: `/manage/<slug>` → ตั้งค่านิทรรศการ
-   - ใส่กุญแจ ImageKit (ระบบตรวจกุญแจกับ ImageKit ก่อนบันทึก)
+   - การ์ด "ที่เก็บรูป (Cloudinary)": ใส่ Cloud name, API Key, API Secret (ระบบตรวจกับ Cloudinary ก่อนบันทึก)
+     แล้วจะเห็นเครดิตที่ใช้ไปของบัญชี (แผนฟรี 25 เครดิต/เดือน; 1 เครดิต = พื้นที่ 1 GB หรือ bandwidth 1 GB หรือแปลงภาพ 1,000 ครั้ง)
    - กรอกชื่อ บทภัณฑารักษ์ วันเปิด-ปิดรับผลงาน จำนวนผลงานต่อคน
    - เลือกธีม การจัดวาง สีหลัก ภาพปก
    - เปลี่ยนสถานะเป็น "เปิด"
@@ -80,10 +84,10 @@
 
 ```bash
 npm install
-cp .dev.vars.example .dev.vars      # มี DEV_FAKE_IMAGEKIT=1 สำหรับอัปโหลดจำลอง
+cp .dev.vars.example .dev.vars      # มี DEV_FAKE_STORAGE=1 สำหรับอัปโหลดจำลอง
 npm run db:init:local
 npm run dev                          # http://localhost:8790
-npm test                             # ทดสอบการนับเสียง 3 ใน 5
+npm test                             # ทดสอบการนับเสียง 3 ใน 5 และลายเซ็น Cloudinary
 ```
 
 ## ความปลอดภัยโดยสรุป
@@ -92,9 +96,10 @@ npm test                             # ทดสอบการนับเส�
 - session เป็น cookie HttpOnly, SameSite=Lax และทุกคำขอที่เขียนข้อมูลต้องมาจากหน้าเว็บของระบบเท่านั้น
 - ผู้ดูแลนิทรรศการเข้าถึงได้เฉพาะงานที่ได้รับมอบหมาย ทุก query กรองด้วย `exhibition_id`
 - ลิงก์ผู้ทรงคุณวุฒิเก็บเป็น hash ปิดหรือออกใหม่ได้ทันที
-- Private key ของ ImageKit เข้ารหัส AES-GCM และไม่ถูกส่งกลับไปที่เบราว์เซอร์
-- เบราว์เซอร์อัปโหลดรูปตรงไป ImageKit ด้วยลายเซ็นอายุ 30 นาที ที่ออกให้เฉพาะช่วงเปิดรับผลงาน
-  และระบบตรวจว่าไฟล์อยู่ในโฟลเดอร์ของนิทรรศการนั้นจริงก่อนบันทึก
+- API secret ของ Cloudinary เข้ารหัส AES-GCM และไม่ถูกส่งกลับไปที่เบราว์เซอร์
+- เบราว์เซอร์อัปโหลดรูปตรงไป Cloudinary ด้วยลายเซ็นที่ออกให้เฉพาะช่วงเปิดรับผลงาน (จำกัดโฟลเดอร์และชนิดไฟล์)
+  ระบบตรวจลายเซ็นที่ Cloudinary ส่งกลับ และตรวจว่าไฟล์อยู่ในโฟลเดอร์ของนิทรรศการนั้นจริงก่อนบันทึก
+- รูปที่ใหญ่เกิน 10 MB หรือ 25 ล้านพิกเซล (เกินขีดจำกัดแผนฟรี) จะถูกย่อในเบราว์เซอร์อัตโนมัติก่อนอัปโหลด
 - ข้อความทุกช่องแสดงผลแบบ escape และมี Content-Security-Policy ป้องกันสคริปต์แปลกปลอม
 - อีเมลและเบอร์โทรของศิลปินไม่แสดงต่อสาธารณะ
 

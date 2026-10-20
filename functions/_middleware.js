@@ -1,14 +1,15 @@
 // Runs before every request: CSRF guard for API writes and security headers on every response.
 import { assertSameOrigin } from './_lib/auth.js';
 import { errorResponse } from './_lib/http.js';
+import { ensureSchema } from './_lib/migrate.js';
 
 const CSP = [
   "default-src 'self'",
   "script-src 'self' https://challenges.cloudflare.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
-  "img-src 'self' data: blob: https://ik.imagekit.io",
-  "connect-src 'self' https://upload.imagekit.io",
+  "img-src 'self' data: blob: https://res.cloudinary.com",
+  "connect-src 'self' https://api.cloudinary.com",
   "frame-src https://challenges.cloudflare.com",
   "base-uri 'self'",
   "form-action 'self'",
@@ -19,7 +20,10 @@ export async function onRequest(context) {
   const url = new URL(context.request.url);
   let response;
   try {
-    if (url.pathname.startsWith('/api/')) assertSameOrigin(context.request);
+    if (url.pathname.startsWith('/api/')) {
+      assertSameOrigin(context.request);
+      await ensureSchema(context.env);
+    }
     response = await context.next();
   } catch (err) {
     response = errorResponse(err);

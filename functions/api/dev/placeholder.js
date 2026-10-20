@@ -1,6 +1,6 @@
-// Local development only (DEV_FAKE_IMAGEKIT=1): stands in for an uploaded image.
+// Local development only (DEV_FAKE_STORAGE=1): stands in for an uploaded image.
 export async function onRequestGet({ env, request }) {
-  if (env.DEV_FAKE_IMAGEKIT !== '1') return new Response('Not found', { status: 404 });
+  if (env.DEV_FAKE_STORAGE !== '1') return new Response('Not found', { status: 404 });
   const seed = new URL(request.url).searchParams.get('seed') || 'x';
   let h = 0;
   for (const c of seed) h = (h * 31 + c.charCodeAt(0)) >>> 0;

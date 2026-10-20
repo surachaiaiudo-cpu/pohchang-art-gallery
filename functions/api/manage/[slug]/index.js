@@ -6,11 +6,11 @@ import { recompute, reviewOpen } from '../../../_lib/review.js';
 import * as v from '../../../_lib/validate.js';
 
 function managerView(ex) {
-  const { imagekit_private_enc, ...rest } = ex;
+  const { cloudinary_api_secret_enc, ...rest } = ex;
   return {
     ...rest,
     theme_overrides: parseOverrides(ex),
-    has_private_key: !!imagekit_private_enc,
+    has_private_key: !!cloudinary_api_secret_enc,
     submission: submissionWindow(ex),
     review_is_open: reviewOpen(ex)
   };

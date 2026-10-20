@@ -1,12 +1,11 @@
 import { api, esc, thDate, applyTheme, toast, icons, slugFromPath } from './core.js';
-import { checkImageFile, uploadImage } from './upload.js';
+import { checkImageFile, uploadImage, fitForUpload } from './upload.js';
 
 const slug = slugFromPath(1);
 const base = `/e/${encodeURIComponent(slug)}`;
 let ex = null;
 let ticket = '';
-let maxBytes = 25 * 1024 * 1024;
-const uploads = {};      // target key -> { fileId, busy }
+const uploads = {};      // target key -> { busy, file: Cloudinary upload result }
 let workSeq = 0;
 
 const $ = (id) => document.getElementById(id);
@@ -18,7 +17,7 @@ function workBlock(n) {
     <div class="field">
       <span style="font-weight:600;font-size:.95rem" id="${k}-img-label">ภาพผลงาน <span class="req">*</span></span>
       <div class="drop" data-kind="work" data-target="${k}" tabindex="0" role="button" aria-labelledby="${k}-img-label">
-        ${icons.upload}<span class="drop-text">แตะเพื่อเลือกไฟล์ภาพ (JPG, PNG, WebP ไม่เกิน 25 MB)</span>
+        ${icons.upload}<span class="drop-text">แตะเพื่อเลือกไฟล์ภาพ (JPG, PNG หรือ WebP)</span>
       </div>
       <span class="hint">ใช้ไฟล์ความละเอียดสูงสำหรับพิมพ์สูจิบัตร ด้านยาวอย่างน้อย 3,000 พิกเซล</span>
     </div>
@@ -78,22 +77,26 @@ function openPicker(drop) {
 
 async function handleFile(drop, file) {
   const key = drop.dataset.target;
-  const problem = checkImageFile(file, maxBytes);
+  const problem = checkImageFile(file);
   if (problem) { toast(problem, 'error'); return; }
   if (!ticket) { toast('กรุณายืนยันว่าไม่ใช่โปรแกรมอัตโนมัติก่อน', 'error'); return; }
   const preview = URL.createObjectURL(file);
-  uploads[key] = { busy: true, fileId: '' };
+  uploads[key] = { busy: true, file: null };
   drop.classList.add('has-image');
-  drop.innerHTML = `<img src="${preview}" alt="ภาพที่เลือก"><div class="progress" aria-label="ความคืบหน้า"><span></span></div><span class="drop-text">กำลังอัปโหลด…</span>`;
+  drop.innerHTML = `<img src="${preview}" alt="ภาพที่เลือก"><div class="progress" aria-label="ความคืบหน้า"><span></span></div><span class="drop-text">กำลังเตรียมไฟล์…</span>`;
   const bar = drop.querySelector('.progress > span');
+  const label = drop.querySelector('.drop-text');
   try {
     const { upload } = await api(`/api/x/${encodeURIComponent(slug)}/upload-auth`, { method: 'POST', body: { ticket, kind: drop.dataset.kind } });
-    maxBytes = upload.maxBytes || maxBytes;
-    const res = await uploadImage(file, upload, (p) => { bar.style.width = `${p}%`; });
-    uploads[key] = { busy: false, fileId: res.fileId };
-    drop.querySelector('.drop-text').textContent = 'อัปโหลดแล้ว · แตะเพื่อเปลี่ยนรูป';
+    const fitted = await fitForUpload(file, upload.maxBytes, upload.maxPixels);
+    label.textContent = fitted.resized ? `กำลังอัปโหลด (ย่อเป็น ${fitted.width}×${fitted.height} px)…` : 'กำลังอัปโหลด…';
+    const res = await uploadImage(fitted.file, upload, (p) => { bar.style.width = `${p}%`; });
+    uploads[key] = { busy: false, file: res };
+    label.textContent = fitted.resized
+      ? `อัปโหลดแล้ว (ระบบย่อเหลือ ${(fitted.file.size / 1048576).toFixed(1)} MB) · แตะเพื่อเปลี่ยนรูป`
+      : 'อัปโหลดแล้ว · แตะเพื่อเปลี่ยนรูป';
   } catch (e) {
-    uploads[key] = { busy: false, fileId: '' };
+    uploads[key] = { busy: false, file: null };
     drop.classList.remove('has-image');
     drop.innerHTML = `${icons.upload}<span class="drop-text">อัปโหลดไม่สำเร็จ แตะเพื่อลองใหม่</span>`;
     toast(e.message, 'error');
@@ -106,14 +109,14 @@ function collect() {
   const artist = {
     name_th: val('name_th'), name_en: val('name_en'), academic_title_th: val('academic_title_th'),
     email: val('email'), phone: val('phone'), nationality: val('nationality'), affiliation: val('affiliation'),
-    bio_th: val('bio_th'), avatar_file_id: uploads.avatar?.fileId || undefined
+    bio_th: val('bio_th'), avatar_file: uploads.avatar?.file || undefined
   };
   const works = [...document.querySelectorAll('.work-block')].map((b) => {
     const k = b.dataset.key;
     return {
       title_th: val(`${k}-title_th`), title_en: val(`${k}-title_en`), technique_th: val(`${k}-technique_th`),
       dimensions: val(`${k}-dimensions`), year_created: val(`${k}-year_created`),
-      concept_th: val(`${k}-concept_th`), concept_en: val(`${k}-concept_en`), file_id: uploads[k]?.fileId || ''
+      concept_th: val(`${k}-concept_th`), concept_en: val(`${k}-concept_en`), file: uploads[k]?.file || null
     };
   });
   return { artist, works };
@@ -126,7 +129,7 @@ function validate({ artist, works }) {
   for (let i = 0; i < works.length; i++) {
     const k = blocks[i].dataset.key;
     if (uploads[k]?.busy) return [null, `ผลงานชิ้นที่ ${i + 1} ยังอัปโหลดไม่เสร็จ`];
-    if (!works[i].file_id) return [null, `กรุณาอัปโหลดภาพผลงานชิ้นที่ ${i + 1}`];
+    if (!works[i].file) return [null, `กรุณาอัปโหลดภาพผลงานชิ้นที่ ${i + 1}`];
     if (!works[i].title_th) return [`${k}-title_th`, `กรุณากรอกชื่อผลงานชิ้นที่ ${i + 1}`];
     if (!works[i].technique_th) return [`${k}-technique_th`, `กรุณากรอกเทคนิคของผลงานชิ้นที่ ${i + 1}`];
   }
@@ -179,7 +182,7 @@ async function main() {
     $('intro').innerHTML = `<div class="notice">
       <p style="margin:0">ส่งได้ไม่เกิน <strong>${ex.max_works_per_artist}</strong> ผลงานต่อคน
       ${ex.submission_closes_at ? ` · ปิดรับ <strong>${esc(thDate(ex.submission_closes_at, true))}</strong>` : ''}</p>
-      <p style="margin:6px 0 0" class="muted">ภาพผลงานต้องเป็น JPG, PNG หรือ WebP ขนาดไม่เกิน 25 MB ต่อภาพ</p></div>`;
+      <p style="margin:6px 0 0" class="muted">ภาพผลงานเป็น JPG, PNG หรือ WebP ไฟล์ที่ใหญ่กว่า 10 MB ระบบจะย่อให้อัตโนมัติโดยคงความละเอียดสำหรับพิมพ์</p></div>`;
     $('form').hidden = false;
     addWork();
     if (cfg.turnstileSiteKey) setupTurnstile(cfg.turnstileSiteKey);

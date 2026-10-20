@@ -1,7 +1,7 @@
 import { handle, json, readJson, notFound } from '../../../../_lib/http.js';
 import { actorOf } from '../../../../_lib/auth.js';
 import { requireManager, audit } from '../../../../_lib/exhibitions.js';
-import { verifyUploadedFile, deleteFile } from '../../../../_lib/imagekit.js';
+import { verifyUploadedFile, deleteFile } from '../../../../_lib/storage.js';
 import { recompute } from '../../../../_lib/review.js';
 import * as v from '../../../../_lib/validate.js';
 
@@ -33,7 +33,7 @@ const ARTIST_TEXT = {
 };
 
 // PUT /api/manage/:slug/works/:id
-// { status?, badge_override?: 'endorsed'|'not_endorsed'|null, display_order?, <work fields>, file_id?, artist: {...}? }
+// { status?, badge_override?: 'endorsed'|'not_endorsed'|null, display_order?, <work fields>, file?, artist: {...}? }
 export const onRequestPut = handle(async (context) => {
   const { user, ex } = await requireManager(context);
   const { env } = context;
@@ -52,8 +52,8 @@ export const onRequestPut = handle(async (context) => {
       ? null : v.oneOf(b.badge_override, ['endorsed', 'not_endorsed'], { field: 'การตัดสินของภัณฑารักษ์' });
   }
   let oldFile = null;
-  if (b.file_id) {
-    const f = await verifyUploadedFile(ex, env, b.file_id, 'work');
+  if (b.file) {
+    const f = await verifyUploadedFile(ex, env, b.file, 'work');
     Object.assign(set, { image_url: f.url, image_file_id: f.fileId, image_width: f.width, image_height: f.height, image_bytes: f.size });
     oldFile = work.image_file_id;
   }
@@ -64,7 +64,7 @@ export const onRequestPut = handle(async (context) => {
     stmts.push(db.prepare(`UPDATE works SET ${keys.map((k) => `${k} = ?`).join(', ')}, updated_at = datetime('now') WHERE id = ? AND exhibition_id = ?`)
       .bind(...keys.map((k) => set[k]), id, ex.id));
   }
-  if (b.file_id) {
+  if (b.file) {
     stmts.push(db.prepare('UPDATE exhibitions SET storage_bytes = MAX(0, storage_bytes + ? - ?) WHERE id = ?')
       .bind(set.image_bytes, work.image_bytes, ex.id));
   }

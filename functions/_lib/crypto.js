@@ -72,3 +72,7 @@ export async function hmacSha1Hex(keyStr, message) {
   const key = await crypto.subtle.importKey('raw', enc.encode(keyStr), { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']);
   return toHex(await crypto.subtle.sign('HMAC', key, enc.encode(message)));
 }
+
+export async function sha1Hex(value) {
+  return toHex(await crypto.subtle.digest('SHA-1', enc.encode(value)));
+}

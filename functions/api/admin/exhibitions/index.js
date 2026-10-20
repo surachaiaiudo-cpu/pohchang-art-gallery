@@ -11,7 +11,7 @@ export const onRequestGet = handle(async (context) => {
   const [ex, members] = await db.batch([
     db.prepare(
       `SELECT e.id, e.slug, e.title_th, e.status, e.theme_preset, e.storage_bytes, e.created_at,
-              (e.imagekit_private_enc != '') AS has_storage,
+              (e.cloudinary_api_secret_enc != '') AS has_storage,
               (SELECT COUNT(*) FROM works w WHERE w.exhibition_id = e.id AND w.deleted_at IS NULL) AS works,
               (SELECT COUNT(*) FROM works w WHERE w.exhibition_id = e.id AND w.status = 'shown' AND w.deleted_at IS NULL) AS shown
          FROM exhibitions e ORDER BY e.created_at DESC`
