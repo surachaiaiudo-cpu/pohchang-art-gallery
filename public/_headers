@@ -1,6 +1,8 @@
+# CSS and JS change with every deploy: browsers keep a copy but check it each time
+# (a cheap 304 when unchanged), so new pages never run with old styles or scripts.
 /css/*
-  Cache-Control: public, max-age=3600
+  Cache-Control: public, max-age=0, must-revalidate
 /js/*
-  Cache-Control: public, max-age=300
+  Cache-Control: public, max-age=0, must-revalidate
 /flags/*
   Cache-Control: public, max-age=604800
