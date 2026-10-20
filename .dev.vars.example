@@ -1,0 +1,5 @@
+APP_ENCRYPTION_KEY=dev-only-change-me-0123456789abcdef
+BOOTSTRAP_ADMIN_EMAIL=admin@example.com
+BOOTSTRAP_ADMIN_PASSWORD=ChangeMe-12345
+# Local development only: fake ImageKit so uploads work without network.
+DEV_FAKE_IMAGEKIT=1

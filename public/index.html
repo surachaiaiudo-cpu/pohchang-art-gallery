@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="th" data-theme="white-cube">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>หอศิลป์ออนไลน์</title>
+  <meta name="description" content="นิทรรศการศิลปะออนไลน์ ที่กำลังจัดแสดง กำลังจะมา และนิทรรศการที่ผ่านมา">
+  <link rel="stylesheet" href="/css/themes.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <script type="module" src="/js/lobby.js"></script>
+</head>
+<body>
+  <a class="sr-only" href="#main">ข้ามไปเนื้อหา</a>
+  <header class="site-head">
+    <div class="wrap">
+      <a class="brand" href="/" id="site-name">หอศิลป์ออนไลน์</a>
+      <nav class="nav" aria-label="เมนูหลัก">
+        <a href="#now">กำลังจัดแสดง</a>
+        <a href="#past">นิทรรศการที่ผ่านมา</a>
+        <a href="/login">สำหรับผู้จัด</a>
+      </nav>
+    </div>
+  </header>
+  <main id="main" class="wrap">
+    <section class="lobby-hero">
+      <p class="eyebrow">Online Gallery</p>
+      <h1>หอศิลป์ที่เปิดทุกนิทรรศการไว้ในที่เดียว</h1>
+      <p class="muted" style="max-width:56ch">เลือกชมนิทรรศการที่กำลังจัดแสดง ส่งผลงานเข้าร่วมงานที่เปิดรับ หรือย้อนดูนิทรรศการที่ผ่านมา</p>
+    </section>
+    <section id="now" aria-labelledby="now-title">
+      <h2 class="section-title" id="now-title">กำลังจัดแสดงและเปิดรับผลงาน</h2>
+      <div class="ex-grid" id="now-list"><p class="muted">กำลังโหลด…</p></div>
+    </section>
+    <section id="past" aria-labelledby="past-title">
+      <h2 class="section-title" id="past-title">นิทรรศการที่ผ่านมา</h2>
+      <div class="ex-grid" id="past-list"></div>
+    </section>
+  </main>
+  <footer class="site-foot"><div class="wrap" id="foot"></div></footer>
+</body>
+</html>

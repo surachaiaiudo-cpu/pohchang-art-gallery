@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <title>พิจารณาผลงาน</title>
+  <link rel="stylesheet" href="/css/app.css">
+  <script type="module" src="/js/review.js"></script>
+</head>
+<body>
+  <header class="rv-head">
+    <div class="in">
+      <div><strong id="rv-ex">กำลังโหลด…</strong><div class="small muted" id="rv-who"></div></div>
+      <div class="rv-progress"><div class="small" id="rv-count"></div><div class="meter"><span id="rv-bar" style="width:0"></span></div></div>
+      <label class="check small"><input type="checkbox" id="only-todo"> แสดงเฉพาะที่ยังไม่พิจารณา</label>
+    </div>
+  </header>
+  <main>
+    <div id="rv-notice" style="max-width:1100px;margin:16px auto 0;padding:0 20px"></div>
+    <section class="rv-work" id="rv-work" aria-live="polite"></section>
+    <section class="rv-list" aria-label="ผลงานทั้งหมด">
+      <h2 class="small muted" style="font-size:.95rem">ผลงานทั้งหมด</h2>
+      <div class="rv-thumbs" id="rv-thumbs"></div>
+    </section>
+  </main>
+</body>
+</html>

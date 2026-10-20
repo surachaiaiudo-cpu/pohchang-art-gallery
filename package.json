@@ -1,0 +1,18 @@
+{
+  "name": "art-gallery-platform",
+  "version": "1.0.0",
+  "description": "Online gallery: one system, many exhibitions",
+  "scripts": {
+    "db:init:local": "wrangler d1 execute art-gallery-platform --local --file=schema/0001_init.sql",
+    "db:init:remote": "wrangler d1 execute art-gallery-platform --remote --file=schema/0001_init.sql",
+    "dev": "wrangler pages dev --port 8790",
+    "test": "node --test tests/*.test.js",
+    "deploy": "wrangler pages deploy public"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "wrangler": "^3.114.17"
+  },
+  "private": true,
+  "type": "module"
+}

@@ -1,0 +1,5 @@
+/e/:slug/work/:id  /work  200
+/e/:slug/submit    /submit  200
+/e/:slug           /exhibition  200
+/manage/:slug      /manage  200
+/review/:token     /review  200

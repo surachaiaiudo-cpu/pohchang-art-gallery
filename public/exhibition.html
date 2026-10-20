@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>นิทรรศการ</title>
+  <link rel="stylesheet" href="/css/themes.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <script type="module" src="/js/exhibition.js"></script>
+</head>
+<body>
+  <a class="sr-only" href="#works">ข้ามไปที่ผลงาน</a>
+  <header class="site-head">
+    <div class="wrap">
+      <a class="brand" href="/">หอศิลป์ออนไลน์</a>
+      <nav class="nav" aria-label="เมนูนิทรรศการ" id="ex-nav"></nav>
+    </div>
+  </header>
+  <div class="ornament" aria-hidden="true"></div>
+  <main class="wrap" id="main">
+    <section class="hero"><div class="hero-grid" id="hero"><p class="muted">กำลังโหลด…</p></div></section>
+    <div id="statement"></div>
+    <div class="toolbar" role="region" aria-label="ตัวกรองผลงาน">
+      <div class="seg" role="group" aria-label="แสดงผลงาน">
+        <button type="button" data-filter="all" aria-pressed="true">ทั้งหมด <span id="n-all"></span></button>
+        <button type="button" data-filter="endorsed" aria-pressed="false" id="f-endorsed">ผ่านผู้ทรงคุณวุฒิ <span id="n-end"></span></button>
+      </div>
+      <label class="sr-only" for="q">ค้นหาผลงานหรือศิลปิน</label>
+      <input class="search" id="q" type="search" placeholder="ค้นหาชื่อผลงานหรือศิลปิน">
+    </div>
+    <section id="works" class="works" aria-live="polite"></section>
+  </main>
+  <footer class="site-foot"><div class="wrap"><a href="/">← กลับหอศิลป์</a></div></footer>
+</body>
+</html>

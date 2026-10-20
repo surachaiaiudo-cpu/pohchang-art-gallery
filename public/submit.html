@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ส่งผลงาน</title>
+  <link rel="stylesheet" href="/css/themes.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <script type="module" src="/js/submit.js"></script>
+</head>
+<body>
+  <header class="site-head">
+    <div class="wrap"><a class="brand" id="back" href="/">หอศิลป์ออนไลน์</a></div>
+  </header>
+  <div class="ornament" aria-hidden="true"></div>
+  <main class="wrap form-page" id="main">
+    <h1 id="title">ส่งผลงาน</h1>
+    <div id="intro"><p class="muted">กำลังโหลด…</p></div>
+    <form id="form" hidden novalidate>
+      <fieldset>
+        <legend>ข้อมูลศิลปิน</legend>
+        <div class="grid-2">
+          <div class="field"><label for="name_th">ชื่อ-นามสกุล <span class="req">*</span></label><input id="name_th" type="text" required maxlength="200" autocomplete="name"></div>
+          <div class="field"><label for="name_en">ชื่อ-นามสกุล (ภาษาอังกฤษ)</label><input id="name_en" type="text" maxlength="200"></div>
+          <div class="field"><label for="academic_title_th">ตำแหน่งทางวิชาการ / คำนำหน้า</label><input id="academic_title_th" type="text" maxlength="200" placeholder="เช่น ผศ., อาจารย์"></div>
+          <div class="field"><label for="affiliation">สังกัด / สถาบัน</label><input id="affiliation" type="text" maxlength="300"></div>
+          <div class="field"><label for="email">อีเมล <span class="req">*</span></label><input id="email" type="email" required maxlength="254" autocomplete="email"><span class="hint">ใช้ติดต่อกลับ ไม่แสดงต่อสาธารณะ</span></div>
+          <div class="field"><label for="phone">โทรศัพท์</label><input id="phone" type="tel" maxlength="40" autocomplete="tel"><span class="hint">ไม่แสดงต่อสาธารณะ</span></div>
+          <div class="field"><label for="nationality">สัญชาติ</label><input id="nationality" type="text" maxlength="80" value="Thailand"></div>
+        </div>
+        <div class="field"><label for="bio_th">ประวัติโดยย่อ</label><textarea id="bio_th" maxlength="6000"></textarea></div>
+        <div class="field">
+          <span id="avatar-label" style="font-weight:600;font-size:.95rem">รูปศิลปิน (ไม่บังคับ)</span>
+          <div class="drop" data-kind="artist" data-target="avatar" tabindex="0" role="button" aria-labelledby="avatar-label">
+            <span class="drop-text">แตะเพื่อเลือกรูป</span>
+          </div>
+        </div>
+      </fieldset>
+      <div id="works"></div>
+      <p><button type="button" class="btn btn-ghost" id="add-work">+ เพิ่มผลงานอีกชิ้น</button></p>
+      <fieldset>
+        <legend>การยินยอม</legend>
+        <label class="check"><input type="checkbox" id="consent">
+          <span>ข้าพเจ้ายืนยันว่าเป็นเจ้าของผลงาน และยินยอมให้ผู้จัดเผยแพร่ภาพและข้อมูลผลงานในนิทรรศการออนไลน์และสูจิบัตร</span></label>
+      </fieldset>
+      <div id="turnstile" style="margin-bottom:16px"></div>
+      <p id="form-error" class="error-text" role="alert"></p>
+      <button type="submit" class="btn" id="send">ส่งผลงาน</button>
+    </form>
+    <section id="done" hidden>
+      <div class="notice"><h2 style="margin-top:0">ส่งผลงานเรียบร้อย</h2><p id="done-text"></p></div>
+      <a class="btn btn-ghost" id="done-back" href="/">กลับหน้านิทรรศการ</a>
+    </section>
+  </main>
+  <input type="file" id="picker" accept="image/jpeg,image/png,image/webp" hidden>
+</body>
+</html>

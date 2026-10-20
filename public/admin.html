@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>ผู้ดูแลหอศิลป์</title>
+  <link rel="stylesheet" href="/css/app.css">
+  <script type="module" src="/js/admin.js"></script>
+</head>
+<body>
+  <header class="topbar" id="topbar"></header>
+  <main class="page">
+    <div id="staff-home" hidden>
+      <h1>นิทรรศการที่ฉันดูแล</h1>
+      <div id="my-list"></div>
+    </div>
+    <div id="admin-home" hidden>
+      <div class="page-head"><h1>ผู้ดูแลหอศิลป์</h1></div>
+      <div class="tabs" role="tablist" id="tabs">
+        <button role="tab" data-tab="exhibitions" aria-controls="p-ex" id="t-ex">นิทรรศการ</button>
+        <button role="tab" data-tab="users" aria-controls="p-users" id="t-users">ผู้ใช้</button>
+      </div>
+
+      <section id="p-ex" role="tabpanel" aria-labelledby="t-ex">
+        <div class="card">
+          <h2>เปิดนิทรรศการใหม่</h2>
+          <form id="new-ex" class="grid-3" novalidate>
+            <div class="field"><label for="ne-title">ชื่อนิทรรศการ</label><input id="ne-title" type="text" required placeholder="เช่น เวิร์กช็อปเพาะช่าง ครั้งที่ 20"></div>
+            <div class="field"><label for="ne-slug">slug (ส่วนท้าย URL)</label><input id="ne-slug" type="text" required placeholder="poh-chang-20" pattern="[a-z0-9-]+"><span class="hint" id="ne-url"></span></div>
+            <div class="field"><label for="ne-theme">ธีมเริ่มต้น</label><select id="ne-theme"></select></div>
+            <div><button class="btn" type="submit">สร้างนิทรรศการ</button> <span class="error-text" id="ne-err"></span></div>
+          </form>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>นิทรรศการ</th><th>สถานะ</th><th>ผลงาน (แสดง/ทั้งหมด)</th><th>ที่เก็บรูป</th><th>ผู้ดูแล</th><th></th></tr></thead>
+          <tbody id="ex-rows"></tbody>
+        </table></div>
+      </section>
+
+      <section id="p-users" role="tabpanel" aria-labelledby="t-users" hidden>
+        <div class="card">
+          <h2>เพิ่มผู้ดูแลนิทรรศการ</h2>
+          <form id="new-user" novalidate>
+            <div class="grid-3">
+              <div class="field"><label for="nu-name">ชื่อ</label><input id="nu-name" type="text" required></div>
+              <div class="field"><label for="nu-email">อีเมล</label><input id="nu-email" type="email" required></div>
+              <div class="field"><label for="nu-role">บทบาท</label><select id="nu-role"><option value="staff">ผู้ดูแลนิทรรศการ</option><option value="admin">ผู้ดูแลหอศิลป์</option></select></div>
+            </div>
+            <div class="field"><span class="label">ดูแลนิทรรศการ</span><div class="row" id="nu-ex"></div></div>
+            <button class="btn" type="submit">สร้างบัญชี</button> <span class="error-text" id="nu-err"></span>
+          </form>
+          <div id="nu-result" hidden style="margin-top:16px"></div>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>ชื่อ</th><th>อีเมล</th><th>บทบาท</th><th>นิทรรศการ</th><th>เข้าใช้ล่าสุด</th><th></th></tr></thead>
+          <tbody id="user-rows"></tbody>
+        </table></div>
+      </section>
+    </div>
+  </main>
+
+  <div class="drawer-back" id="dback"></div>
+  <aside class="drawer" id="drawer" aria-modal="true" role="dialog" aria-labelledby="d-title">
+    <div class="head"><h2 id="d-title" style="margin:0"></h2><button class="icon-btn" id="d-close" aria-label="ปิด">✕</button></div>
+    <div class="content" id="d-body"></div>
+  </aside>
+</body>
+</html>

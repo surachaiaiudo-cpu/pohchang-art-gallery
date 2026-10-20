@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>เข้าสู่ระบบผู้จัด</title>
+  <link rel="stylesheet" href="/css/app.css">
+  <script type="module" src="/js/login.js"></script>
+</head>
+<body>
+  <main class="login-box">
+    <form id="login" novalidate>
+      <h1>เข้าสู่ระบบผู้จัด</h1>
+      <p class="muted small">สำหรับผู้ดูแลหอศิลป์และผู้ดูแลนิทรรศการ</p>
+      <div class="field"><label for="email">อีเมล</label><input id="email" type="email" autocomplete="username" required></div>
+      <div class="field"><label for="password">รหัสผ่าน</label><input id="password" type="password" autocomplete="current-password" required></div>
+      <p class="error-text" id="err" role="alert"></p>
+      <button class="btn" type="submit" style="width:100%">เข้าสู่ระบบ</button>
+    </form>
+    <form id="change" hidden novalidate>
+      <h1>ตั้งรหัสผ่านใหม่</h1>
+      <p class="muted small">บัญชีนี้ใช้รหัสผ่านชั่วคราว กรุณาตั้งรหัสผ่านของคุณเองก่อนเริ่มใช้งาน</p>
+      <div class="field"><label for="cur">รหัสผ่านปัจจุบัน (ชั่วคราว)</label><input id="cur" type="password" autocomplete="current-password"></div>
+      <div class="field"><label for="next">รหัสผ่านใหม่</label><input id="next" type="password" autocomplete="new-password" minlength="10"><span class="hint">อย่างน้อย 10 ตัวอักษร</span></div>
+      <div class="field"><label for="next2">ยืนยันรหัสผ่านใหม่</label><input id="next2" type="password" autocomplete="new-password"></div>
+      <p class="error-text" id="err2" role="alert"></p>
+      <button class="btn" type="submit" style="width:100%">บันทึกรหัสผ่าน</button>
+    </form>
+    <p class="small" style="margin-top:20px"><a href="/">← กลับหอศิลป์</a></p>
+  </main>
+</body>
+</html>

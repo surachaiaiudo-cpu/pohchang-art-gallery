@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>จัดการนิทรรศการ</title>
+  <link rel="stylesheet" href="/css/app.css">
+  <script type="module" src="/js/manage.js"></script>
+</head>
+<body>
+  <header class="topbar" id="topbar"></header>
+  <main class="page">
+    <div class="page-head">
+      <div><h1 id="ex-title">กำลังโหลด…</h1><div class="small muted" id="ex-sub"></div></div>
+      <div class="row"><a class="btn btn-ghost" id="view-public" target="_blank" rel="noopener">ดูหน้านิทรรศการ</a></div>
+    </div>
+    <div class="stats" id="stats"></div>
+    <div class="tabs" role="tablist" id="tabs">
+      <button role="tab" data-tab="works" aria-controls="p-works" id="t-works">คัดกรองผลงาน</button>
+      <button role="tab" data-tab="panel" aria-controls="p-panel" id="t-panel">ผู้ทรงคุณวุฒิ</button>
+      <button role="tab" data-tab="results" aria-controls="p-results" id="t-results">ผลการพิจารณา</button>
+      <button role="tab" data-tab="settings" aria-controls="p-settings" id="t-settings">ตั้งค่านิทรรศการ</button>
+    </div>
+
+    <!-- Phase 1: curator screening -->
+    <section id="p-works" role="tabpanel" aria-labelledby="t-works">
+      <div class="card row" style="justify-content:space-between">
+        <div class="row" role="group" aria-label="กรองตามสถานะ" id="w-filter">
+          <button class="btn btn-sm" data-status="submitted" aria-pressed="true">รอคัดกรอง</button>
+          <button class="btn btn-ghost btn-sm" data-status="shown" aria-pressed="false">จัดแสดง</button>
+          <button class="btn btn-ghost btn-sm" data-status="rejected" aria-pressed="false">ไม่ผ่าน</button>
+          <button class="btn btn-ghost btn-sm" data-status="all" aria-pressed="false">ทั้งหมด</button>
+        </div>
+        <div class="row">
+          <label class="sr-only" for="w-q">ค้นหา</label><input id="w-q" type="search" placeholder="ค้นหาชื่อผลงาน/ศิลปิน" style="width:220px">
+        </div>
+      </div>
+      <div class="card row" id="bulk" style="justify-content:space-between">
+        <label class="check"><input type="checkbox" id="sel-all"> เลือกทั้งหมดที่แสดง <span class="muted" id="sel-count"></span></label>
+        <div class="row">
+          <button class="btn btn-sm" data-bulk="shown">ผ่านคัดกรอง → จัดแสดง</button>
+          <button class="btn btn-danger btn-sm" data-bulk="rejected">ไม่ผ่าน</button>
+          <button class="btn btn-ghost btn-sm" data-bulk="submitted">กลับไปรอคัดกรอง</button>
+        </div>
+      </div>
+      <div class="works-grid" id="w-grid"></div>
+    </section>
+
+    <!-- Phase 2: expert panel -->
+    <section id="p-panel" role="tabpanel" aria-labelledby="t-panel" hidden>
+      <div class="card">
+        <h2>กติกาการพิจารณา</h2>
+        <form id="rv-settings" novalidate>
+          <div class="grid-3">
+            <div class="field"><label for="rs-panel">จำนวนผู้ทรงคุณวุฒิ</label><input id="rs-panel" type="number" min="1" max="15"></div>
+            <div class="field"><label for="rs-threshold">อนุมัติกี่เสียงจึงได้ badge</label><input id="rs-threshold" type="number" min="1" max="15"></div>
+            <div class="field"><label for="rs-deadline">ปิดการพิจารณา</label><input id="rs-deadline" type="datetime-local"></div>
+          </div>
+          <label class="check"><input type="checkbox" id="rs-open"> เปิดให้ผู้ทรงคุณวุฒิพิจารณา</label>
+          <label class="check"><input type="checkbox" id="rs-blind"> ซ่อนชื่อศิลปินจากผู้ทรงคุณวุฒิ</label>
+          <div class="grid-2">
+            <div class="field"><label for="rs-badge">ข้อความ badge</label><input id="rs-badge" type="text" maxlength="80"></div>
+            <div class="field"><label for="rs-badge-en">ข้อความ badge (ภาษาอังกฤษ)</label><input id="rs-badge-en" type="text" maxlength="80"></div>
+          </div>
+          <button class="btn" type="submit">บันทึกกติกา</button>
+        </form>
+      </div>
+      <div class="card">
+        <h2>เพิ่มผู้ทรงคุณวุฒิ</h2>
+        <form id="rv-add" class="grid-3" novalidate>
+          <div class="field"><label for="ra-name">ชื่อ-นามสกุล</label><input id="ra-name" type="text" required></div>
+          <div class="field"><label for="ra-title">ตำแหน่ง</label><input id="ra-title" type="text" placeholder="เช่น ศิลปินแห่งชาติ"></div>
+          <div class="field"><label for="ra-email">อีเมล (ไม่บังคับ)</label><input id="ra-email" type="email"></div>
+          <div><button class="btn" type="submit">เพิ่มและสร้างลิงก์</button> <span class="error-text" id="ra-err"></span></div>
+        </form>
+        <div id="ra-link" hidden></div>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>ผู้ทรงคุณวุฒิ</th><th>ความคืบหน้า</th><th>เปิดลิงก์ล่าสุด</th><th></th></tr></thead>
+        <tbody id="rv-rows"></tbody>
+      </table></div>
+    </section>
+
+    <section id="p-results" role="tabpanel" aria-labelledby="t-results" hidden>
+      <div class="card row" style="justify-content:space-between">
+        <p style="margin:0" id="res-summary"></p>
+        <button class="btn btn-ghost btn-sm" id="res-csv">ดาวน์โหลด CSV</button>
+      </div>
+      <div class="table-wrap"><table id="res-table"></table></div>
+    </section>
+
+    <section id="p-settings" role="tabpanel" aria-labelledby="t-settings" hidden>
+      <form id="set-form" novalidate>
+        <div class="card">
+          <h2>ข้อมูลนิทรรศการ</h2>
+          <div class="grid-2">
+            <div class="field"><label for="s-title_th">ชื่อนิทรรศการ</label><input id="s-title_th" type="text"></div>
+            <div class="field"><label for="s-title_en">ชื่อภาษาอังกฤษ</label><input id="s-title_en" type="text"></div>
+            <div class="field"><label for="s-subtitle_th">คำโปรย</label><input id="s-subtitle_th" type="text"></div>
+            <div class="field"><label for="s-subtitle_en">คำโปรยภาษาอังกฤษ</label><input id="s-subtitle_en" type="text"></div>
+            <div class="field"><label for="s-venue">สถานที่จัดแสดง</label><input id="s-venue" type="text"></div>
+            <div class="field"><label for="s-status">สถานะ</label><select id="s-status"></select>
+              <span class="hint">"เปิด" = แสดงต่อสาธารณะและรับผลงานตามช่วงวันที่ด้านล่าง</span></div>
+            <div class="field"><label for="s-starts_on">วันเริ่มจัดแสดง</label><input id="s-starts_on" type="date"></div>
+            <div class="field"><label for="s-ends_on">วันสิ้นสุด</label><input id="s-ends_on" type="date"></div>
+          </div>
+          <div class="field"><label for="s-statement_th">บทภัณฑารักษ์</label><textarea id="s-statement_th" rows="6"></textarea></div>
+          <div class="field"><label for="s-statement_en">บทภัณฑารักษ์ (ภาษาอังกฤษ)</label><textarea id="s-statement_en" rows="4"></textarea></div>
+        </div>
+        <div class="card">
+          <h2>การรับผลงาน</h2>
+          <div class="grid-3">
+            <div class="field"><label for="s-opens">เปิดรับ</label><input id="s-opens" type="datetime-local"></div>
+            <div class="field"><label for="s-closes">ปิดรับ</label><input id="s-closes" type="datetime-local"></div>
+            <div class="field"><label for="s-max">ผลงานสูงสุดต่อคน</label><input id="s-max" type="number" min="1" max="20"></div>
+          </div>
+          <p class="small" id="sub-state"></p>
+        </div>
+        <div class="card">
+          <h2>หน้าตานิทรรศการ</h2>
+          <div class="field"><span class="label">ธีม</span><div class="preset-grid" id="presets"></div></div>
+          <div class="grid-3">
+            <div class="field"><label for="s-layout">การจัดวางผลงาน</label><select id="s-layout">
+              <option value="grid">ตาราง (grid)</option><option value="masonry">ก่ออิฐ (masonry)</option><option value="salon">ผนังซาลอน (salon)</option></select></div>
+            <div class="field"><label for="s-font">ฟอนต์หัวเรื่อง</label><select id="s-font"></select></div>
+            <div class="field"><label for="s-ornament">ลวดลายประดับ</label><select id="s-ornament">
+              <option value="none">ไม่มี</option><option value="light">น้อย</option><option value="full">เต็ม</option></select></div>
+          </div>
+          <div class="field"><label for="s-accent">สีหลัก (เว้นว่างเพื่อใช้สีของธีม)</label>
+            <div class="row"><input id="s-accent-pick" type="color" aria-label="เลือกสี"><input id="s-accent" type="text" placeholder="#8b1b1b" style="width:140px">
+            <button class="btn btn-ghost btn-sm" type="button" id="s-accent-clear">ใช้สีของธีม</button></div></div>
+        </div>
+        <p><button class="btn" type="submit">บันทึกการตั้งค่า</button> <span class="error-text" id="set-err"></span></p>
+      </form>
+      <div class="card">
+        <h2>ภาพปก</h2>
+        <div class="row"><img id="hero-img" alt="" style="max-height:140px;border-radius:6px" hidden>
+          <button class="btn btn-ghost" id="hero-pick" type="button">อัปโหลดภาพปก</button>
+          <button class="btn btn-danger btn-sm" id="hero-remove" type="button" hidden>ลบภาพปก</button></div>
+        <div class="hint" id="hero-state"></div>
+      </div>
+      <div class="card">
+        <h2>ที่เก็บรูป (ImageKit ของนิทรรศการนี้)</h2>
+        <p class="small muted">สมัคร ImageKit ฟรี 1 บัญชีต่อนิทรรศการ แล้วคัดลอกค่าจากเมนู Developer options มาใส่ Private key จะถูกเข้ารหัสและไม่แสดงอีก</p>
+        <div id="storage-meter"></div>
+        <form id="ik-form" novalidate>
+          <div class="grid-3">
+            <div class="field"><label for="ik-url">URL endpoint</label><input id="ik-url" type="text" placeholder="https://ik.imagekit.io/xxxx"></div>
+            <div class="field"><label for="ik-pub">Public key</label><input id="ik-pub" type="text" placeholder="public_…"></div>
+            <div class="field"><label for="ik-priv">Private key</label><input id="ik-priv" type="password" placeholder="private_…" autocomplete="off"></div>
+          </div>
+          <button class="btn" type="submit">ตรวจสอบและบันทึก</button> <span class="error-text" id="ik-err"></span>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <div class="drawer-back" id="dback"></div>
+  <aside class="drawer" id="drawer" aria-modal="true" role="dialog" aria-labelledby="d-title">
+    <div class="head"><h2 id="d-title" style="margin:0"></h2><button class="icon-btn" id="d-close" aria-label="ปิด">✕</button></div>
+    <div class="content" id="d-body"></div>
+  </aside>
+  <input type="file" id="picker" accept="image/jpeg,image/png,image/webp" hidden>
+</body>
+</html>

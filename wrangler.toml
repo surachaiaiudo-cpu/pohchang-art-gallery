@@ -1,0 +1,19 @@
+# Art Gallery Platform - one Cloudflare Pages project for every exhibition.
+# Secrets (never in this file) - set with `npx wrangler pages secret put <NAME>`:
+#   APP_ENCRYPTION_KEY         long random string; encrypts each exhibition's ImageKit private key
+#   BOOTSTRAP_ADMIN_EMAIL      first admin account (used only while the users table is empty)
+#   BOOTSTRAP_ADMIN_PASSWORD   its first password (must be changed at first login)
+#   TURNSTILE_SECRET_KEY       optional; enables the anti-spam check on the public submission form
+name = "art-gallery-platform"
+compatibility_date = "2024-09-23"
+pages_build_output_dir = "public"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "art-gallery-platform"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+
+[vars]
+SITE_NAME = "หอศิลป์ออนไลน์"
+# Public Turnstile site key (not secret). Leave empty to disable the widget.
+TURNSTILE_SITE_KEY = ""
