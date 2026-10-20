@@ -33,6 +33,7 @@ function detect() {
 }
 
 export const lang = detect();
+export const locale = LANGS.find((l) => l.code === lang).html;
 
 const FALLBACK = { th: ['th', 'en', 'zh'], en: ['en', 'th', 'zh'], zh: ['zh', 'en', 'th'] };
 
@@ -75,7 +76,7 @@ const D = {
     categoriesLine: 'กลุ่มงาน: {list}', fileNote: 'ภาพผลงานเป็น JPG, PNG หรือ WebP ไฟล์ที่ใหญ่กว่า 10 MB ระบบจะย่อให้อัตโนมัติโดยคงความละเอียดสำหรับพิมพ์',
     artistInfo: 'ข้อมูลศิลปิน', fullName: 'ชื่อ-นามสกุล', nameEn: 'ชื่อ-นามสกุล (ภาษาอังกฤษ)', nameZh: 'ชื่อ-นามสกุล (ภาษาจีน)',
     academicTitle: 'ตำแหน่งทางวิชาการ / คำนำหน้า', academicPh: 'เช่น ผศ., อาจารย์', affiliationField: 'สังกัด / สถาบัน',
-    email: 'อีเมล', emailHint: 'ใช้ติดต่อกลับ ไม่แสดงต่อสาธารณะ', phone: 'โทรศัพท์', notPublic: 'ไม่แสดงต่อสาธารณะ', nationality: 'สัญชาติ',
+    email: 'อีเมล', emailHint: 'ใช้ติดต่อกลับ ไม่แสดงต่อสาธารณะ', phone: 'โทรศัพท์', notPublic: 'ไม่แสดงต่อสาธารณะ', nationality: 'สัญชาติ', pickCountry: '— เลือกสัญชาติ —', errNationality: 'กรุณาเลือกสัญชาติ',
     bio: 'ประวัติโดยย่อ', bioEn: 'ประวัติโดยย่อ (ภาษาอังกฤษ)', bioZh: 'ประวัติโดยย่อ (ภาษาจีน)',
     translations: 'ภาษาอังกฤษและภาษาจีน (ไม่บังคับ)', avatar: 'รูปศิลปิน (ไม่บังคับ)', tapPhoto: 'แตะเพื่อเลือกรูป',
     workN: 'ผลงานชิ้นที่', image: 'ภาพผลงาน', tapImage: 'แตะเพื่อเลือกไฟล์ภาพ (JPG, PNG หรือ WebP)',
@@ -130,7 +131,7 @@ const D = {
     categoriesLine: 'Categories: {list}', fileNote: 'Images in JPG, PNG or WebP. Files over 10 MB are resized automatically while keeping print resolution.',
     artistInfo: 'About the artist', fullName: 'Full name (as it should appear)', nameEn: 'Name in English', nameZh: 'Name in Chinese',
     academicTitle: 'Academic title / prefix', academicPh: 'e.g. Asst. Prof., Dr.', affiliationField: 'Affiliation / institution',
-    email: 'Email', emailHint: 'For contacting you only; never shown publicly.', phone: 'Phone', notPublic: 'Never shown publicly.', nationality: 'Nationality',
+    email: 'Email', emailHint: 'For contacting you only; never shown publicly.', phone: 'Phone', notPublic: 'Never shown publicly.', nationality: 'Nationality', pickCountry: '— Choose a country —', errNationality: 'Please choose your nationality.',
     bio: 'Short biography', bioEn: 'Short biography (English)', bioZh: 'Short biography (Chinese)',
     translations: 'English and Chinese versions (optional)', avatar: 'Artist photo (optional)', tapPhoto: 'Tap to choose a photo',
     workN: 'Work', image: 'Image of the work', tapImage: 'Tap to choose an image (JPG, PNG or WebP)',
@@ -184,7 +185,7 @@ const D = {
     categoriesLine: '作品类别：{list}', fileNote: '图片格式为 JPG、PNG 或 WebP。超过 10 MB 的文件会自动缩小，并保留印刷所需的清晰度。',
     artistInfo: '艺术家信息', fullName: '姓名（展出时使用）', nameEn: '英文姓名', nameZh: '中文姓名',
     academicTitle: '职称 / 称谓', academicPh: '例如：副教授、讲师', affiliationField: '所属单位 / 院校',
-    email: '电子邮箱', emailHint: '仅用于联系，不会公开。', phone: '电话', notPublic: '不会公开。', nationality: '国籍',
+    email: '电子邮箱', emailHint: '仅用于联系，不会公开。', phone: '电话', notPublic: '不会公开。', nationality: '国籍', pickCountry: '— 请选择国籍 —', errNationality: '请选择国籍。',
     bio: '个人简介', bioEn: '个人简介（英文）', bioZh: '个人简介（中文）',
     translations: '英文与中文版本（选填）', avatar: '艺术家照片（选填）', tapPhoto: '点击选择照片',
     workN: '作品', image: '作品图片', tapImage: '点击选择图片（JPG、PNG 或 WebP）',

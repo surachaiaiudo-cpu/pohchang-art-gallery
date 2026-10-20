@@ -1,6 +1,7 @@
 // Small schema upgrades applied automatically, once per Worker isolate, so a deploy never
 // depends on someone remembering to run a SQL file. Each step must be safe to retry.
 import { DEFAULT_CATEGORIES, DEFAULT_CATEGORIES_V1 } from './categories.js';
+import { COUNTRY_ALIASES } from '../../public/js/countries.js';
 
 const STEPS = [
   {
@@ -59,6 +60,18 @@ const STEPS = [
       "ALTER TABLE artists ADD COLUMN bio_zh TEXT NOT NULL DEFAULT ''",
       ["UPDATE exhibitions SET categories = ? WHERE categories = ?", DEFAULT_CATEGORIES, DEFAULT_CATEGORIES_V1]
     ]
+  },
+  {
+    // Nationality became a country code: turn the free text typed so far ("Thailand", "ไทย") into codes.
+    // Text that matches no known spelling is kept as typed for the curator to fix.
+    name: '0006_nationality_codes',
+    needed: async (db) => !!(await db.prepare(
+      "SELECT 1 AS x FROM artists WHERE nationality != '' AND nationality NOT GLOB '[A-Z][A-Z]' LIMIT 1"
+    ).first()),
+    sql: Object.entries(COUNTRY_ALIASES).map(([code, names]) => [
+      `UPDATE artists SET nationality = ? WHERE nationality NOT GLOB '[A-Z][A-Z]'
+          AND lower(trim(nationality)) IN (${names.map(() => '?').join(',')})`, code, ...names
+    ])
   }
 ];
 

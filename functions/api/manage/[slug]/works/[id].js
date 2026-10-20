@@ -32,7 +32,6 @@ const ARTIST_TEXT = {
   academic_title_th: { field: 'ตำแหน่งทางวิชาการ', max: 200 },
   academic_title_en: { field: 'ตำแหน่งทางวิชาการภาษาอังกฤษ', max: 200 },
   phone: { field: 'โทรศัพท์', max: 40 },
-  nationality: { field: 'สัญชาติ', max: 80 },
   affiliation: { field: 'สังกัด', max: 300 }
 };
 
@@ -80,6 +79,7 @@ export const onRequestPut = handle(async (context) => {
     const a = {};
     for (const [k, opts] of Object.entries(ARTIST_TEXT)) if (b.artist[k] !== undefined) a[k] = v.text(b.artist[k], opts);
     if (b.artist.email !== undefined) a.email = v.email(b.artist.email);
+    if (b.artist.nationality) a.nationality = v.country(b.artist.nationality);
     if (b.artist.bio_th !== undefined) a.bio_th = v.longText(b.artist.bio_th, { field: 'ประวัติศิลปิน' });
     if (b.artist.bio_en !== undefined) a.bio_en = v.longText(b.artist.bio_en, { field: 'ประวัติศิลปินภาษาอังกฤษ' });
     if (b.artist.bio_zh !== undefined) a.bio_zh = v.longText(b.artist.bio_zh, { field: 'ประวัติศิลปินภาษาจีน' });

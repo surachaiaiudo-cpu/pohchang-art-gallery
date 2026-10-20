@@ -26,7 +26,7 @@ export const onRequestPost = handle(async ({ request, env, params }) => {
     academic_title_th: v.text(a.academic_title_th, { field: 'ตำแหน่งทางวิชาการ', max: 200 }),
     email: v.email(a.email, { required: true }),
     phone: v.text(a.phone, { field: 'โทรศัพท์', max: 40 }),
-    nationality: v.text(a.nationality, { field: 'สัญชาติ', max: 80 }) || 'Thailand',
+    nationality: v.country(a.nationality, { required: true }),
     affiliation: v.text(a.affiliation, { field: 'สังกัด', max: 300 }),
     bio_th: v.longText(a.bio_th, { field: 'ประวัติ', max: 6000 }),
     bio_en: v.longText(a.bio_en, { field: 'ประวัติภาษาอังกฤษ', max: 6000 }),

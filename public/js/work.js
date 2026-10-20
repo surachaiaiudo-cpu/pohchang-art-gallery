@@ -1,5 +1,6 @@
 import { api, esc, img, applyTheme, paras, badgeHtml, icons, slugFromPath } from './core.js';
-import { t, pick, pickOther, catLabel, applyStatic, mountSwitcher, localError } from './i18n.js';
+import { t, pick, pickOther, catLabel, applyStatic, mountSwitcher, localError, locale } from './i18n.js';
+import { countryName } from './countries.js';
 
 applyStatic();
 mountSwitcher(document.getElementById('lang'));
@@ -42,6 +43,7 @@ async function main() {
           ${fact(t('size'), w.dimensions)}
           ${fact(t('year'), w.year_created)}
           ${fact(t('affiliation'), w.affiliation)}
+          ${fact(t('nationality'), countryName(w.nationality, locale))}
         </dl>
         ${w.video_url ? `<p><a class="btn btn-ghost" href="${esc(w.video_url)}" target="_blank" rel="noopener noreferrer">${esc(t('watchVideo'))} ↗</a></p>` : ''}
         ${concept ? `<h2 style="font-size:1.15rem">${esc(t('concept'))}</h2>${paras(concept)}` : ''}

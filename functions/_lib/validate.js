@@ -1,6 +1,7 @@
 // Input validation. Text is stored as typed (no look-alike replacements); every page escapes
 // on output instead, so names with quotes or < > display correctly and still cannot inject HTML.
 import { bad } from './http.js';
+import { isCountryCode } from '../../public/js/countries.js';
 
 // Remove control characters except tab and newline.
 const CONTROL = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g;
@@ -70,6 +71,14 @@ export function httpsUrl(value, { field = 'URL' } = {}) {
   try { u = new URL(v); } catch { throw bad(`${field} ไม่ถูกต้อง`); }
   if (u.protocol !== 'https:') throw bad(`${field} ต้องขึ้นต้นด้วย https://`);
   return u.toString();
+}
+
+// ISO 3166-1 alpha-2 code from the nationality list (e.g. "TH").
+export function country(value, { field = 'สัญชาติ', required = false } = {}) {
+  const v = text(value, { field, max: 2 }).toUpperCase();
+  if (!v && !required) return '';
+  if (!isCountryCode(v)) throw bad(`กรุณาเลือก${field}จากรายการ`);
+  return v;
 }
 
 export function color(value, { field = 'สี' } = {}) {

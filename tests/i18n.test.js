@@ -30,3 +30,23 @@ test('dates and category labels follow the language', () => {
   assert.equal(i18n.t('workOf', { i: 2, n: 5 }), 'Work 2 of 5');
   assert.equal(i18n.localError('ไม่พบผลงาน'), 'Something went wrong: ไม่พบผลงาน');
 });
+
+test('nationality list: codes only, names from the browser, old free text converted', async () => {
+  const c = await import('../public/js/countries.js');
+  assert.equal(c.COUNTRY_CODES.length, new Set(c.COUNTRY_CODES).size);
+  assert.ok(c.isCountryCode('TH') && c.isCountryCode('CN') && !c.isCountryCode('Thailand') && !c.isCountryCode('th'));
+  assert.equal(c.countryName('TH', 'en'), 'Thailand');
+  assert.equal(c.countryName('TH', 'th'), 'ไทย');
+  assert.equal(c.countryName('CN', 'zh-Hans'), '中国');
+  assert.equal(c.countryName('Thailand (old text)', 'en'), 'Thailand (old text)');
+  const html = c.countryOptions('en', 'CN');
+  assert.ok(html.startsWith('<option value="TH">Thailand</option><option value="CN" selected>China</option>'));
+  for (const [code, names] of Object.entries(c.COUNTRY_ALIASES)) {
+    assert.ok(c.isCountryCode(code), code);
+    for (const n of names) assert.equal(n, n.toLowerCase(), `${code}: aliases must be lower case`);
+  }
+  const v = await import('../functions/_lib/validate.js');
+  assert.equal(v.country('th'), 'TH');
+  assert.throws(() => v.country('Thailand'));
+  assert.throws(() => v.country('', { required: true }));
+});

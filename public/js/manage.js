@@ -2,6 +2,7 @@ import { api, esc, img, bytes, thDate, toast, toLocalInput, fromLocalInput, slug
 import { requireLogin, tabs, copyText, STATUS_TH } from './backoffice.js';
 import { PRESETS } from './presets.js';
 import { checkImageFile, uploadImage, fitForUpload } from './upload.js';
+import { countryOptions, isCountryCode } from './countries.js';
 
 const slug = slugFromPath(1);
 const M = `/api/manage/${encodeURIComponent(slug)}`;
@@ -157,7 +158,10 @@ function workEditor(w) {
       <div class="grid-2">
         ${f('a-name_th', 'ชื่อ', w.artist_name_th)}${f('a-name_en', 'ชื่อภาษาอังกฤษ', w.artist_name_en)}${f('a-name_zh', 'ชื่อภาษาจีน', w.artist_name_zh)}
         ${f('a-academic_title_th', 'ตำแหน่งทางวิชาการ', w.academic_title_th)}${f('a-affiliation', 'สังกัด', w.affiliation)}
-        ${f('a-email', 'อีเมล', w.artist_email, 'email')}${f('a-phone', 'โทรศัพท์', w.artist_phone)}</div>
+        ${f('a-email', 'อีเมล', w.artist_email, 'email')}${f('a-phone', 'โทรศัพท์', w.artist_phone)}
+        <div class="field"><label for="we-a-nationality">สัญชาติ</label><select id="we-a-nationality">
+          ${isCountryCode(w.nationality) ? '' : `<option value="" selected>${w.nationality ? `ข้อความเดิม: ${esc(w.nationality)} (กรุณาเลือกใหม่)` : '— ไม่ระบุ —'}</option>`}
+          ${countryOptions('th', w.nationality, esc)}</select></div></div>
       <p class="small muted">ส่งเมื่อ ${esc(thDate(w.created_at.replace(' ', 'T') + 'Z', true))}</p>
       <div class="row"><button class="btn" type="submit">บันทึก</button>
         <button class="btn btn-danger" type="button" id="we-delete">ลบผลงาน</button> <span class="error-text" id="we-err"></span></div>
@@ -191,7 +195,7 @@ function workEditor(w) {
           dimensions: val('dimensions'), year_created: val('year_created'), zone: val('zone'), display_order: Number(val('display_order') || 0),
           concept_th: val('concept_th'), concept_en: val('concept_en'), concept_zh: val('concept_zh'),
           artist: { name_th: val('a-name_th'), name_en: val('a-name_en'), name_zh: val('a-name_zh'), academic_title_th: val('a-academic_title_th'),
-            affiliation: val('a-affiliation'), email: val('a-email'), phone: val('a-phone') }
+            affiliation: val('a-affiliation'), email: val('a-email'), phone: val('a-phone'), nationality: val('a-nationality') }
         }
       });
       toast('บันทึกแล้ว', 'ok');

@@ -1,6 +1,7 @@
 import { api, esc, applyTheme, toast, icons, slugFromPath } from './core.js';
 import { imageProblem, uploadImage, fitForUpload } from './upload.js';
-import { t, pick, fmtDate, catName, subName, applyStatic, mountSwitcher, localError, lang } from './i18n.js';
+import { t, pick, fmtDate, catName, subName, applyStatic, mountSwitcher, localError, lang, locale } from './i18n.js';
+import { countryOptions } from './countries.js';
 
 applyStatic();
 mountSwitcher(document.getElementById('lang'));
@@ -179,6 +180,7 @@ function collect() {
 
 function validate({ artist, works }) {
   if (!artist.name_th) return ['name_th', t('errName')];
+  if (!artist.nationality) return ['nationality', t('errNationality')];
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(artist.email)) return ['email', t('errEmail')];
   const blocks = [...document.querySelectorAll('.work-block')];
   const cats = ex.categories || [];
@@ -251,6 +253,7 @@ async function main() {
       ${ex.submission_closes_at ? ` · ${t('closesAt', { d: esc(fmtDate(ex.submission_closes_at, true)) })}` : ''}</p>
       ${cats.length ? `<p style="margin:6px 0 0">${esc(t('categoriesLine', { list: catList }))}</p>` : ''}
       <p style="margin:6px 0 0" class="muted">${esc(t('fileNote'))}</p></div>`;
+    $('nationality').innerHTML = `<option value="">${esc(t('pickCountry'))}</option>${countryOptions(locale, '', esc)}`;
     $('form').hidden = false;
     addWork();
     if (cfg.turnstileSiteKey) setupTurnstile(cfg.turnstileSiteKey);
