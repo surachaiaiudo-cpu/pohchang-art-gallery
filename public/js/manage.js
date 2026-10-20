@@ -105,7 +105,7 @@ function renderWorks() {
       <button class="thumb" data-open="${w.id}" aria-label="เปิดรายละเอียด ${esc(w.title_th)}"><img src="${esc(img(w.image_url, 400))}" alt="" loading="lazy"></button>
       <div class="body">
         <div class="t">${esc(w.title_th)}</div>
-        <div class="small muted">${flagImg(w.nationality, { alt: countryName(w.nationality, 'th') }, esc)} ${esc([w.academic_title_th, w.artist_name_th].filter(Boolean).join(' '))}</div>
+        <div class="small muted">${flagImg(w.nationality, { alt: countryName(w.nationality, 'th') }, esc)}${esc([w.academic_title_th, w.artist_name_th].filter(Boolean).join(' '))}</div>
         <div class="small muted">${esc(w.technique_th)}${w.dimensions ? ` · ${esc(w.dimensions)}` : ''}</div>
         ${catLabel(w) ? `<div class="small"><span class="tag">${esc(catLabel(w))}</span>${w.video_url ? ' <span class="small muted">มีวิดีโอ</span>' : ''}</div>` : ''}
         <div class="row">${statusTag(w)} ${reviewTag(w)}

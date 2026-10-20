@@ -259,6 +259,7 @@ async function main() {
     $('nationality').addEventListener('change', (e) => {
       const url = emoji ? '' : flagUrl(e.target.value);
       $('nat-flag').hidden = !url;
+      $('nat-wrap').classList.toggle('has-flag', !!url);
       if (url) $('nat-flag').src = url;
     });
     $('form').hidden = false;

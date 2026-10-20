@@ -57,7 +57,7 @@ function renderWorks() {
       </div>
       <div class="cap">
         <p class="title">${esc(pick(w, 'title'))}</p>
-        <p class="artist">${flagImg(w.nationality, { alt: countryName(w.nationality, locale) }, esc)}${flagImg(w.nationality) ? ' ' : ''}${esc([w.academic_title_th, pick(w, 'artist_name')].filter(Boolean).join(' '))}</p>
+        <p class="artist">${flagImg(w.nationality, { alt: countryName(w.nationality, locale) }, esc)}${esc([w.academic_title_th, pick(w, 'artist_name')].filter(Boolean).join(' '))}</p>
         ${w.category ? `<p class="artist" style="opacity:.75">${esc(catLabel(cats, w))}</p>` : ''}
       </div>
     </a>`).join('');

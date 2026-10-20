@@ -187,8 +187,13 @@ details.translations > summary { cursor: pointer; font-weight: 600; font-size: .
 details.translations[open] > summary { margin-bottom: 10px; }
 :lang(zh-Hans) body, body:lang(zh-Hans) { line-break: strict; }
 
-/* Flags */
-.flag { width: 1.34em; height: 1em; object-fit: cover; vertical-align: -0.14em; border-radius: 2px; box-shadow: 0 0 0 1px rgba(0, 0, 0, .14); }
-.flag-lg { width: 32px; height: 24px; flex: none; }
-.with-flag { display: flex; align-items: center; gap: 10px; }
-.with-flag select { flex: 1; min-width: 0; }
+/* Flags: always a small inline image right before the country or artist name. */
+img.flag, .work-card img.flag, [data-layout] .work-card img.flag, .work-card:hover img.flag {
+  display: inline-block; width: 1.34em; height: 1em; aspect-ratio: auto; max-width: none;
+  object-fit: cover; vertical-align: -0.14em; margin-right: .35em; border-radius: 2px;
+  background: none; transform: none; transition: none; box-shadow: 0 0 0 1px rgba(0, 0, 0, .14);
+}
+/* Nationality picker: the chosen flag sits inside the box, in front of the country name. */
+.with-flag { position: relative; }
+.with-flag img.flag { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); margin: 0; pointer-events: none; width: 24px; height: 18px; }
+.with-flag.has-flag select { padding-left: 46px; }
