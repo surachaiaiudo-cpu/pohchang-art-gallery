@@ -264,16 +264,22 @@ function fillSettings() {
   $('hero-img').hidden = !ex.hero_url;
   $('hero-remove').hidden = !ex.hero_url;
   if (ex.hero_url) $('hero-img').src = img(ex.hero_url, 400);
-  $('cl-cloud').value = ex.cloudinary_cloud_name || '';
+  $('cl-cloud').value = ex.cloudinary_cloud_name || 'uukpgvmz';
+  $('cl-preset').value = ex.cloudinary_upload_preset || '20workshop';
   $('cl-key').value = ex.cloudinary_api_key || '';
-  renderStorage(null);
+  renderStorage(null, '');
   loadStorage();
 }
 
-function renderStorage(u) {
+function renderStorage(u, warning = '') {
   const ex = S.ex;
   const own = `ผลงานของนิทรรศการนี้ใช้พื้นที่ ${bytes(ex.storage_bytes)}`;
-  let html = `<p class="small">${ex.has_private_key ? `เชื่อมต่อแล้ว: <strong>${esc(ex.cloudinary_cloud_name)}</strong>` : '<strong>ยังไม่ได้เชื่อมต่อ</strong> — ต้องตั้งค่าก่อนเปิดรับผลงาน'}</p>`;
+  const connected = ex.has_storage || (ex.cloudinary_cloud_name && (ex.cloudinary_upload_preset || ex.has_private_key));
+  const detail = ex.cloudinary_upload_preset ? ` (preset: <code>${esc(ex.cloudinary_upload_preset)}</code>)` : '';
+  let html = `<p class="small">${connected ? `เชื่อมต่อแล้ว: <strong>${esc(ex.cloudinary_cloud_name)}</strong>${detail}` : '<strong>ยังไม่ได้เชื่อมต่อ</strong> — ต้องตั้งค่าก่อนเปิดรับผลงาน'}</p>`;
+  if (warning) {
+    html += `<div class="card" style="background:#fffbe8;border-color:#ecd98d;margin:8px 0"><p class="small" style="margin:0">${esc(warning)}</p></div>`;
+  }
   if (u && u.creditsLimit) {
     const pct = Math.min(100, Math.round(u.creditsPercent ?? (u.creditsUsed / u.creditsLimit) * 100));
     html += `<div class="meter ${pct > 90 ? 'bad' : pct > 75 ? 'warn' : ''}"><span style="width:${pct}%"></span></div>
@@ -285,8 +291,8 @@ function renderStorage(u) {
 }
 
 async function loadStorage() {
-  if (!S.ex.has_private_key) return;
-  try { const d = await api(`${M}/storage`); renderStorage(d.usage); } catch { /* usage is optional */ }
+  if (!S.ex.has_storage && !S.ex.has_private_key) return;
+  try { const d = await api(`${M}/storage`); renderStorage(d.usage, d.warning); } catch { /* usage is optional */ }
 }
 
 let chosenPreset = '';
@@ -416,12 +422,20 @@ $('cl-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   $('cl-err').textContent = '';
   try {
-    const d = await api(`${M}/storage`, { method: 'PUT', body: { cloud_name: $('cl-cloud').value.trim(), api_key: $('cl-key').value.trim(), api_secret: $('cl-secret').value.trim() } });
+    const d = await api(`${M}/storage`, {
+      method: 'PUT',
+      body: {
+        cloud_name: $('cl-cloud').value.trim(),
+        upload_preset: $('cl-preset').value.trim(),
+        api_key: $('cl-key').value.trim(),
+        api_secret: $('cl-secret').value.trim()
+      }
+    });
     $('cl-secret').value = '';
-    toast('เชื่อมต่อ Cloudinary แล้ว', 'ok');
+    toast('บันทึกการตั้งค่า Cloudinary แล้ว', 'ok');
     await loadOverview();
     fillSettings();
-    renderStorage(d.usage);
+    renderStorage(d.usage, d.warning);
   } catch (err) { $('cl-err').textContent = err.message; }
 });
 $('hero-pick').addEventListener('click', () => pickImage(async (file) => {

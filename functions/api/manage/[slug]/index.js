@@ -1,6 +1,6 @@
 import { handle, json, readJson, bad } from '../../../_lib/http.js';
 import { actorOf } from '../../../_lib/auth.js';
-import { requireManager, audit, parseOverrides, submissionWindow } from '../../../_lib/exhibitions.js';
+import { requireManager, hasStorage, audit, parseOverrides, submissionWindow } from '../../../_lib/exhibitions.js';
 import { PRESETS, HEADING_FONTS, ORNAMENTS } from '../../../_lib/themes.js';
 import { recompute, reviewOpen } from '../../../_lib/review.js';
 import * as v from '../../../_lib/validate.js';
@@ -10,6 +10,7 @@ function managerView(ex) {
   return {
     ...rest,
     theme_overrides: parseOverrides(ex),
+    has_storage: hasStorage(ex),
     has_private_key: !!cloudinary_api_secret_enc,
     submission: submissionWindow(ex),
     review_is_open: reviewOpen(ex)

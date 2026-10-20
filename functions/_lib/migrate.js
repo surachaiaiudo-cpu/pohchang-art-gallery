@@ -12,6 +12,18 @@ const STEPS = [
       'ALTER TABLE exhibitions RENAME COLUMN imagekit_public_key TO cloudinary_api_key',
       'ALTER TABLE exhibitions RENAME COLUMN imagekit_private_enc TO cloudinary_api_secret_enc'
     ]
+  },
+  {
+    // 0003_upload_preset.sql: support Cloudinary unsigned upload preset and default to uukpgvmz / 20workshop.
+    name: '0003_upload_preset',
+    needed: async (db) => !(await db.prepare(
+      "SELECT 1 AS x FROM pragma_table_info('exhibitions') WHERE name = 'cloudinary_upload_preset'"
+    ).first()),
+    sql: [
+      "ALTER TABLE exhibitions ADD COLUMN cloudinary_upload_preset TEXT NOT NULL DEFAULT '20workshop'",
+      "UPDATE exhibitions SET cloudinary_cloud_name = 'uukpgvmz' WHERE cloudinary_cloud_name = ''",
+      "UPDATE exhibitions SET cloudinary_upload_preset = '20workshop' WHERE cloudinary_upload_preset = ''"
+    ]
   }
 ];
 

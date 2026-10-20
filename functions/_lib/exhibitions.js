@@ -38,6 +38,10 @@ export async function requireManager(context) {
   return { user, ex };
 }
 
+export function hasStorage(ex) {
+  return !!(ex.cloudinary_cloud_name && (ex.cloudinary_upload_preset || ex.cloudinary_api_secret_enc));
+}
+
 export function submissionWindow(ex, at = Date.now()) {
   if (ex.status !== 'open') return { open: false, reason: 'นิทรรศการนี้ไม่ได้เปิดรับผลงาน' };
   if (ex.submission_opens_at && at < Date.parse(ex.submission_opens_at)) {
@@ -46,7 +50,7 @@ export function submissionWindow(ex, at = Date.now()) {
   if (ex.submission_closes_at && at > Date.parse(ex.submission_closes_at)) {
     return { open: false, reason: 'ปิดรับผลงานแล้ว' };
   }
-  if (!ex.cloudinary_api_secret_enc) return { open: false, reason: 'นิทรรศการยังไม่ได้ตั้งค่าที่เก็บรูป' };
+  if (!hasStorage(ex)) return { open: false, reason: 'นิทรรศการยังไม่ได้ตั้งค่าที่เก็บรูป' };
   return { open: true, reason: '' };
 }
 

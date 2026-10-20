@@ -1,13 +1,13 @@
-// Image storage on Cloudinary. Each exhibition keeps its own cloud name + API key, and the
-// API secret encrypted in D1 (several exhibitions may share one Cloudinary account).
-// The secret never leaves the server: it signs short-lived browser uploads, verifies the
-// signature Cloudinary returns after an upload, deletes files and reads the usage report.
+// Image storage on Cloudinary. Each exhibition keeps its own cloud name + upload preset (unsigned)
+// or API key + encrypted API secret in D1 (several exhibitions may share one Cloudinary account).
 import { decryptSecret, sha1Hex, timingSafeEqual } from './crypto.js';
 import { HttpError, bad } from './http.js';
 
+export const DEFAULT_CLOUD_NAME = 'uukpgvmz';
+export const DEFAULT_UPLOAD_PRESET = '20workshop';
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // Cloudinary free plan: 10 MB per image
 export const MAX_PIXELS = 25e6;                   // and 25 megapixels
-const FORMATS = ['jpg', 'png', 'webp'];
+const FORMATS = ['jpg', 'jpeg', 'png', 'webp'];
 
 const isFake = (env) => env.DEV_FAKE_STORAGE === '1';
 const api = (cloud, path) => `https://api.cloudinary.com/v1_1/${encodeURIComponent(cloud)}${path}`;
@@ -34,49 +34,67 @@ export function folderFor(ex, kind) {
   return `${ex.slug}/${sub}`;
 }
 
-// Everything the browser needs for one signed upload straight to Cloudinary (valid ~1 hour).
+// Everything the browser needs for one direct upload straight to Cloudinary.
+// Uses signed upload when API secret is configured, or unsigned upload_preset otherwise.
 export async function uploadAuth(ex, env, kind) {
   const folder = folderFor(ex, kind);
   if (isFake(env)) return { fake: true, folder, maxBytes: MAX_UPLOAD_BYTES, maxPixels: MAX_PIXELS };
-  const params = { allowed_formats: FORMATS.join(','), folder, timestamp: Math.floor(Date.now() / 1000) };
+  const cloudName = ex.cloudinary_cloud_name || DEFAULT_CLOUD_NAME;
+  if (ex.cloudinary_api_secret_enc && ex.cloudinary_api_key) {
+    const params = { allowed_formats: 'jpg,png,webp', folder, timestamp: Math.floor(Date.now() / 1000) };
+    return {
+      cloudName,
+      apiKey: ex.cloudinary_api_key,
+      ...params,
+      signature: await signParams(params, await secretOf(ex, env)),
+      maxBytes: MAX_UPLOAD_BYTES,
+      maxPixels: MAX_PIXELS
+    };
+  }
+  const uploadPreset = ex.cloudinary_upload_preset || DEFAULT_UPLOAD_PRESET;
+  if (!cloudName || !uploadPreset) throw new HttpError(409, 'นิทรรศการนี้ยังไม่ได้ตั้งค่า Cloudinary');
   return {
-    cloudName: ex.cloudinary_cloud_name,
-    apiKey: ex.cloudinary_api_key,
-    ...params,
-    signature: await signParams(params, await secretOf(ex, env)),
+    cloudName,
+    uploadPreset,
+    folder,
     maxBytes: MAX_UPLOAD_BYTES,
     maxPixels: MAX_PIXELS
   };
 }
 
 // The browser hands back what Cloudinary returned: { public_id, version, signature, format, bytes, width, height }.
-// Cloudinary signs public_id + version with our secret, so a valid signature proves the upload is real.
 export async function verifyUploadedFile(ex, env, file, kind) {
   const f = file && typeof file === 'object' ? file : {};
   const folder = folderFor(ex, kind);
   const publicId = String(f.public_id || '');
-  if (!/^[A-Za-z0-9_\-/.]{3,255}$/.test(publicId) || publicId.includes('..')) throw bad('รหัสไฟล์ไม่ถูกต้อง');
-  if (!publicId.startsWith(`${folder}/`)) throw bad('ไฟล์ไม่ได้อยู่ในโฟลเดอร์ของนิทรรศการนี้');
+  if (!/^[A-Za-z0-9_\-/.]{1,255}$/.test(publicId) || publicId.includes('..')) throw bad('รหัสไฟล์ไม่ถูกต้อง');
   const size = Number(f.bytes) || 0, width = Number(f.width) || 0, height = Number(f.height) || 0;
   if (isFake(env)) {
+    if (!publicId.startsWith(`${folder}/`)) throw bad('ไฟล์ไม่ได้อยู่ในโฟลเดอร์ของนิทรรศการนี้');
     return { fileId: publicId, url: `/api/dev/placeholder?seed=${encodeURIComponent(publicId)}`, size: size || 1200000, width: width || 1600, height: height || 1200 };
   }
   const version = String(f.version || '');
   if (!/^\d{1,12}$/.test(version)) throw bad('ข้อมูลไฟล์ไม่ครบ กรุณาอัปโหลดใหม่');
-  const format = String(f.format || '').toLowerCase();
-  if (!FORMATS.includes(format)) throw bad('ไฟล์ต้องเป็น JPG, PNG หรือ WebP');
-  const expected = await sha1Hex(`public_id=${publicId}&version=${version}${await secretOf(ex, env)}`);
-  if (!timingSafeEqual(String(f.signature || ''), expected)) throw bad('ยืนยันไฟล์ที่อัปโหลดไม่สำเร็จ กรุณาอัปโหลดใหม่');
+  const rawFormat = String(f.format || '').toLowerCase();
+  if (!FORMATS.includes(rawFormat)) throw bad('ไฟล์ต้องเป็น JPG, PNG หรือ WebP');
+  const format = rawFormat === 'jpeg' ? 'jpg' : rawFormat;
+  const cloudName = ex.cloudinary_cloud_name || DEFAULT_CLOUD_NAME;
+
+  if (ex.cloudinary_api_secret_enc) {
+    if (!publicId.startsWith(`${folder}/`)) throw bad('ไฟล์ไม่ได้อยู่ในโฟลเดอร์ของนิทรรศการนี้');
+    const expected = await sha1Hex(`public_id=${publicId}&version=${version}${await secretOf(ex, env)}`);
+    if (!timingSafeEqual(String(f.signature || ''), expected)) throw bad('ยืนยันไฟล์ที่อัปโหลดไม่สำเร็จ กรุณาอัปโหลดใหม่');
+  }
   return {
     fileId: publicId,
-    url: `https://res.cloudinary.com/${ex.cloudinary_cloud_name}/image/upload/v${version}/${publicId}.${format}`,
+    url: `https://res.cloudinary.com/${cloudName}/image/upload/v${version}/${publicId}.${format}`,
     size, width, height
   };
 }
 
 // Best effort: a failed delete is reported, never fatal.
 export async function deleteFile(ex, env, publicId) {
-  if (!publicId || isFake(env)) return { skipped: true };
+  if (!publicId || isFake(env) || !ex.cloudinary_api_secret_enc || !ex.cloudinary_api_key) return { skipped: true };
   try {
     const params = { invalidate: 'true', public_id: publicId, timestamp: Math.floor(Date.now() / 1000) };
     const form = new FormData();
@@ -91,6 +109,33 @@ export async function deleteFile(ex, env, publicId) {
   }
 }
 
+// Probe Cloudinary with cloud_name + upload_preset (no file) to verify both exist and check unsigned status.
+export async function checkUploadPreset(cloudName, uploadPreset, env) {
+  if (isFake(env)) return { unsignedReady: true, warning: '' };
+  try {
+    const form = new FormData();
+    form.append('upload_preset', uploadPreset);
+    const res = await fetch(api(cloudName, '/image/upload'), { method: 'POST', body: form });
+    const cldErr = (res.headers.get('x-cld-error') || '').toLowerCase();
+    if (cldErr.includes('unknown api key') || cldErr.includes('invalid cloud_name')) {
+      throw bad(`ไม่พบ Cloud name "${cloudName}" ใน Cloudinary`);
+    }
+    if (cldErr.includes('upload preset not found')) {
+      throw bad(`ไม่พบ Upload preset "${uploadPreset}" ในบัญชี ${cloudName}`);
+    }
+    if (cldErr.includes('whitelisted for unsigned')) {
+      return {
+        unsignedReady: false,
+        warning: `พบ Upload preset "${uploadPreset}" แล้ว แต่ใน Cloudinary ยังตั้งเป็น Signed — กรุณาไปที่ Cloudinary Console → Settings → Upload → Upload presets → "${uploadPreset}" แล้วเปลี่ยน Signing Mode เป็น Unsigned เพื่อให้ผู้ส่งผลงานอัปโหลดได้โดยไม่ต้องใช้ API Secret`
+      };
+    }
+    return { unsignedReady: true, warning: '' };
+  } catch (err) {
+    if (err instanceof HttpError) throw err;
+    return { unsignedReady: true, warning: '' };
+  }
+}
+
 // Account usage (also proves the credentials work). Uses the Admin API (500 calls/hour on free).
 export async function usage(cloudName, apiKey, apiSecret, env) {
   if (isFake(env)) {
@@ -102,6 +147,6 @@ export async function usage(cloudName, apiKey, apiSecret, env) {
 }
 
 export async function usageFor(ex, env) {
-  if (!ex.cloudinary_api_secret_enc) return null;
+  if (!ex.cloudinary_api_secret_enc || !ex.cloudinary_api_key) return null;
   return usage(ex.cloudinary_cloud_name, ex.cloudinary_api_key, await secretOf(ex, env), env);
 }

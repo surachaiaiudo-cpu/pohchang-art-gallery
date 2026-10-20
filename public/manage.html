@@ -142,13 +142,14 @@
       </div>
       <div class="card">
         <h2>ที่เก็บรูป (Cloudinary)</h2>
-        <p class="small muted">เข้า Cloudinary Console → Settings → API Keys แล้วคัดลอก Cloud name, API Key และ API Secret มาใส่ ใช้บัญชีเดียวกันได้หลายนิทรรศการ ระบบแยกไฟล์ตามโฟลเดอร์ของแต่ละงาน API Secret จะถูกเข้ารหัสและไม่แสดงอีก</p>
+        <p class="small muted">ใช้ Cloud name (เช่น <code>uukpgvmz</code>) คู่กับ Upload preset แบบ Unsigned (เช่น <code>20workshop</code>) ได้ทันที หรือใส่ API Key + API Secret เพิ่มเติมหากต้องการดูเครดิตและลบไฟล์อัตโนมัติ</p>
         <div id="storage-meter"></div>
         <form id="cl-form" novalidate>
-          <div class="grid-3">
-            <div class="field"><label for="cl-cloud">Cloud name</label><input id="cl-cloud" type="text" autocomplete="off"></div>
-            <div class="field"><label for="cl-key">API Key</label><input id="cl-key" type="text" inputmode="numeric" autocomplete="off"></div>
-            <div class="field"><label for="cl-secret">API Secret</label><input id="cl-secret" type="password" autocomplete="off"></div>
+          <div class="grid-2">
+            <div class="field"><label for="cl-cloud">Cloud name (ชื่อ Storage)</label><input id="cl-cloud" type="text" placeholder="uukpgvmz" autocomplete="off"></div>
+            <div class="field"><label for="cl-preset">Upload preset (Unsigned)</label><input id="cl-preset" type="text" placeholder="20workshop" autocomplete="off"></div>
+            <div class="field"><label for="cl-key">API Key (ไม่บังคับ)</label><input id="cl-key" type="text" inputmode="numeric" autocomplete="off"></div>
+            <div class="field"><label for="cl-secret">API Secret (ไม่บังคับ)</label><input id="cl-secret" type="password" autocomplete="off"></div>
           </div>
           <button class="btn" type="submit">ตรวจสอบและบันทึก</button> <span class="error-text" id="cl-err"></span>
         </form>

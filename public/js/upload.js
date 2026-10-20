@@ -48,7 +48,7 @@ export async function fitForUpload(file, maxBytes = 10 * 1024 * 1024, maxPixels 
   }
 }
 
-// auth: { cloudName, apiKey, timestamp, signature, folder, allowed_formats, fake? }
+// auth: { cloudName, uploadPreset, folder } OR { cloudName, apiKey, timestamp, signature, folder, allowed_formats } OR { fake: true, folder }
 // Resolves with the fields our server needs to verify the upload.
 export function uploadImage(file, auth, onProgress = () => {}) {
   if (auth.fake) {
@@ -68,11 +68,16 @@ export function uploadImage(file, auth, onProgress = () => {}) {
   return new Promise((resolve, reject) => {
     const form = new FormData();
     form.append('file', file);
-    form.append('api_key', auth.apiKey);
-    form.append('timestamp', String(auth.timestamp));
-    form.append('signature', auth.signature);
-    form.append('folder', auth.folder);
-    form.append('allowed_formats', auth.allowed_formats);
+    if (auth.uploadPreset) {
+      form.append('upload_preset', auth.uploadPreset);
+      if (auth.folder) form.append('folder', auth.folder);
+    } else {
+      form.append('api_key', auth.apiKey);
+      form.append('timestamp', String(auth.timestamp));
+      form.append('signature', auth.signature);
+      form.append('folder', auth.folder);
+      form.append('allowed_formats', auth.allowed_formats);
+    }
     const xhr = new XMLHttpRequest();
     xhr.open('POST', `https://api.cloudinary.com/v1_1/${encodeURIComponent(auth.cloudName)}/image/upload`);
     xhr.upload.onprogress = (e) => { if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100)); };
@@ -80,7 +85,7 @@ export function uploadImage(file, auth, onProgress = () => {}) {
       let d = {};
       try { d = JSON.parse(xhr.responseText); } catch { /* ignore */ }
       if (xhr.status >= 200 && xhr.status < 300 && d.public_id) {
-        resolve({ public_id: d.public_id, version: String(d.version), signature: d.signature, format: d.format,
+        resolve({ public_id: d.public_id, version: String(d.version), signature: d.signature || '', format: d.format,
           bytes: d.bytes, width: d.width, height: d.height, url: d.secure_url });
       } else {
         reject(new Error((d.error && d.error.message) ? `อัปโหลดไม่สำเร็จ: ${d.error.message}` : `อัปโหลดไม่สำเร็จ (${xhr.status})`));

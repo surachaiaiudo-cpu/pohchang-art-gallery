@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { signParams, verifyUploadedFile, folderFor } from '../functions/_lib/storage.js';
+import { signParams, uploadAuth, verifyUploadedFile, folderFor } from '../functions/_lib/storage.js';
 import { encryptSecret } from '../functions/_lib/crypto.js';
 
 const sha1 = (s) => createHash('sha1').update(s).digest('hex');
@@ -26,4 +26,14 @@ test('an upload is accepted only with a valid Cloudinary response signature in t
   await assert.rejects(verifyUploadedFile(ex, env, { ...good, version: '1712345679' }, 'work'));
   await assert.rejects(verifyUploadedFile(ex, env, { ...good, public_id: 'other-show/works/abc123' }, 'work'));
   await assert.rejects(verifyUploadedFile(ex, env, { ...good, format: 'svg' }, 'work'));
+});
+
+test('unsigned upload preset mode (uukpgvmz + 20workshop) works without API secret', async () => {
+  const ex = { slug: 'poh-chang-20', cloudinary_cloud_name: 'uukpgvmz', cloudinary_upload_preset: '20workshop', cloudinary_api_secret_enc: '' };
+  const auth = await uploadAuth(ex, env, 'work');
+  assert.equal(auth.cloudName, 'uukpgvmz');
+  assert.equal(auth.uploadPreset, '20workshop');
+  assert.equal(auth.folder, 'poh-chang-20/works');
+  const f = await verifyUploadedFile(ex, env, { public_id: 'sample123', version: '1712345678', format: 'jpeg', bytes: 4096, width: 3000, height: 2000 }, 'work');
+  assert.equal(f.url, 'https://res.cloudinary.com/uukpgvmz/image/upload/v1712345678/sample123.jpg');
 });
