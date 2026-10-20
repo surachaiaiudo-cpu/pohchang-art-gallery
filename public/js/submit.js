@@ -10,6 +10,7 @@ const slug = slugFromPath(1);
 const base = `/e/${encodeURIComponent(slug)}`;
 let ex = null;
 let ticket = '';
+let useTurnstile = false;
 const uploads = {};      // target key -> { busy, file: Cloudinary upload result }
 let workSeq = 0;
 
@@ -103,6 +104,14 @@ async function getTicket(turnstileToken) {
   ticket = d.ticket;
 }
 
+// A submission ticket is only requested when the artist actually starts (first upload or send),
+// so people who just look at the form do not use up the per-network limit.
+async function ensureTicket() {
+  if (ticket) return;
+  if (useTurnstile) throw new Error(t('errHuman'));
+  await getTicket('');
+}
+
 function setupTurnstile(siteKey) {
   return new Promise((resolve) => {
     window.onTurnstileLoad = () => {
@@ -133,7 +142,7 @@ async function handleFile(drop, file) {
   const key = drop.dataset.target;
   const problem = imageProblem(file);
   if (problem) { toast(t(FILE_ERR[problem]), 'error'); return; }
-  if (!ticket) { toast(t('errHuman'), 'error'); return; }
+  try { await ensureTicket(); } catch (e) { toast(localError(e.message), 'error'); return; }
   const preview = URL.createObjectURL(file);
   uploads[key] = { busy: true, file: null };
   drop.classList.add('has-image');
@@ -214,6 +223,7 @@ async function onSubmit(e) {
   $('send').disabled = true;
   $('send').textContent = t('sending');
   try {
+    await ensureTicket();
     const d = await api(`/api/x/${encodeURIComponent(slug)}/submit`, { method: 'POST', body: { ticket, consent: true, ...data } });
     $('form').hidden = true;
     $('intro').hidden = true;
@@ -264,8 +274,8 @@ async function main() {
     });
     $('form').hidden = false;
     addWork();
-    if (cfg.turnstileSiteKey) setupTurnstile(cfg.turnstileSiteKey);
-    else await getTicket('');
+    useTurnstile = !!cfg.turnstileSiteKey;
+    if (useTurnstile) setupTurnstile(cfg.turnstileSiteKey);
   } catch (e) {
     $('intro').innerHTML = `<p class="error-text">${esc(localError(e.message))}</p>`;
   }

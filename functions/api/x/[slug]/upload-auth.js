@@ -15,7 +15,7 @@ export const onRequestPost = handle(async ({ request, env, params }) => {
   await checkTicket(env, request, ex.slug, body.ticket);
   const kind = v.oneOf(body.kind, ['work', 'artist'], { field: 'ประเภทไฟล์' });
   if (ex.storage_bytes >= ex.storage_quota_bytes) throw new HttpError(507, 'พื้นที่เก็บรูปของนิทรรศการนี้เต็มแล้ว กรุณาติดต่อผู้จัด');
-  await enforce(env.DB, `upload:${clientIp(request)}`, { limit: 15, windowSec: 3600 }, 'อัปโหลดถี่เกินไป กรุณารอสักครู่');
-  await enforce(env.DB, `upload-ex:${ex.id}`, { limit: 400, windowSec: 3600 }, 'ระบบรับไฟล์ของนิทรรศการนี้หนาแน่น กรุณาลองใหม่ภายหลัง');
+  await enforce(env.DB, `upload:${clientIp(request)}`, { limit: 240, windowSec: 3600 }, 'อัปโหลดถี่เกินไป กรุณารอสักครู่');
+  await enforce(env.DB, `upload-ex:${ex.id}`, { limit: 1500, windowSec: 3600 }, 'ระบบรับไฟล์ของนิทรรศการนี้หนาแน่น กรุณาลองใหม่ภายหลัง');
   return json({ ok: true, upload: await uploadAuth(ex, env, kind) });
 });

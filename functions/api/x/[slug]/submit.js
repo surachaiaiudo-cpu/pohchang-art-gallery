@@ -15,7 +15,7 @@ export const onRequestPost = handle(async ({ request, env, params }) => {
   if (!win.open) throw new HttpError(409, win.reason);
   const b = await readJson(request);
   await checkTicket(env, request, ex.slug, b.ticket);
-  await enforce(db, `submit:${clientIp(request)}`, { limit: 10, windowSec: 3600 });
+  await enforce(db, `submit:${clientIp(request)}`, { limit: 60, windowSec: 3600 });
   if (b.consent !== true) throw bad('กรุณายืนยันการยินยอมให้เผยแพร่ผลงาน');
 
   const a = b.artist && typeof b.artist === 'object' ? b.artist : {};
