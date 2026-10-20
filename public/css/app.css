@@ -146,3 +146,6 @@ th { font-size: 0.85rem; color: var(--muted); font-weight: 600; background: #faf
 .lang-switch { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; font-size: .85rem; background: var(--surface); }
 .lang-switch a { padding: 4px 11px; min-height: 36px; display: inline-flex; align-items: center; text-decoration: none; color: var(--muted); }
 .lang-switch a[aria-current="true"] { background: var(--ink); color: var(--bg); font-weight: 600; }
+
+/* Flags */
+.flag { width: 1.34em; height: 1em; object-fit: cover; vertical-align: -0.14em; border-radius: 2px; box-shadow: 0 0 0 1px rgba(0, 0, 0, .14); }

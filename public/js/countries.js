@@ -30,10 +30,10 @@ export function countryName(code, locale = 'th') {
 }
 
 // <option> list: pinned countries, then everything else sorted by name in that language.
-export function countryOptions(locale, selected = '', escape = (s) => s) {
+export function countryOptions(locale, selected = '', escape = (s) => s, { emoji = false } = {}) {
   const name = (c) => countryName(c, locale);
   const rest = COUNTRY_CODES.filter((c) => !PINNED.includes(c)).sort((a, b) => name(a).localeCompare(name(b), locale));
-  const opt = (c) => `<option value="${c}"${c === selected ? ' selected' : ''}>${escape(name(c))}</option>`;
+  const opt = (c) => `<option value="${c}"${c === selected ? ' selected' : ''}>${emoji ? `${flagEmoji(c)} ` : ''}${escape(name(c))}</option>`;
   return `${PINNED.map(opt).join('')}<option disabled>──────────</option>${rest.map(opt).join('')}`;
 }
 
@@ -56,3 +56,37 @@ export const COUNTRY_ALIASES = {
   US: ['usa', 'united states', 'american', 'อเมริกา', 'สหรัฐอเมริกา', 'us'],
   GB: ['uk', 'united kingdom', 'england', 'british', 'อังกฤษ', 'สหราชอาณาจักร', 'gb']
 };
+
+// Flag images: public/flags/<code>.svg (from the MIT-licensed flag-icons project, 4:3).
+export const flagUrl = (code) => (isCountryCode(code) ? `/flags/${code.toLowerCase()}.svg` : '');
+
+// <img> of the flag; alt carries the country name when the flag is shown without it.
+export function flagImg(code, { alt = '', cls = 'flag' } = {}, escape = (s) => s) {
+  const url = flagUrl(code);
+  return url ? `<img class="${cls}" src="${url}" alt="${escape(alt)}" width="20" height="15" loading="lazy" decoding="async">` : '';
+}
+
+// Flag emoji (🇹🇭) for places that only take text, like <option>. Windows shows letters
+// instead of flags, so it is only used where the system can draw them.
+export const flagEmoji = (code) => (isCountryCode(code)
+  ? String.fromCodePoint(...[...code].map((ch) => 0x1F1E6 + ch.charCodeAt(0) - 65)) : '');
+
+let emojiOk;
+export function canShowFlagEmoji() {
+  if (emojiOk !== undefined) return emojiOk;
+  emojiOk = false;
+  try {
+    const c = document.createElement('canvas');
+    c.width = c.height = 20;
+    const ctx = c.getContext('2d', { willReadFrequently: true });
+    ctx.font = '16px sans-serif';
+    ctx.textBaseline = 'top';
+    ctx.fillText(flagEmoji('TH'), 0, 0);
+    const d = ctx.getImageData(0, 0, 20, 20).data;
+    // A real flag has colour; the letter fallback is grey/black.
+    for (let i = 0; i < d.length; i += 4) {
+      if (d[i + 3] > 0 && (Math.abs(d[i] - d[i + 1]) > 40 || Math.abs(d[i + 1] - d[i + 2]) > 40)) { emojiOk = true; break; }
+    }
+  } catch { /* no canvas */ }
+  return emojiOk;
+}

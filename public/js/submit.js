@@ -1,7 +1,7 @@
 import { api, esc, applyTheme, toast, icons, slugFromPath } from './core.js';
 import { imageProblem, uploadImage, fitForUpload } from './upload.js';
 import { t, pick, fmtDate, catName, subName, applyStatic, mountSwitcher, localError, lang, locale } from './i18n.js';
-import { countryOptions } from './countries.js';
+import { countryOptions, flagUrl, canShowFlagEmoji } from './countries.js';
 
 applyStatic();
 mountSwitcher(document.getElementById('lang'));
@@ -253,7 +253,14 @@ async function main() {
       ${ex.submission_closes_at ? ` · ${t('closesAt', { d: esc(fmtDate(ex.submission_closes_at, true)) })}` : ''}</p>
       ${cats.length ? `<p style="margin:6px 0 0">${esc(t('categoriesLine', { list: catList }))}</p>` : ''}
       <p style="margin:6px 0 0" class="muted">${esc(t('fileNote'))}</p></div>`;
-    $('nationality').innerHTML = `<option value="">${esc(t('pickCountry'))}</option>${countryOptions(locale, '', esc)}`;
+    // Flags inside the list where the system draws flag emoji; otherwise a flag image beside it.
+    const emoji = canShowFlagEmoji();
+    $('nationality').innerHTML = `<option value="">${esc(t('pickCountry'))}</option>${countryOptions(locale, '', esc, { emoji })}`;
+    $('nationality').addEventListener('change', (e) => {
+      const url = emoji ? '' : flagUrl(e.target.value);
+      $('nat-flag').hidden = !url;
+      if (url) $('nat-flag').src = url;
+    });
     $('form').hidden = false;
     addWork();
     if (cfg.turnstileSiteKey) setupTurnstile(cfg.turnstileSiteKey);

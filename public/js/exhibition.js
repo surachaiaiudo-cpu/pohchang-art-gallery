@@ -1,5 +1,6 @@
 import { api, esc, img, srcset, applyTheme, paras, badgeHtml, slugFromPath } from './core.js';
-import { t, pick, pickOther, fmtDate, catName, catLabel, applyStatic, mountSwitcher, localError } from './i18n.js';
+import { t, pick, pickOther, fmtDate, catName, catLabel, applyStatic, mountSwitcher, localError, locale } from './i18n.js';
+import { countryName, flagImg } from './countries.js';
 
 applyStatic();
 mountSwitcher(document.getElementById('lang'));
@@ -56,7 +57,7 @@ function renderWorks() {
       </div>
       <div class="cap">
         <p class="title">${esc(pick(w, 'title'))}</p>
-        <p class="artist">${esc([w.academic_title_th, pick(w, 'artist_name')].filter(Boolean).join(' '))}</p>
+        <p class="artist">${flagImg(w.nationality, { alt: countryName(w.nationality, locale) }, esc)}${flagImg(w.nationality) ? ' ' : ''}${esc([w.academic_title_th, pick(w, 'artist_name')].filter(Boolean).join(' '))}</p>
         ${w.category ? `<p class="artist" style="opacity:.75">${esc(catLabel(cats, w))}</p>` : ''}
       </div>
     </a>`).join('');

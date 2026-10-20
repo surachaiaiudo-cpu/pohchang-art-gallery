@@ -186,3 +186,9 @@ details.translations { border: 1px dashed var(--line); border-radius: var(--radi
 details.translations > summary { cursor: pointer; font-weight: 600; font-size: .95rem; min-height: 32px; display: list-item; }
 details.translations[open] > summary { margin-bottom: 10px; }
 :lang(zh-Hans) body, body:lang(zh-Hans) { line-break: strict; }
+
+/* Flags */
+.flag { width: 1.34em; height: 1em; object-fit: cover; vertical-align: -0.14em; border-radius: 2px; box-shadow: 0 0 0 1px rgba(0, 0, 0, .14); }
+.flag-lg { width: 32px; height: 24px; flex: none; }
+.with-flag { display: flex; align-items: center; gap: 10px; }
+.with-flag select { flex: 1; min-width: 0; }

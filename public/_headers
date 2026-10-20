@@ -2,3 +2,5 @@
   Cache-Control: public, max-age=3600
 /js/*
   Cache-Control: public, max-age=300
+/flags/*
+  Cache-Control: public, max-age=604800

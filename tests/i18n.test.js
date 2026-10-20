@@ -50,3 +50,12 @@ test('nationality list: codes only, names from the browser, old free text conver
   assert.throws(() => v.country('Thailand'));
   assert.throws(() => v.country('', { required: true }));
 });
+
+test('every country in the list has a flag file', async () => {
+  const fs = await import('node:fs');
+  const c = await import('../public/js/countries.js');
+  for (const code of c.COUNTRY_CODES) assert.ok(fs.existsSync(new URL(`../public${c.flagUrl(code)}`, import.meta.url)), code);
+  assert.equal(c.flagUrl('Mars'), '');
+  assert.equal(c.flagEmoji('TH'), '🇹🇭');
+  assert.match(c.flagImg('TH', { alt: 'ไทย' }), /src="\/flags\/th\.svg" alt="ไทย"/);
+});
