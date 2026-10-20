@@ -27,11 +27,23 @@ function tempPasswordHtml(user, pw) {
 }
 
 // ---------------------------------------------------------------- exhibitions
+// Open/close submissions straight from the table (curators can still do it in their own settings).
+function submissionCell(e) {
+  if (e.status !== 'open' && e.status !== 'closed') return '';
+  const s = e.submission || {};
+  const state = s.open ? '<span class="small" style="color:var(--ok)">● กำลังรับผลงาน</span>'
+    : `<span class="small muted">● ไม่รับผลงาน${e.status === 'open' && s.reason ? `: ${esc(s.reason)}` : ''}</span>`;
+  const btn = e.status === 'open'
+    ? `<button class="btn btn-danger btn-sm" data-sub-toggle="${e.id}" data-to="closed">ปิดรับผลงาน</button>`
+    : `<button class="btn btn-ghost btn-sm" data-sub-toggle="${e.id}" data-to="open">เปิดรับผลงานอีกครั้ง</button>`;
+  return `<div style="margin-top:6px;display:grid;gap:4px;justify-items:start">${state}${btn}</div>`;
+}
+
 function renderExRows() {
   $('ex-rows').innerHTML = exhibitions.map((e) => `
     <tr>
       <td><a href="/manage/${encodeURIComponent(e.slug)}"><strong>${esc(e.title_th)}</strong></a><div class="small muted">/e/${esc(e.slug)} · ${esc(presetName(e.theme_preset))}</div></td>
-      <td><span class="tag">${esc(STATUS_TH[e.status] || e.status)}</span></td>
+      <td><span class="tag">${esc(STATUS_TH[e.status] || e.status)}</span>${submissionCell(e)}</td>
       <td>${e.shown} / ${e.works}</td>
       <td>${e.has_storage ? `Cloudinary · ${bytes(e.storage_bytes)}` : '<span class="muted">ยังไม่ตั้งค่า</span>'}</td>
       <td class="small">${e.staff.map((s) => esc(s.name)).join(', ') || '<span class="muted">—</span>'}</td>
@@ -250,6 +262,22 @@ document.addEventListener('click', async (e) => {
   if (c) { toast((await copyText(c.dataset.copy)) ? 'คัดลอกแล้ว' : 'คัดลอกไม่ได้ กรุณาเลือกข้อความเอง'); return; }
   const ee = e.target.closest('[data-ex-edit]');
   if (ee) { exEditor(exhibitions.find((x) => x.id === Number(ee.dataset.exEdit))); return; }
+  const st = e.target.closest('[data-sub-toggle]');
+  if (st) {
+    const ex = exhibitions.find((x) => x.id === Number(st.dataset.subToggle));
+    const closing = st.dataset.to === 'closed';
+    const msg = closing
+      ? `ปิดรับผลงาน "${ex.title_th}"?\n\nฟอร์มส่งผลงานจะปิดทันที นิทรรศการและผลงานยังแสดงตามปกติ เปิดกลับได้ภายหลัง`
+      : `เปิดรับผลงาน "${ex.title_th}" อีกครั้ง?${ex.submission_closes_at && Date.parse(ex.submission_closes_at) < Date.now() ? '\n\nหมายเหตุ: วันปิดรับที่ตั้งไว้ผ่านไปแล้ว ฟอร์มจะยังไม่รับผลงานจนกว่าจะแก้วันปิดรับในหน้าจัดการ' : ''}`;
+    if (!confirm(msg)) return;
+    st.disabled = true;
+    try {
+      await api(`/api/admin/exhibitions/${ex.id}`, { method: 'PUT', body: { status: st.dataset.to } });
+      toast(closing ? 'ปิดรับผลงานแล้ว' : 'เปิดรับผลงานแล้ว', 'ok');
+      await load();
+    } catch (err) { st.disabled = false; toast(err.message, 'error'); }
+    return;
+  }
   const ue = e.target.closest('[data-user-edit]');
   if (ue) userEditor(users.find((x) => x.id === Number(ue.dataset.userEdit)));
 });

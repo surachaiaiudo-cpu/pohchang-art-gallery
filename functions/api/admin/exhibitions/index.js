@@ -1,6 +1,6 @@
 import { handle, json, readJson, bad } from '../../../_lib/http.js';
 import { requireAdmin, actorOf } from '../../../_lib/auth.js';
-import { audit } from '../../../_lib/exhibitions.js';
+import { audit, submissionWindow } from '../../../_lib/exhibitions.js';
 import { DEFAULT_CLOUD_NAME, DEFAULT_UPLOAD_PRESET } from '../../../_lib/storage.js';
 import { PRESETS } from '../../../_lib/themes.js';
 import { DEFAULT_CATEGORIES } from '../../../_lib/categories.js';
@@ -13,6 +13,8 @@ export const onRequestGet = handle(async (context) => {
   const [ex, members] = await db.batch([
     db.prepare(
       `SELECT e.id, e.slug, e.title_th, e.status, e.theme_preset, e.storage_bytes, e.created_at,
+              e.submission_opens_at, e.submission_closes_at, e.cloudinary_cloud_name, e.cloudinary_upload_preset,
+              (e.cloudinary_api_secret_enc != '') AS has_secret,
               (e.cloudinary_cloud_name != '' AND (e.cloudinary_upload_preset != '' OR e.cloudinary_api_secret_enc != '')) AS has_storage,
               (SELECT COUNT(*) FROM works w WHERE w.exhibition_id = e.id AND w.deleted_at IS NULL) AS works,
               (SELECT COUNT(*) FROM works w WHERE w.exhibition_id = e.id AND w.status = 'shown' AND w.deleted_at IS NULL) AS shown
@@ -25,7 +27,15 @@ export const onRequestGet = handle(async (context) => {
     if (!staff.has(m.exhibition_id)) staff.set(m.exhibition_id, []);
     staff.get(m.exhibition_id).push({ id: m.id, name: m.name, email: m.email });
   }
-  return json({ ok: true, exhibitions: (ex.results || []).map((e) => ({ ...e, staff: staff.get(e.id) || [] })) });
+  return json({
+    ok: true,
+    exhibitions: (ex.results || []).map(({ cloudinary_upload_preset, has_secret, ...e }) => ({
+      ...e,
+      // Whether the submission form is actually accepting work right now (status, dates and storage).
+      submission: submissionWindow({ ...e, cloudinary_upload_preset, cloudinary_api_secret_enc: has_secret ? 'x' : '' }),
+      staff: staff.get(e.id) || []
+    }))
+  });
 });
 
 // POST /api/admin/exhibitions { slug, title_th, title_en?, theme_preset? }
