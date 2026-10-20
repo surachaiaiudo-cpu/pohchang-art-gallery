@@ -1,7 +1,7 @@
 import { api, esc, img, srcset, thDate, applyTheme, paras, badgeHtml, slugFromPath } from './core.js';
 
 const slug = slugFromPath(1);
-let state = { ex: null, works: [], filter: 'all', q: '' };
+let state = { ex: null, works: [], filter: 'all', q: '', cat: '' };
 
 function heroHtml(ex) {
   const sub = ex.submission || {};
@@ -32,7 +32,7 @@ function cardClass(w, i) {
 function renderWorks() {
   const q = state.q.trim().toLowerCase();
   const list = state.works.filter((w) =>
-    (state.filter === 'all' || w.endorsed) &&
+    (state.filter === 'all' || w.endorsed) && (!state.cat || w.category === state.cat) &&
     (!q || [w.title_th, w.title_en, w.artist_name_th, w.artist_name_en].some((t) => (t || '').toLowerCase().includes(q))));
   const el = document.getElementById('works');
   if (!list.length) {
@@ -51,6 +51,7 @@ function renderWorks() {
       <div class="cap">
         <p class="title">${esc(w.title_th)}</p>
         <p class="artist">${esc([w.academic_title_th, w.artist_name_th].filter(Boolean).join(' '))}</p>
+        ${w.category ? `<p class="artist" style="opacity:.75">${esc([w.category, w.subcategory].filter(Boolean).join(' · '))}</p>` : ''}
       </div>
     </a>`).join('');
 }
@@ -74,6 +75,13 @@ async function main() {
     document.getElementById('n-all').textContent = `(${data.works.length})`;
     document.getElementById('n-end').textContent = `(${nEnd})`;
     document.getElementById('f-endorsed').hidden = nEnd === 0;
+    // Category filter: only categories that have shown works.
+    const used = [...new Set(data.works.map((w) => w.category).filter(Boolean))];
+    const order = (ex.categories || []).map((c) => c.name);
+    used.sort((a, b) => (order.indexOf(a) + 1 || 999) - (order.indexOf(b) + 1 || 999));
+    const sel = document.getElementById('cat');
+    sel.hidden = used.length < 2;
+    sel.innerHTML = `<option value="">ทุกกลุ่มงาน</option>${used.map((n) => `<option value="${esc(n)}">${esc(n)} (${data.works.filter((w) => w.category === n).length})</option>`).join('')}`;
     renderWorks();
   } catch (e) {
     document.getElementById('hero').innerHTML = `<div><h1>ไม่พบนิทรรศการ</h1><p class="muted">${esc(e.message)}</p><a class="btn btn-ghost" href="/">กลับหอศิลป์</a></div>`;
@@ -87,5 +95,6 @@ document.addEventListener('click', (e) => {
   document.querySelectorAll('[data-filter]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
   renderWorks();
 });
+document.getElementById('cat').addEventListener('change', (e) => { state.cat = e.target.value; renderWorks(); });
 document.getElementById('q').addEventListener('input', (e) => { state.q = e.target.value; renderWorks(); });
 main();

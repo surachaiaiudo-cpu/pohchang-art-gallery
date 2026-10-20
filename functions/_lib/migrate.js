@@ -1,5 +1,7 @@
 // Small schema upgrades applied automatically, once per Worker isolate, so a deploy never
 // depends on someone remembering to run a SQL file. Each step must be safe to retry.
+import { DEFAULT_CATEGORIES } from './categories.js';
+
 const STEPS = [
   {
     // 0002_cloudinary.sql: image storage moved from ImageKit to Cloudinary.
@@ -24,6 +26,20 @@ const STEPS = [
       "UPDATE exhibitions SET cloudinary_cloud_name = 'uukpgvmz' WHERE cloudinary_cloud_name = ''",
       "UPDATE exhibitions SET cloudinary_upload_preset = '20workshop' WHERE cloudinary_upload_preset = ''"
     ]
+  },
+  {
+    // 0004_categories.sql: work categories (กลุ่มงาน); existing exhibitions get the default list.
+    name: '0004_categories',
+    needed: async (db) => !(await db.prepare(
+      "SELECT 1 AS x FROM pragma_table_info('works') WHERE name = 'video_url'"
+    ).first()),
+    sql: [
+      "ALTER TABLE exhibitions ADD COLUMN categories TEXT NOT NULL DEFAULT ''",
+      "ALTER TABLE works ADD COLUMN category TEXT NOT NULL DEFAULT ''",
+      "ALTER TABLE works ADD COLUMN subcategory TEXT NOT NULL DEFAULT ''",
+      "ALTER TABLE works ADD COLUMN video_url TEXT NOT NULL DEFAULT ''",
+      ["UPDATE exhibitions SET categories = ? WHERE categories = ''", DEFAULT_CATEGORIES]
+    ]
   }
 ];
 
@@ -33,7 +49,8 @@ async function run(db) {
   for (const step of STEPS) {
     if (!(await step.needed(db))) continue;
     try {
-      await db.batch(step.sql.map((s) => db.prepare(s)));
+      // An entry is SQL text, or [sql, ...bound values].
+      await db.batch(step.sql.map((s) => (Array.isArray(s) ? db.prepare(s[0]).bind(...s.slice(1)) : db.prepare(s))));
     } catch (err) {
       // Another isolate may have applied it at the same moment; only fail if it is still needed.
       if (await step.needed(db)) throw err;

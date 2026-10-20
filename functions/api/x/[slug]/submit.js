@@ -4,6 +4,7 @@ import { verifyUploadedFile, deleteFile } from '../../../_lib/storage.js';
 import { checkTicket } from '../../../_lib/ticket.js';
 import { enforce } from '../../../_lib/ratelimit.js';
 import * as v from '../../../_lib/validate.js';
+import { parseCategories, checkCategory, needsVideo } from '../../../_lib/categories.js';
 
 // POST /api/x/:slug/submit { ticket, consent, artist: {...}, works: [{..., file}], artist: {..., avatar_file?} }
 // file = the JSON Cloudinary returned for that upload (public_id, version, signature, format, bytes, width, height)
@@ -32,7 +33,10 @@ export const onRequestPost = handle(async ({ request, env, params }) => {
   const list = Array.isArray(b.works) ? b.works : [];
   if (!list.length) throw bad('กรุณาเพิ่มผลงานอย่างน้อย 1 ชิ้น');
   if (list.length > ex.max_works_per_artist) throw bad(`ส่งได้ไม่เกิน ${ex.max_works_per_artist} ผลงาน`);
+  const cats = parseCategories(ex.categories);
   const works = list.map((w, i) => ({
+    ...checkCategory(cats, w.category, w.subcategory, ` (ผลงานชิ้นที่ ${i + 1})`),
+    video_url: v.httpsUrl(w.video_url, { field: `ลิงก์วิดีโอของผลงานชิ้นที่ ${i + 1}` }),
     title_th: v.text(w.title_th, { field: `ชื่อผลงานชิ้นที่ ${i + 1}`, max: 300, required: true }),
     title_en: v.text(w.title_en, { field: 'ชื่อผลงานภาษาอังกฤษ', max: 300 }),
     technique_th: v.text(w.technique_th, { field: 'เทคนิค', max: 300, required: true }),
@@ -42,6 +46,9 @@ export const onRequestPost = handle(async ({ request, env, params }) => {
     concept_en: v.longText(w.concept_en, { field: 'แนวคิดภาษาอังกฤษ', max: 4000 }),
     file: w.file && typeof w.file === 'object' ? w.file : {}
   }));
+  works.forEach((w, i) => {
+    if (needsVideo(w.category, w.subcategory) && !w.video_url) throw bad(`กรุณาใส่ลิงก์วิดีโอของผลงานชิ้นที่ ${i + 1}`);
+  });
 
   // Respect the per-artist limit across several submissions with the same email.
   const prior = await db.prepare(
@@ -83,9 +90,11 @@ export const onRequestPost = handle(async ({ request, env, params }) => {
   const order = await db.prepare('SELECT COALESCE(MAX(display_order), 0) AS m FROM works WHERE exhibition_id = ?').bind(ex.id).first();
   const stmts = works.map((w, i) => db.prepare(
     `INSERT INTO works (exhibition_id, artist_id, title_th, title_en, technique_th, dimensions, year_created, concept_th, concept_en,
+                        category, subcategory, video_url,
                         image_url, image_file_id, image_width, image_height, image_bytes, display_order)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).bind(ex.id, artistId, w.title_th, w.title_en, w.technique_th, w.dimensions, w.year_created, w.concept_th, w.concept_en,
+    w.category, w.subcategory, w.video_url,
     files[i].url, files[i].fileId, files[i].width, files[i].height, files[i].size, order.m + 10 * (i + 1)));
   stmts.push(db.prepare('UPDATE exhibitions SET storage_bytes = storage_bytes + ? WHERE id = ?').bind(added, ex.id));
   await db.batch(stmts);

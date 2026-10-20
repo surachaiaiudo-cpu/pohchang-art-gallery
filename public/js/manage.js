@@ -6,10 +6,12 @@ import { checkImageFile, uploadImage, fitForUpload } from './upload.js';
 const slug = slugFromPath(1);
 const M = `/api/manage/${encodeURIComponent(slug)}`;
 const $ = (id) => document.getElementById(id);
-const S = { ex: null, counts: {}, works: [], status: 'submitted', q: '', selected: new Set(), reviewers: [], shownWorks: 0, headingFonts: [] };
+const S = { ex: null, counts: {}, works: [], status: 'submitted', q: '', cat: '', selected: new Set(), reviewers: [], shownWorks: 0, headingFonts: [] };
 
 const RESULT_TH = { pending: 'รอผล', endorsed: 'ได้ badge', not_endorsed: 'ไม่ได้ badge', needs_curator: 'ให้ภัณฑารักษ์ตัดสิน' };
 const DECISION = { approve: '✓', reject: '✕', abstain: '–' };
+const catLabel = (w) => [w.category, w.subcategory].filter(Boolean).join(' · ');
+const catText = (list) => list.map((c) => (c.subs.length ? `${c.name}: ${c.subs.join(', ')}` : c.name)).join('\n');
 
 // ------------------------------------------------------------------ helpers
 function openDrawer(title, html) {
@@ -70,12 +72,19 @@ async function loadOverview() {
 async function loadWorks() {
   const d = await api(`${M}/works?status=all`);
   S.works = d.works;
+  // Category filter: the exhibition's list plus anything already used by a work.
+  const names = [...new Set([...(S.ex.categories || []).map((c) => c.name), ...S.works.map((w) => w.category).filter(Boolean)])];
+  const count = (n) => S.works.filter((w) => w.category === n).length;
+  $('w-cat').hidden = !names.length;
+  $('w-cat').innerHTML = `<option value="">ทุกกลุ่มงาน</option>${names.map((n) => `<option value="${esc(n)}">${esc(n)} (${count(n)})</option>`).join('')}`;
+  if (!names.includes(S.cat)) S.cat = '';
+  $('w-cat').value = S.cat;
   renderWorks();
 }
 
 function visibleWorks() {
   const q = S.q.trim().toLowerCase();
-  return S.works.filter((w) => (S.status === 'all' || w.status === S.status) &&
+  return S.works.filter((w) => (S.status === 'all' || w.status === S.status) && (!S.cat || w.category === S.cat) &&
     (!q || [w.title_th, w.title_en, w.artist_name_th, w.artist_email].some((t) => (t || '').toLowerCase().includes(q))));
 }
 
@@ -91,6 +100,7 @@ function renderWorks() {
         <div class="t">${esc(w.title_th)}</div>
         <div class="small muted">${esc([w.academic_title_th, w.artist_name_th].filter(Boolean).join(' '))}</div>
         <div class="small muted">${esc(w.technique_th)}${w.dimensions ? ` · ${esc(w.dimensions)}` : ''}</div>
+        ${catLabel(w) ? `<div class="small"><span class="tag">${esc(catLabel(w))}</span>${w.video_url ? ' <span class="small muted">มีวิดีโอ</span>' : ''}</div>` : ''}
         <div class="row">${statusTag(w)} ${reviewTag(w)}
           ${w.status === 'shown' ? `<span class="small muted">✓${w.approvals} ✕${w.rejections} –${w.abstentions}</span>` : ''}</div>
       </div>
@@ -125,6 +135,12 @@ function workEditor(w) {
           <span class="hint">ใช้เมื่อผลเป็น "ให้ภัณฑารักษ์ตัดสิน"</span></div>
       </div>
       <h3>ผลงาน</h3>
+      <div class="grid-2">
+        <div class="field"><label for="we-category">กลุ่มงาน</label><select id="we-category"></select></div>
+        <div class="field"><label for="we-subcategory">ประเภท</label><select id="we-subcategory"></select></div>
+      </div>
+      ${f('video_url', 'ลิงก์วิดีโอ', w.video_url, 'url')}
+      ${w.video_url ? `<p class="small" style="margin-top:-6px"><a href="${esc(w.video_url)}" target="_blank" rel="noopener noreferrer">เปิดวิดีโอ ↗</a></p>` : ''}
       <div class="grid-2">${f('title_th', 'ชื่อผลงาน')}${f('title_en', 'ชื่อภาษาอังกฤษ')}${f('technique_th', 'เทคนิค')}${f('technique_en', 'เทคนิคภาษาอังกฤษ')}
         ${f('dimensions', 'ขนาด')}${f('year_created', 'ปีที่สร้าง')}${f('zone', 'โซน')}${f('display_order', 'ลำดับการแสดง', w.display_order, 'number')}</div>
       <div class="field"><label for="we-concept_th">แนวคิด</label><textarea id="we-concept_th">${esc(w.concept_th)}</textarea></div>
@@ -140,6 +156,19 @@ function workEditor(w) {
     </form>`);
   $('we-status').value = w.status;
   $('we-override').value = w.badge_override || '';
+  const cats = (S.ex.categories || []).slice();
+  if (w.category && !cats.some((c) => c.name === w.category)) cats.push({ name: w.category, subs: w.subcategory ? [w.subcategory] : [] });
+  $('we-category').innerHTML = `<option value="">${cats.length ? '— เลือก —' : 'ไม่แบ่งกลุ่มงาน'}</option>${cats.map((c) => `<option value="${esc(c.name)}">${esc(c.name)}</option>`).join('')}`;
+  $('we-category').value = w.category || '';
+  const syncSub = (keep) => {
+    const c = cats.find((x) => x.name === $('we-category').value);
+    const subs = c ? c.subs : [];
+    $('we-subcategory').innerHTML = `<option value="">${subs.length ? '— เลือก —' : '—'}</option>${subs.map((s) => `<option value="${esc(s)}">${esc(s)}</option>`).join('')}`;
+    $('we-subcategory').disabled = !subs.length;
+    if (subs.includes(keep)) $('we-subcategory').value = keep;
+  };
+  syncSub(w.subcategory);
+  $('we-category').addEventListener('change', () => syncSub(''));
   const val = (k) => $(`we-${k}`).value;
   $('we-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -148,6 +177,7 @@ function workEditor(w) {
         method: 'PUT',
         body: {
           status: val('status'), badge_override: val('override') || null,
+          category: val('category'), subcategory: val('subcategory'), video_url: val('video_url').trim(),
           title_th: val('title_th'), title_en: val('title_en'), technique_th: val('technique_th'), technique_en: val('technique_en'),
           dimensions: val('dimensions'), year_created: val('year_created'), zone: val('zone'), display_order: Number(val('display_order') || 0),
           concept_th: val('concept_th'), concept_en: val('concept_en'),
@@ -223,12 +253,12 @@ async function loadResults() {
   const vote = new Map(d.votes.map((v) => [`${v.work_id}:${v.reviewer_id}`, v]));
   const endorsed = d.works.filter((w) => w.endorsed).length;
   $('res-summary').innerHTML = `เกณฑ์ <strong>${d.threshold} ใน ${d.panelSize}</strong> · ได้ badge <strong>${endorsed}</strong> จาก ${d.works.length} ผลงานที่จัดแสดง`;
-  resultRows = d.works.map((w) => [w.id, w.title_th, w.artist_name_th, ...rv.map((r) => (vote.get(`${w.id}:${r.id}`) || {}).decision || ''), RESULT_TH[w.review_result], w.endorsed ? 'ได้ badge' : '']);
-  resultRows.unshift(['id', 'ผลงาน', 'ศิลปิน', ...rv.map((r) => r.name), 'ผลโหวต', 'badge']);
+  resultRows = d.works.map((w) => [w.id, w.title_th, w.artist_name_th, w.category || '', w.subcategory || '', ...rv.map((r) => (vote.get(`${w.id}:${r.id}`) || {}).decision || ''), RESULT_TH[w.review_result], w.endorsed ? 'ได้ badge' : '']);
+  resultRows.unshift(['id', 'ผลงาน', 'ศิลปิน', 'กลุ่มงาน', 'ประเภท', ...rv.map((r) => r.name), 'ผลโหวต', 'badge']);
   $('res-table').innerHTML = `<thead><tr><th>ผลงาน</th>${rv.map((r) => `<th title="${esc(r.name)}">${esc(r.name)}${r.active ? '' : ' (ปิด)'}</th>`).join('')}<th>ผล</th></tr></thead>
     <tbody>${d.works.map((w) => `<tr>
       <td><div class="row" style="flex-wrap:nowrap"><img src="${esc(img(w.image_url, 120))}" alt="" style="width:48px;height:48px;object-fit:cover;border-radius:4px">
-        <div><strong>${esc(w.title_th)}</strong><div class="small muted">${esc(w.artist_name_th)}</div></div></div></td>
+        <div><strong>${esc(w.title_th)}</strong><div class="small muted">${esc([w.artist_name_th, catLabel(w)].filter(Boolean).join(' · '))}</div></div></div></td>
       ${rv.map((r) => { const v = vote.get(`${w.id}:${r.id}`); return `<td title="${esc(v && v.comment ? v.comment : '')}" style="text-align:center">${v ? DECISION[v.decision] : '<span class="muted">·</span>'}${v && v.comment ? '<sup class="muted">*</sup>' : ''}</td>`; }).join('')}
       <td>${reviewTag({ ...w, status: 'shown' })}</td></tr>`).join('') || `<tr><td colspan="${rv.length + 2}" class="muted">ยังไม่มีผลงานที่จัดแสดง</td></tr>`}</tbody>`;
 }
@@ -252,6 +282,7 @@ function fillSettings() {
   $('s-opens').value = toLocalInput(ex.submission_opens_at);
   $('s-closes').value = toLocalInput(ex.submission_closes_at);
   $('s-max').value = ex.max_works_per_artist;
+  $('s-categories').value = catText(ex.categories || []);
   $('sub-state').textContent = ex.submission.open ? 'ขณะนี้เปิดรับผลงานอยู่' : `ขณะนี้ไม่รับผลงาน: ${ex.submission.reason}`;
   $('s-layout').value = ex.layout;
   const o = ex.theme_overrides || {};
@@ -316,6 +347,7 @@ async function saveSettings(e) {
         starts_on: v('s-starts_on'), ends_on: v('s-ends_on'),
         submission_opens_at: fromLocalInput(v('s-opens')), submission_closes_at: fromLocalInput(v('s-closes')),
         max_works_per_artist: Number(v('s-max') || 3),
+        categories: v('s-categories'),
         theme_preset: chosenPreset, layout: v('s-layout'),
         theme_overrides: { accent: v('s-accent').trim(), headingFont: v('s-font'), ornament: v('s-ornament') }
       }
@@ -386,6 +418,7 @@ $('sel-all').addEventListener('change', (e) => {
   S.selected = e.target.checked ? new Set(visibleWorks().map((w) => w.id)) : new Set();
   renderWorks();
 });
+$('w-cat').addEventListener('change', (e) => { S.cat = e.target.value; renderWorks(); });
 $('w-q').addEventListener('input', (e) => { S.q = e.target.value; renderWorks(); });
 $('res-csv').addEventListener('click', downloadCsv);
 $('set-form').addEventListener('submit', saveSettings);

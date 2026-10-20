@@ -30,11 +30,13 @@ async function main() {
         ${w.title_en ? `<p class="muted" style="margin-top:-4px">${esc(w.title_en)}</p>` : ''}
         <dl class="facts">
           ${fact('ศิลปิน', artist)}
+          ${fact('กลุ่มงาน', [w.category, w.subcategory].filter(Boolean).join(' · '))}
           ${fact('เทคนิค', w.technique_th)}
           ${fact('ขนาด', w.dimensions)}
           ${fact('ปีที่สร้าง', w.year_created)}
           ${fact('สังกัด', w.affiliation)}
         </dl>
+        ${w.video_url ? `<p><a class="btn btn-ghost" href="${esc(w.video_url)}" target="_blank" rel="noopener noreferrer">ชมวิดีโอผลงาน ↗</a></p>` : ''}
         ${w.concept_th ? `<h2 style="font-size:1.15rem">แนวคิด</h2>${paras(w.concept_th)}` : ''}
         ${w.bio_th || w.avatar_url ? `
           <div class="artist-box">

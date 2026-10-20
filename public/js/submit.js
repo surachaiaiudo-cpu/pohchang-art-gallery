@@ -9,11 +9,41 @@ const uploads = {};      // target key -> { busy, file: Cloudinary upload result
 let workSeq = 0;
 
 const $ = (id) => document.getElementById(id);
+const needsVideo = (cat, sub) => /วิดีโอ|วีดิทัศน์|video/i.test(`${cat} ${sub}`);
+
+function categoryFields(k) {
+  const cats = ex.categories || [];
+  if (!cats.length) return '';
+  return `<div class="grid-2">
+      <div class="field"><label for="${k}-category">กลุ่มงาน <span class="req">*</span></label>
+        <select id="${k}-category" data-cat="${k}"><option value="">— เลือกกลุ่มงาน —</option>
+          ${cats.map((c) => `<option value="${esc(c.name)}">${esc(c.name)}</option>`).join('')}</select></div>
+      <div class="field" id="${k}-sub-field" hidden><label for="${k}-subcategory">ประเภท <span class="req">*</span></label>
+        <select id="${k}-subcategory" data-sub="${k}"></select></div>
+    </div>
+    <div class="field" id="${k}-video-field" hidden><label for="${k}-video_url">ลิงก์วิดีโอ <span class="req">*</span></label>
+      <input id="${k}-video_url" type="url" inputmode="url" maxlength="1000" placeholder="https://youtu.be/… หรือ https://vimeo.com/…">
+      <span class="hint">ใส่ลิงก์ YouTube, Vimeo หรือ Google Drive ที่เปิดให้ทุกคนดูได้ และอัปโหลดภาพนิ่งจากวิดีโอเป็นภาพผลงาน</span></div>`;
+}
+
+function syncCategory(k) {
+  const cat = $(`${k}-category`);
+  if (!cat) return;
+  const c = (ex.categories || []).find((x) => x.name === cat.value);
+  const subs = c ? c.subs : [];
+  const subSel = $(`${k}-subcategory`);
+  const keep = subSel.value;
+  $(`${k}-sub-field`).hidden = !subs.length;
+  subSel.innerHTML = `<option value="">— เลือกประเภท —</option>${subs.map((s) => `<option value="${esc(s)}">${esc(s)}</option>`).join('')}`;
+  if (subs.includes(keep)) subSel.value = keep;
+  $(`${k}-video-field`).hidden = !needsVideo(cat.value, subSel.value);
+}
 
 function workBlock(n) {
   const k = `work${n}`;
   return `<fieldset class="work-block" data-key="${k}">
     <legend>ผลงานชิ้นที่ <span class="wnum"></span></legend>
+    ${categoryFields(k)}
     <div class="field">
       <span style="font-weight:600;font-size:.95rem" id="${k}-img-label">ภาพผลงาน <span class="req">*</span></span>
       <div class="drop" data-kind="work" data-target="${k}" tabindex="0" role="button" aria-labelledby="${k}-img-label">
@@ -115,6 +145,7 @@ function collect() {
     const k = b.dataset.key;
     return {
       title_th: val(`${k}-title_th`), title_en: val(`${k}-title_en`), technique_th: val(`${k}-technique_th`),
+      category: val(`${k}-category`), subcategory: val(`${k}-subcategory`), video_url: val(`${k}-video_url`),
       dimensions: val(`${k}-dimensions`), year_created: val(`${k}-year_created`),
       concept_th: val(`${k}-concept_th`), concept_en: val(`${k}-concept_en`), file: uploads[k]?.file || null
     };
@@ -128,6 +159,12 @@ function validate({ artist, works }) {
   const blocks = [...document.querySelectorAll('.work-block')];
   for (let i = 0; i < works.length; i++) {
     const k = blocks[i].dataset.key;
+    const cat = (ex.categories || []).find((c) => c.name === works[i].category);
+    if ((ex.categories || []).length && !cat) return [`${k}-category`, `กรุณาเลือกกลุ่มงานของผลงานชิ้นที่ ${i + 1}`];
+    if (cat && cat.subs.length && !works[i].subcategory) return [`${k}-subcategory`, `กรุณาเลือกประเภทของผลงานชิ้นที่ ${i + 1}`];
+    if (needsVideo(works[i].category, works[i].subcategory) && !/^https:\/\/\S+$/.test(works[i].video_url)) {
+      return [`${k}-video_url`, `กรุณาใส่ลิงก์วิดีโอ (https://…) ของผลงานชิ้นที่ ${i + 1}`];
+    }
     if (uploads[k]?.busy) return [null, `ผลงานชิ้นที่ ${i + 1} ยังอัปโหลดไม่เสร็จ`];
     if (!works[i].file) return [null, `กรุณาอัปโหลดภาพผลงานชิ้นที่ ${i + 1}`];
     if (!works[i].title_th) return [`${k}-title_th`, `กรุณากรอกชื่อผลงานชิ้นที่ ${i + 1}`];
@@ -182,6 +219,7 @@ async function main() {
     $('intro').innerHTML = `<div class="notice">
       <p style="margin:0">ส่งได้ไม่เกิน <strong>${ex.max_works_per_artist}</strong> ผลงานต่อคน
       ${ex.submission_closes_at ? ` · ปิดรับ <strong>${esc(thDate(ex.submission_closes_at, true))}</strong>` : ''}</p>
+      ${(ex.categories || []).length ? `<p style="margin:6px 0 0">กลุ่มงาน: ${ex.categories.map((c) => esc(c.subs.length ? `${c.name} (${c.subs.join(', ')})` : c.name)).join(' · ')}</p>` : ''}
       <p style="margin:6px 0 0" class="muted">ภาพผลงานเป็น JPG, PNG หรือ WebP ไฟล์ที่ใหญ่กว่า 10 MB ระบบจะย่อให้อัตโนมัติโดยคงความละเอียดสำหรับพิมพ์</p></div>`;
     $('form').hidden = false;
     addWork();
@@ -205,6 +243,10 @@ document.addEventListener('click', (e) => {
 document.addEventListener('keydown', (e) => {
   const drop = e.target.closest && e.target.closest('.drop');
   if (drop && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openPicker(drop); }
+});
+document.addEventListener('change', (e) => {
+  const k = e.target.dataset && (e.target.dataset.cat || e.target.dataset.sub);
+  if (k) syncCategory(k);
 });
 $('picker').addEventListener('change', (e) => { if (pickTarget && e.target.files[0]) handleFile(pickTarget, e.target.files[0]); });
 $('add-work').addEventListener('click', addWork);

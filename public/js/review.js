@@ -41,6 +41,8 @@ function render() {
       <p class="small muted" style="margin:0 0 4px">ผลงานที่ ${S.i + 1} / ${S.works.length}</p>
       <h1 style="font-size:1.5rem">${esc(w.title_th)}</h1>
       ${w.title_en ? `<p class="muted" style="margin-top:-6px">${esc(w.title_en)}</p>` : ''}
+      ${w.category ? `<p class="small" style="margin:0"><span class="tag">${esc([w.category, w.subcategory].filter(Boolean).join(' · '))}</span></p>` : ''}
+      ${w.video_url ? `<p class="small"><a href="${esc(w.video_url)}" target="_blank" rel="noopener noreferrer">ชมวิดีโอผลงาน ↗</a></p>` : ''}
       <p class="small">${artist ? `${esc(artist)}<br>` : ''}${esc(w.technique_th)}${w.dimensions ? ` · ${esc(w.dimensions)}` : ''}${w.year_created ? ` · ${esc(w.year_created)}` : ''}</p>
       ${w.concept_th ? `<details><summary>แนวคิดของผลงาน</summary><div class="small">${paras(w.concept_th)}</div></details>` : ''}
       <div class="decide" role="group" aria-label="ผลการพิจารณา">

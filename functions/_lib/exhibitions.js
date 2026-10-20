@@ -2,6 +2,7 @@
 // loadExhibition / requireManager so exhibition_id is always resolved in one place.
 import { forbidden, notFound } from './http.js';
 import { requireUser } from './auth.js';
+import { parseCategories } from './categories.js';
 
 export async function findBySlug(db, slug) {
   if (typeof slug !== 'string' || slug.length > 60) return null;
@@ -86,6 +87,7 @@ export function publicExhibition(ex) {
     hero_url: ex.hero_url,
     badge_label_th: ex.badge_label_th,
     badge_label_en: ex.badge_label_en,
+    categories: parseCategories(ex.categories),
     submission: submissionWindow(ex)
   };
 }

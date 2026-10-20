@@ -138,7 +138,7 @@ legend { font-family: var(--font-head); font-weight: var(--head-weight); padding
 .field label { font-weight: 600; font-size: 0.95rem; }
 .field .hint { font-size: 0.85rem; color: var(--muted); }
 .req { color: var(--accent); }
-input[type="text"], input[type="email"], input[type="tel"], input[type="password"], input[type="number"],
+input[type="text"], input[type="email"], input[type="url"], input[type="tel"], input[type="password"], input[type="number"],
 input[type="datetime-local"], input[type="date"], select, textarea {
   font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius);
   padding: 10px 12px; min-height: 44px; width: 100%;

@@ -33,6 +33,7 @@
           <button class="btn btn-ghost btn-sm" data-status="all" aria-pressed="false">ทั้งหมด</button>
         </div>
         <div class="row">
+          <label class="sr-only" for="w-cat">กลุ่มงาน</label><select id="w-cat" style="width:auto"><option value="">ทุกกลุ่มงาน</option></select>
           <label class="sr-only" for="w-q">ค้นหา</label><input id="w-q" type="search" placeholder="ค้นหาชื่อผลงาน/ศิลปิน" style="width:220px">
         </div>
       </div>
@@ -115,6 +116,9 @@
             <div class="field"><label for="s-closes">ปิดรับ</label><input id="s-closes" type="datetime-local"></div>
             <div class="field"><label for="s-max">ผลงานสูงสุดต่อคน</label><input id="s-max" type="number" min="1" max="20"></div>
           </div>
+          <div class="field"><label for="s-categories">กลุ่มงาน (Categories)</label>
+            <textarea id="s-categories" rows="7" placeholder="จิตรกรรม&#10;Mixed media technique: 2D, 3D, วิดีโออาร์ต, Digital art"></textarea>
+            <span class="hint">บรรทัดละ 1 กลุ่ม ถ้ามีประเภทย่อยให้ใส่หลังเครื่องหมาย : คั่นด้วยจุลภาค ประเภทที่มีคำว่า "วิดีโอ" จะบังคับให้ใส่ลิงก์วิดีโอ เว้นว่างทั้งหมดถ้าไม่ต้องการแบ่งกลุ่มงาน</span></div>
           <p class="small" id="sub-state"></p>
         </div>
         <div class="card">

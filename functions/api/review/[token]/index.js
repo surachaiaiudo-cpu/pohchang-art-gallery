@@ -9,7 +9,7 @@ export const onRequestGet = handle(async ({ request, env, params }) => {
   const blind = !!ex.review_blind;
   const [works, mine] = await db.batch([
     db.prepare(
-      `SELECT w.id, w.title_th, w.title_en, w.technique_th, w.dimensions, w.year_created, w.concept_th,
+      `SELECT w.id, w.title_th, w.title_en, w.technique_th, w.dimensions, w.year_created, w.concept_th, w.category, w.subcategory, w.video_url,
               w.image_url, w.image_width, w.image_height,
               a.name_th AS artist_name_th, a.academic_title_th, a.affiliation
          FROM works w JOIN artists a ON a.id = w.artist_id

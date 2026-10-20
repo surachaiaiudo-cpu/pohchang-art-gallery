@@ -4,12 +4,14 @@ import { requireManager, hasStorage, audit, parseOverrides, submissionWindow } f
 import { PRESETS, HEADING_FONTS, ORNAMENTS } from '../../../_lib/themes.js';
 import { recompute, reviewOpen } from '../../../_lib/review.js';
 import * as v from '../../../_lib/validate.js';
+import { normalizeCategories, parseCategories } from '../../../_lib/categories.js';
 
 function managerView(ex) {
   const { cloudinary_api_secret_enc, ...rest } = ex;
   return {
     ...rest,
     theme_overrides: parseOverrides(ex),
+    categories: parseCategories(ex.categories),
     has_storage: hasStorage(ex),
     has_private_key: !!cloudinary_api_secret_enc,
     submission: submissionWindow(ex),
@@ -63,6 +65,7 @@ export const onRequestPut = handle(async (context) => {
   if (b.ends_on !== undefined) set.ends_on = v.dateOnly(b.ends_on, { field: 'วันสิ้นสุดนิทรรศการ' });
   if (b.submission_opens_at !== undefined) set.submission_opens_at = v.dateTime(b.submission_opens_at, { field: 'วันเปิดรับผลงาน' });
   if (b.submission_closes_at !== undefined) set.submission_closes_at = v.dateTime(b.submission_closes_at, { field: 'วันปิดรับผลงาน' });
+  if (b.categories !== undefined) set.categories = normalizeCategories(b.categories);
   if (b.max_works_per_artist !== undefined) set.max_works_per_artist = v.int(b.max_works_per_artist, { field: 'จำนวนผลงานต่อคน', min: 1, max: 20 });
   if (b.theme_preset !== undefined) set.theme_preset = v.oneOf(b.theme_preset, Object.keys(PRESETS), { field: 'ธีม' });
   if (b.layout !== undefined) set.layout = v.oneOf(b.layout, ['grid', 'masonry', 'salon'], { field: 'รูปแบบการจัดวาง' });

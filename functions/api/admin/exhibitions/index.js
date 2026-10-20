@@ -3,6 +3,7 @@ import { requireAdmin, actorOf } from '../../../_lib/auth.js';
 import { audit } from '../../../_lib/exhibitions.js';
 import { DEFAULT_CLOUD_NAME, DEFAULT_UPLOAD_PRESET } from '../../../_lib/storage.js';
 import { PRESETS } from '../../../_lib/themes.js';
+import { DEFAULT_CATEGORIES } from '../../../_lib/categories.js';
 import * as v from '../../../_lib/validate.js';
 
 // GET /api/admin/exhibitions - every exhibition with counts and its staff.
@@ -41,8 +42,8 @@ export const onRequestPost = handle(async (context) => {
   ).bind(slug, slug).first();
   if (taken) throw bad('slug นี้ถูกใช้แล้ว');
   const res = await db.prepare(
-    'INSERT INTO exhibitions (slug, title_th, title_en, theme_preset, cloudinary_cloud_name, cloudinary_upload_preset) VALUES (?, ?, ?, ?, ?, ?)'
-  ).bind(slug, title_th, title_en, theme_preset, DEFAULT_CLOUD_NAME, DEFAULT_UPLOAD_PRESET).run();
+    'INSERT INTO exhibitions (slug, title_th, title_en, theme_preset, cloudinary_cloud_name, cloudinary_upload_preset, categories) VALUES (?, ?, ?, ?, ?, ?, ?)'
+  ).bind(slug, title_th, title_en, theme_preset, DEFAULT_CLOUD_NAME, DEFAULT_UPLOAD_PRESET, DEFAULT_CATEGORIES).run();
   await audit(db, res.meta.last_row_id, actorOf(admin), 'exhibition.create', { slug });
   return json({ ok: true, exhibition: { id: res.meta.last_row_id, slug, title_th } }, { status: 201 });
 });

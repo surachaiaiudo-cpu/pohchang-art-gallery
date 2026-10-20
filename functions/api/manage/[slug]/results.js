@@ -8,7 +8,7 @@ export const onRequestGet = handle(async (context) => {
   const db = context.env.DB;
   const [works, votes, reviewers] = await db.batch([
     db.prepare(
-      `SELECT w.id, w.title_th, w.image_url, w.review_result, w.badge_override, w.endorsed, a.name_th AS artist_name_th
+      `SELECT w.id, w.title_th, w.category, w.subcategory, w.image_url, w.review_result, w.badge_override, w.endorsed, a.name_th AS artist_name_th
          FROM works w JOIN artists a ON a.id = w.artist_id
         WHERE w.exhibition_id = ? AND w.status = 'shown' AND w.deleted_at IS NULL
         ORDER BY w.display_order, w.id`
