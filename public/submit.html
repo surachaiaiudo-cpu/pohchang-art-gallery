@@ -10,46 +10,54 @@
 </head>
 <body>
   <header class="site-head">
-    <div class="wrap"><a class="brand" id="back" href="/">หอศิลป์ออนไลน์</a></div>
+    <div class="wrap"><a class="brand" id="back" href="/">หอศิลป์ออนไลน์</a><span id="lang"></span></div>
   </header>
   <div class="ornament" aria-hidden="true"></div>
   <main class="wrap form-page" id="main">
     <h1 id="title">ส่งผลงาน</h1>
-    <div id="intro"><p class="muted">กำลังโหลด…</p></div>
+    <div id="intro"><p class="muted" data-i18n="loading">กำลังโหลด…</p></div>
     <form id="form" hidden novalidate>
       <fieldset>
-        <legend>ข้อมูลศิลปิน</legend>
+        <legend data-i18n="artistInfo">ข้อมูลศิลปิน</legend>
         <div class="grid-2">
-          <div class="field"><label for="name_th">ชื่อ-นามสกุล <span class="req">*</span></label><input id="name_th" type="text" required maxlength="200" autocomplete="name"></div>
-          <div class="field"><label for="name_en">ชื่อ-นามสกุล (ภาษาอังกฤษ)</label><input id="name_en" type="text" maxlength="200"></div>
-          <div class="field"><label for="academic_title_th">ตำแหน่งทางวิชาการ / คำนำหน้า</label><input id="academic_title_th" type="text" maxlength="200" placeholder="เช่น ผศ., อาจารย์"></div>
-          <div class="field"><label for="affiliation">สังกัด / สถาบัน</label><input id="affiliation" type="text" maxlength="300"></div>
-          <div class="field"><label for="email">อีเมล <span class="req">*</span></label><input id="email" type="email" required maxlength="254" autocomplete="email"><span class="hint">ใช้ติดต่อกลับ ไม่แสดงต่อสาธารณะ</span></div>
-          <div class="field"><label for="phone">โทรศัพท์</label><input id="phone" type="tel" maxlength="40" autocomplete="tel"><span class="hint">ไม่แสดงต่อสาธารณะ</span></div>
-          <div class="field"><label for="nationality">สัญชาติ</label><input id="nationality" type="text" maxlength="80" value="Thailand"></div>
+          <div class="field"><label for="name_th"><span data-i18n="fullName">ชื่อ-นามสกุล</span> <span class="req">*</span></label><input id="name_th" type="text" required maxlength="200" autocomplete="name"></div>
+          <div class="field"><label for="academic_title_th" data-i18n="academicTitle">ตำแหน่งทางวิชาการ / คำนำหน้า</label><input id="academic_title_th" type="text" maxlength="200" data-i18n-ph="academicPh"></div>
+          <div class="field"><label for="affiliation" data-i18n="affiliationField">สังกัด / สถาบัน</label><input id="affiliation" type="text" maxlength="300"></div>
+          <div class="field"><label for="nationality" data-i18n="nationality">สัญชาติ</label><input id="nationality" type="text" maxlength="80" value="Thailand"></div>
+          <div class="field"><label for="email"><span data-i18n="email">อีเมล</span> <span class="req">*</span></label><input id="email" type="email" required maxlength="254" autocomplete="email"><span class="hint" data-i18n="emailHint">ใช้ติดต่อกลับ ไม่แสดงต่อสาธารณะ</span></div>
+          <div class="field"><label for="phone" data-i18n="phone">โทรศัพท์</label><input id="phone" type="tel" maxlength="40" autocomplete="tel"><span class="hint" data-i18n="notPublic">ไม่แสดงต่อสาธารณะ</span></div>
         </div>
-        <div class="field"><label for="bio_th">ประวัติโดยย่อ</label><textarea id="bio_th" maxlength="6000"></textarea></div>
+        <div class="field"><label for="bio_th" data-i18n="bio">ประวัติโดยย่อ</label><textarea id="bio_th" maxlength="6000"></textarea></div>
+        <details class="translations">
+          <summary data-i18n="translations">ภาษาอังกฤษและภาษาจีน (ไม่บังคับ)</summary>
+          <div class="grid-2">
+            <div class="field"><label for="name_en" data-i18n="nameEn">ชื่อ-นามสกุล (ภาษาอังกฤษ)</label><input id="name_en" type="text" maxlength="200" lang="en"></div>
+            <div class="field"><label for="name_zh" data-i18n="nameZh">ชื่อ-นามสกุล (ภาษาจีน)</label><input id="name_zh" type="text" maxlength="200" lang="zh-Hans"></div>
+          </div>
+          <div class="field"><label for="bio_en" data-i18n="bioEn">ประวัติโดยย่อ (ภาษาอังกฤษ)</label><textarea id="bio_en" maxlength="6000" lang="en"></textarea></div>
+          <div class="field"><label for="bio_zh" data-i18n="bioZh">ประวัติโดยย่อ (ภาษาจีน)</label><textarea id="bio_zh" maxlength="6000" lang="zh-Hans"></textarea></div>
+        </details>
         <div class="field">
-          <span id="avatar-label" style="font-weight:600;font-size:.95rem">รูปศิลปิน (ไม่บังคับ)</span>
+          <span id="avatar-label" style="font-weight:600;font-size:.95rem" data-i18n="avatar">รูปศิลปิน (ไม่บังคับ)</span>
           <div class="drop" data-kind="artist" data-target="avatar" tabindex="0" role="button" aria-labelledby="avatar-label">
-            <span class="drop-text">แตะเพื่อเลือกรูป</span>
+            <span class="drop-text" data-i18n="tapPhoto">แตะเพื่อเลือกรูป</span>
           </div>
         </div>
       </fieldset>
       <div id="works"></div>
-      <p><button type="button" class="btn btn-ghost" id="add-work">+ เพิ่มผลงานอีกชิ้น</button></p>
+      <p><button type="button" class="btn btn-ghost" id="add-work" data-i18n="addWork">+ เพิ่มผลงานอีกชิ้น</button></p>
       <fieldset>
-        <legend>การยินยอม</legend>
+        <legend data-i18n="consent">การยินยอม</legend>
         <label class="check"><input type="checkbox" id="consent">
-          <span>ข้าพเจ้ายืนยันว่าเป็นเจ้าของผลงาน และยินยอมให้ผู้จัดเผยแพร่ภาพและข้อมูลผลงานในนิทรรศการออนไลน์และสูจิบัตร</span></label>
+          <span data-i18n="consentText">ข้าพเจ้ายืนยันว่าเป็นเจ้าของผลงาน และยินยอมให้ผู้จัดเผยแพร่ภาพและข้อมูลผลงานในนิทรรศการออนไลน์และสูจิบัตร</span></label>
       </fieldset>
       <div id="turnstile" style="margin-bottom:16px"></div>
       <p id="form-error" class="error-text" role="alert"></p>
-      <button type="submit" class="btn" id="send">ส่งผลงาน</button>
+      <button type="submit" class="btn" id="send" data-i18n="send">ส่งผลงาน</button>
     </form>
     <section id="done" hidden>
-      <div class="notice"><h2 style="margin-top:0">ส่งผลงานเรียบร้อย</h2><p id="done-text"></p></div>
-      <a class="btn btn-ghost" id="done-back" href="/">กลับหน้านิทรรศการ</a>
+      <div class="notice"><h2 style="margin-top:0" data-i18n="doneTitle">ส่งผลงานเรียบร้อย</h2><p id="done-text"></p></div>
+      <a class="btn btn-ghost" id="done-back" href="/" data-i18n="backToEx">กลับหน้านิทรรศการ</a>
     </section>
   </main>
   <input type="file" id="picker" accept="image/jpeg,image/png,image/webp" hidden>

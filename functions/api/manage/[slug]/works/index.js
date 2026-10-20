@@ -15,7 +15,7 @@ export const onRequestGet = handle(async (context) => {
   const params = [ex.id];
   if (status !== 'all') { where.push('w.status = ?'); params.push(status); }
   const { results } = await db.prepare(
-    `SELECT w.*, a.name_th AS artist_name_th, a.name_en AS artist_name_en, a.academic_title_th,
+    `SELECT w.*, a.name_th AS artist_name_th, a.name_en AS artist_name_en, a.name_zh AS artist_name_zh, a.bio_th, a.bio_en, a.bio_zh, a.academic_title_th,
             a.email AS artist_email, a.phone AS artist_phone, a.affiliation, a.nationality, a.avatar_url,
             (SELECT COUNT(*) FROM votes x JOIN reviewers r ON r.id = x.reviewer_id AND r.active = 1
               WHERE x.work_id = w.id AND x.decision = 'approve') AS approvals,

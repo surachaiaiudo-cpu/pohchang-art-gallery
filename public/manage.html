@@ -63,6 +63,7 @@
           <div class="grid-2">
             <div class="field"><label for="rs-badge">ข้อความ badge</label><input id="rs-badge" type="text" maxlength="80"></div>
             <div class="field"><label for="rs-badge-en">ข้อความ badge (ภาษาอังกฤษ)</label><input id="rs-badge-en" type="text" maxlength="80"></div>
+            <div class="field"><label for="rs-badge-zh">ข้อความ badge (ภาษาจีน)</label><input id="rs-badge-zh" type="text" maxlength="80" lang="zh-Hans"></div>
           </div>
           <button class="btn" type="submit">บันทึกกติกา</button>
         </form>
@@ -97,9 +98,11 @@
           <h2>ข้อมูลนิทรรศการ</h2>
           <div class="grid-2">
             <div class="field"><label for="s-title_th">ชื่อนิทรรศการ</label><input id="s-title_th" type="text"></div>
-            <div class="field"><label for="s-title_en">ชื่อภาษาอังกฤษ</label><input id="s-title_en" type="text"></div>
+            <div class="field"><label for="s-title_en">ชื่อภาษาอังกฤษ</label><input id="s-title_en" type="text" lang="en"></div>
+            <div class="field"><label for="s-title_zh">ชื่อภาษาจีน (ไม่บังคับ)</label><input id="s-title_zh" type="text" lang="zh-Hans"></div>
             <div class="field"><label for="s-subtitle_th">คำโปรย</label><input id="s-subtitle_th" type="text"></div>
-            <div class="field"><label for="s-subtitle_en">คำโปรยภาษาอังกฤษ</label><input id="s-subtitle_en" type="text"></div>
+            <div class="field"><label for="s-subtitle_en">คำโปรยภาษาอังกฤษ</label><input id="s-subtitle_en" type="text" lang="en"></div>
+            <div class="field"><label for="s-subtitle_zh">คำโปรยภาษาจีน (ไม่บังคับ)</label><input id="s-subtitle_zh" type="text" lang="zh-Hans"></div>
             <div class="field"><label for="s-venue">สถานที่จัดแสดง</label><input id="s-venue" type="text"></div>
             <div class="field"><label for="s-status">สถานะ</label><select id="s-status"></select>
               <span class="hint">"เปิด" = แสดงต่อสาธารณะและรับผลงานตามช่วงวันที่ด้านล่าง</span></div>
@@ -107,7 +110,9 @@
             <div class="field"><label for="s-ends_on">วันสิ้นสุด</label><input id="s-ends_on" type="date"></div>
           </div>
           <div class="field"><label for="s-statement_th">บทภัณฑารักษ์</label><textarea id="s-statement_th" rows="6"></textarea></div>
-          <div class="field"><label for="s-statement_en">บทภัณฑารักษ์ (ภาษาอังกฤษ)</label><textarea id="s-statement_en" rows="4"></textarea></div>
+          <div class="field"><label for="s-statement_en">บทภัณฑารักษ์ (ภาษาอังกฤษ)</label><textarea id="s-statement_en" rows="4" lang="en"></textarea></div>
+          <div class="field"><label for="s-statement_zh">บทภัณฑารักษ์ (ภาษาจีน ไม่บังคับ)</label><textarea id="s-statement_zh" rows="4" lang="zh-Hans"></textarea>
+            <span class="hint">หน้าเว็บมี 3 ภาษา (ไทย / English / 中文) ช่องภาษาที่เว้นว่างจะแสดงภาษาอังกฤษแทน ถ้าไม่มีจะแสดงภาษาไทย</span></div>
         </div>
         <div class="card">
           <h2>การรับผลงาน</h2>
@@ -118,7 +123,7 @@
           </div>
           <div class="field"><label for="s-categories">กลุ่มงาน (Categories)</label>
             <textarea id="s-categories" rows="7" placeholder="จิตรกรรม&#10;Mixed media technique: 2D, 3D, วิดีโออาร์ต, Digital art"></textarea>
-            <span class="hint">บรรทัดละ 1 กลุ่ม ถ้ามีประเภทย่อยให้ใส่หลังเครื่องหมาย : คั่นด้วยจุลภาค ประเภทที่มีคำว่า "วิดีโอ" จะบังคับให้ใส่ลิงก์วิดีโอ เว้นว่างทั้งหมดถ้าไม่ต้องการแบ่งกลุ่มงาน</span></div>
+            <span class="hint">บรรทัดละ 1 กลุ่ม ถ้ามีประเภทย่อยให้ใส่หลังเครื่องหมาย : คั่นด้วยจุลภาค ใส่ชื่อภาษาอังกฤษและจีนต่อท้ายด้วย | เช่น <code>จิตรกรรม | Painting | 绘画</code> ประเภทที่มีคำว่า "วิดีโอ" จะบังคับให้ใส่ลิงก์วิดีโอ เว้นว่างทั้งหมดถ้าไม่ต้องการแบ่งกลุ่มงาน</span></div>
           <p class="small" id="sub-state"></p>
         </div>
         <div class="card">

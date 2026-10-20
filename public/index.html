@@ -10,29 +10,30 @@
   <script type="module" src="/js/lobby.js"></script>
 </head>
 <body>
-  <a class="sr-only" href="#main">ข้ามไปเนื้อหา</a>
+  <a class="sr-only" href="#main" data-i18n="skip">ข้ามไปเนื้อหา</a>
   <header class="site-head">
     <div class="wrap">
       <a class="brand" href="/" id="site-name">หอศิลป์ออนไลน์</a>
-      <nav class="nav" aria-label="เมนูหลัก">
-        <a href="#now">กำลังจัดแสดง</a>
-        <a href="#past">นิทรรศการที่ผ่านมา</a>
-        <a href="/login">สำหรับผู้จัด</a>
+      <nav class="nav" aria-label="เมนูหลัก" data-i18n-aria="mainMenu" id="site-nav">
+        <a href="#now" data-i18n="navNow">กำลังจัดแสดง</a>
+        <a href="#past" data-i18n="navPast">นิทรรศการที่ผ่านมา</a>
+        <a href="/login" data-i18n="navStaff">สำหรับผู้จัด</a>
       </nav>
+      <span id="lang"></span>
     </div>
   </header>
   <main id="main" class="wrap">
     <section class="lobby-hero">
       <p class="eyebrow">Online Gallery</p>
-      <h1>หอศิลป์ที่เปิดทุกนิทรรศการไว้ในที่เดียว</h1>
-      <p class="muted" style="max-width:56ch">เลือกชมนิทรรศการที่กำลังจัดแสดง ส่งผลงานเข้าร่วมงานที่เปิดรับ หรือย้อนดูนิทรรศการที่ผ่านมา</p>
+      <h1 data-i18n="lobbyHeadline">หอศิลป์ที่เปิดทุกนิทรรศการไว้ในที่เดียว</h1>
+      <p class="muted" style="max-width:56ch" data-i18n="lobbyLead">เลือกชมนิทรรศการที่กำลังจัดแสดง ส่งผลงานเข้าร่วมงานที่เปิดรับ หรือย้อนดูนิทรรศการที่ผ่านมา</p>
     </section>
     <section id="now" aria-labelledby="now-title">
-      <h2 class="section-title" id="now-title">กำลังจัดแสดงและเปิดรับผลงาน</h2>
-      <div class="ex-grid" id="now-list"><p class="muted">กำลังโหลด…</p></div>
+      <h2 class="section-title" id="now-title" data-i18n="nowTitle">กำลังจัดแสดงและเปิดรับผลงาน</h2>
+      <div class="ex-grid" id="now-list"><p class="muted" data-i18n="loading">กำลังโหลด…</p></div>
     </section>
     <section id="past" aria-labelledby="past-title">
-      <h2 class="section-title" id="past-title">นิทรรศการที่ผ่านมา</h2>
+      <h2 class="section-title" id="past-title" data-i18n="pastTitle">นิทรรศการที่ผ่านมา</h2>
       <div class="ex-grid" id="past-list"></div>
     </section>
   </main>

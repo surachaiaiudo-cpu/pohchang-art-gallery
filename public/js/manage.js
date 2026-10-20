@@ -11,7 +11,13 @@ const S = { ex: null, counts: {}, works: [], status: 'submitted', q: '', cat: ''
 const RESULT_TH = { pending: 'รอผล', endorsed: 'ได้ badge', not_endorsed: 'ไม่ได้ badge', needs_curator: 'ให้ภัณฑารักษ์ตัดสิน' };
 const DECISION = { approve: '✓', reject: '✕', abstain: '–' };
 const catLabel = (w) => [w.category, w.subcategory].filter(Boolean).join(' · ');
-const catText = (list) => list.map((c) => (c.subs.length ? `${c.name}: ${c.subs.join(', ')}` : c.name)).join('\n');
+// Same text format as functions/_lib/categories.js formatCategories (keeps the EN / 中文 labels).
+const labelled = ({ name, en, zh }) => (zh ? `${name} | ${en || ''} | ${zh}` : en ? `${name} | ${en}` : name);
+const catText = (list) => list.map((c) => {
+  const head = labelled(c);
+  if (!c.subs.length) return head;
+  return `${head}: ${c.subs.map((s) => labelled({ name: s, ...((c.subLabels || {})[s] || {}) })).join(', ')}`;
+}).join('\n');
 
 // ------------------------------------------------------------------ helpers
 function openDrawer(title, html) {
@@ -141,13 +147,15 @@ function workEditor(w) {
       </div>
       ${f('video_url', 'ลิงก์วิดีโอ', w.video_url, 'url')}
       ${w.video_url ? `<p class="small" style="margin-top:-6px"><a href="${esc(w.video_url)}" target="_blank" rel="noopener noreferrer">เปิดวิดีโอ ↗</a></p>` : ''}
-      <div class="grid-2">${f('title_th', 'ชื่อผลงาน')}${f('title_en', 'ชื่อภาษาอังกฤษ')}${f('technique_th', 'เทคนิค')}${f('technique_en', 'เทคนิคภาษาอังกฤษ')}
+      <div class="grid-2">${f('title_th', 'ชื่อผลงาน')}${f('title_en', 'ชื่อภาษาอังกฤษ')}${f('title_zh', 'ชื่อภาษาจีน')}
+        ${f('technique_th', 'เทคนิค')}${f('technique_en', 'เทคนิคภาษาอังกฤษ')}${f('technique_zh', 'เทคนิคภาษาจีน')}
         ${f('dimensions', 'ขนาด')}${f('year_created', 'ปีที่สร้าง')}${f('zone', 'โซน')}${f('display_order', 'ลำดับการแสดง', w.display_order, 'number')}</div>
       <div class="field"><label for="we-concept_th">แนวคิด</label><textarea id="we-concept_th">${esc(w.concept_th)}</textarea></div>
       <div class="field"><label for="we-concept_en">แนวคิดภาษาอังกฤษ</label><textarea id="we-concept_en">${esc(w.concept_en)}</textarea></div>
+      <div class="field"><label for="we-concept_zh">แนวคิดภาษาจีน</label><textarea id="we-concept_zh" lang="zh-Hans">${esc(w.concept_zh)}</textarea></div>
       <h3>ศิลปิน</h3>
       <div class="grid-2">
-        ${f('a-name_th', 'ชื่อ', w.artist_name_th)}${f('a-name_en', 'ชื่อภาษาอังกฤษ', w.artist_name_en)}
+        ${f('a-name_th', 'ชื่อ', w.artist_name_th)}${f('a-name_en', 'ชื่อภาษาอังกฤษ', w.artist_name_en)}${f('a-name_zh', 'ชื่อภาษาจีน', w.artist_name_zh)}
         ${f('a-academic_title_th', 'ตำแหน่งทางวิชาการ', w.academic_title_th)}${f('a-affiliation', 'สังกัด', w.affiliation)}
         ${f('a-email', 'อีเมล', w.artist_email, 'email')}${f('a-phone', 'โทรศัพท์', w.artist_phone)}</div>
       <p class="small muted">ส่งเมื่อ ${esc(thDate(w.created_at.replace(' ', 'T') + 'Z', true))}</p>
@@ -178,10 +186,11 @@ function workEditor(w) {
         body: {
           status: val('status'), badge_override: val('override') || null,
           category: val('category'), subcategory: val('subcategory'), video_url: val('video_url').trim(),
-          title_th: val('title_th'), title_en: val('title_en'), technique_th: val('technique_th'), technique_en: val('technique_en'),
+          title_th: val('title_th'), title_en: val('title_en'), title_zh: val('title_zh'),
+          technique_th: val('technique_th'), technique_en: val('technique_en'), technique_zh: val('technique_zh'),
           dimensions: val('dimensions'), year_created: val('year_created'), zone: val('zone'), display_order: Number(val('display_order') || 0),
-          concept_th: val('concept_th'), concept_en: val('concept_en'),
-          artist: { name_th: val('a-name_th'), name_en: val('a-name_en'), academic_title_th: val('a-academic_title_th'),
+          concept_th: val('concept_th'), concept_en: val('concept_en'), concept_zh: val('concept_zh'),
+          artist: { name_th: val('a-name_th'), name_en: val('a-name_en'), name_zh: val('a-name_zh'), academic_title_th: val('a-academic_title_th'),
             affiliation: val('a-affiliation'), email: val('a-email'), phone: val('a-phone') }
         }
       });
@@ -224,6 +233,7 @@ async function loadPanel() {
   $('rs-blind').checked = !!ex.review_blind;
   $('rs-badge').value = ex.badge_label_th;
   $('rs-badge-en').value = ex.badge_label_en;
+  $('rs-badge-zh').value = ex.badge_label_zh || '';
   $('rv-rows').innerHTML = S.reviewers.map((r) => `
     <tr>
       <td><strong>${esc(r.name)}</strong>${r.active ? '' : ' <span class="tag">ปิดใช้งาน</span>'}<div class="small muted">${esc(r.title)}${r.email ? ` · ${esc(r.email)}` : ''}</div></td>
@@ -274,7 +284,7 @@ function downloadCsv() {
 // ------------------------------------------------------------------ settings
 function fillSettings() {
   const ex = S.ex;
-  for (const k of ['title_th', 'title_en', 'subtitle_th', 'subtitle_en', 'venue', 'statement_th', 'statement_en']) $(`s-${k}`).value = ex[k] || '';
+  for (const k of ['title_th', 'title_en', 'title_zh', 'subtitle_th', 'subtitle_en', 'subtitle_zh', 'venue', 'statement_th', 'statement_en', 'statement_zh']) $(`s-${k}`).value = ex[k] || '';
   $('s-status').innerHTML = ['draft', 'open', 'closed'].concat(ex.status === 'archived' ? ['archived'] : [])
     .map((k) => `<option value="${k}" ${k === ex.status ? 'selected' : ''}>${STATUS_TH[k]}</option>`).join('');
   $('s-starts_on').value = ex.starts_on || '';
@@ -342,8 +352,9 @@ async function saveSettings(e) {
     await api(M, {
       method: 'PUT',
       body: {
-        title_th: v('s-title_th'), title_en: v('s-title_en'), subtitle_th: v('s-subtitle_th'), subtitle_en: v('s-subtitle_en'),
-        venue: v('s-venue'), statement_th: v('s-statement_th'), statement_en: v('s-statement_en'), status: v('s-status'),
+        title_th: v('s-title_th'), title_en: v('s-title_en'), title_zh: v('s-title_zh'),
+        subtitle_th: v('s-subtitle_th'), subtitle_en: v('s-subtitle_en'), subtitle_zh: v('s-subtitle_zh'),
+        venue: v('s-venue'), statement_th: v('s-statement_th'), statement_en: v('s-statement_en'), statement_zh: v('s-statement_zh'), status: v('s-status'),
         starts_on: v('s-starts_on'), ends_on: v('s-ends_on'),
         submission_opens_at: fromLocalInput(v('s-opens')), submission_closes_at: fromLocalInput(v('s-closes')),
         max_works_per_artist: Number(v('s-max') || 3),
@@ -432,7 +443,7 @@ $('rv-settings').addEventListener('submit', async (e) => {
       body: {
         review_panel_size: Number($('rs-panel').value), review_threshold: Number($('rs-threshold').value),
         review_deadline: fromLocalInput($('rs-deadline').value), review_open: $('rs-open').checked, review_blind: $('rs-blind').checked,
-        badge_label_th: $('rs-badge').value, badge_label_en: $('rs-badge-en').value
+        badge_label_th: $('rs-badge').value, badge_label_en: $('rs-badge-en').value, badge_label_zh: $('rs-badge-zh').value
       }
     });
     toast('บันทึกกติกาแล้ว', 'ok');

@@ -1,5 +1,9 @@
-import { api, esc, thDate, applyTheme, toast, icons, slugFromPath } from './core.js';
-import { checkImageFile, uploadImage, fitForUpload } from './upload.js';
+import { api, esc, applyTheme, toast, icons, slugFromPath } from './core.js';
+import { imageProblem, uploadImage, fitForUpload } from './upload.js';
+import { t, pick, fmtDate, catName, subName, applyStatic, mountSwitcher, localError, lang } from './i18n.js';
+
+applyStatic();
+mountSwitcher(document.getElementById('lang'));
 
 const slug = slugFromPath(1);
 const base = `/e/${encodeURIComponent(slug)}`;
@@ -9,58 +13,74 @@ const uploads = {};      // target key -> { busy, file: Cloudinary upload result
 let workSeq = 0;
 
 const $ = (id) => document.getElementById(id);
-const needsVideo = (cat, sub) => /วิดีโอ|วีดิทัศน์|video/i.test(`${cat} ${sub}`);
+const needsVideo = (cat, sub) => /วิดีโอ|วีดิทัศน์|video|录像|视频/i.test(`${cat} ${sub}`);
+const req = '<span class="req">*</span>';
 
 function categoryFields(k) {
   const cats = ex.categories || [];
   if (!cats.length) return '';
   return `<div class="grid-2">
-      <div class="field"><label for="${k}-category">กลุ่มงาน <span class="req">*</span></label>
-        <select id="${k}-category" data-cat="${k}"><option value="">— เลือกกลุ่มงาน —</option>
-          ${cats.map((c) => `<option value="${esc(c.name)}">${esc(c.name)}</option>`).join('')}</select></div>
-      <div class="field" id="${k}-sub-field" hidden><label for="${k}-subcategory">ประเภท <span class="req">*</span></label>
+      <div class="field"><label for="${k}-category">${esc(t('category'))} ${req}</label>
+        <select id="${k}-category" data-cat="${k}"><option value="">${esc(t('pickCategory'))}</option>
+          ${cats.map((c) => `<option value="${esc(c.name)}">${esc(catName(cats, c.name))}</option>`).join('')}</select></div>
+      <div class="field" id="${k}-sub-field" hidden><label for="${k}-subcategory">${esc(t('subtype'))} ${req}</label>
         <select id="${k}-subcategory" data-sub="${k}"></select></div>
     </div>
-    <div class="field" id="${k}-video-field" hidden><label for="${k}-video_url">ลิงก์วิดีโอ <span class="req">*</span></label>
-      <input id="${k}-video_url" type="url" inputmode="url" maxlength="1000" placeholder="https://youtu.be/… หรือ https://vimeo.com/…">
-      <span class="hint">ใส่ลิงก์ YouTube, Vimeo หรือ Google Drive ที่เปิดให้ทุกคนดูได้ และอัปโหลดภาพนิ่งจากวิดีโอเป็นภาพผลงาน</span></div>`;
+    <div class="field" id="${k}-video-field" hidden><label for="${k}-video_url">${esc(t('videoUrl'))} ${req}</label>
+      <input id="${k}-video_url" type="url" inputmode="url" maxlength="1000" placeholder="https://youtu.be/…">
+      <span class="hint">${esc(t('videoHint'))}</span></div>`;
 }
 
 function syncCategory(k) {
   const cat = $(`${k}-category`);
   if (!cat) return;
-  const c = (ex.categories || []).find((x) => x.name === cat.value);
+  const cats = ex.categories || [];
+  const c = cats.find((x) => x.name === cat.value);
   const subs = c ? c.subs : [];
   const subSel = $(`${k}-subcategory`);
   const keep = subSel.value;
   $(`${k}-sub-field`).hidden = !subs.length;
-  subSel.innerHTML = `<option value="">— เลือกประเภท —</option>${subs.map((s) => `<option value="${esc(s)}">${esc(s)}</option>`).join('')}`;
+  subSel.innerHTML = `<option value="">${esc(t('pickSubtype'))}</option>${subs.map((s) => `<option value="${esc(s)}">${esc(subName(cats, c.name, s))}</option>`).join('')}`;
   if (subs.includes(keep)) subSel.value = keep;
   $(`${k}-video-field`).hidden = !needsVideo(cat.value, subSel.value);
 }
 
 function workBlock(n) {
   const k = `work${n}`;
+  const input = (f, label, { ph = '', required = false, max = 300, lang = '' } = {}) =>
+    `<div class="field"><label for="${k}-${f}">${esc(t(label))}${required ? ` ${req}` : ''}</label>
+      <input id="${k}-${f}" type="text" maxlength="${max}"${ph ? ` placeholder="${esc(t(ph))}"` : ''}${lang ? ` lang="${lang}"` : ''}></div>`;
+  const area = (f, label, lang = '') =>
+    `<div class="field"><label for="${k}-${f}">${esc(t(label))}</label><textarea id="${k}-${f}" maxlength="4000"${lang ? ` lang="${lang}"` : ''}></textarea></div>`;
   return `<fieldset class="work-block" data-key="${k}">
-    <legend>ผลงานชิ้นที่ <span class="wnum"></span></legend>
+    <legend>${esc(t('workN'))} <span class="wnum"></span></legend>
     ${categoryFields(k)}
     <div class="field">
-      <span style="font-weight:600;font-size:.95rem" id="${k}-img-label">ภาพผลงาน <span class="req">*</span></span>
+      <span style="font-weight:600;font-size:.95rem" id="${k}-img-label">${esc(t('image'))} ${req}</span>
       <div class="drop" data-kind="work" data-target="${k}" tabindex="0" role="button" aria-labelledby="${k}-img-label">
-        ${icons.upload}<span class="drop-text">แตะเพื่อเลือกไฟล์ภาพ (JPG, PNG หรือ WebP)</span>
+        ${icons.upload}<span class="drop-text">${esc(t('tapImage'))}</span>
       </div>
-      <span class="hint">ใช้ไฟล์ความละเอียดสูงสำหรับพิมพ์สูจิบัตร ด้านยาวอย่างน้อย 3,000 พิกเซล</span>
+      <span class="hint">${esc(t('imageHint'))}</span>
     </div>
     <div class="grid-2">
-      <div class="field"><label for="${k}-title_th">ชื่อผลงาน <span class="req">*</span></label><input id="${k}-title_th" type="text" maxlength="300"></div>
-      <div class="field"><label for="${k}-title_en">ชื่อผลงาน (ภาษาอังกฤษ)</label><input id="${k}-title_en" type="text" maxlength="300"></div>
-      <div class="field"><label for="${k}-technique_th">เทคนิค <span class="req">*</span></label><input id="${k}-technique_th" type="text" maxlength="300" placeholder="เช่น สีน้ำมันบนผ้าใบ"></div>
-      <div class="field"><label for="${k}-dimensions">ขนาด</label><input id="${k}-dimensions" type="text" maxlength="120" placeholder="เช่น 80 × 120 ซม."></div>
-      <div class="field"><label for="${k}-year_created">ปีที่สร้าง</label><input id="${k}-year_created" type="text" maxlength="20" placeholder="เช่น 2569"></div>
+      ${input('title_th', 'title', { required: true })}
+      ${input('technique_th', 'techniqueReq', { required: true, ph: 'techniquePh' })}
+      ${input('dimensions', 'size', { max: 120, ph: 'sizePh' })}
+      ${input('year_created', 'year', { max: 20, ph: 'yearPh' })}
     </div>
-    <div class="field"><label for="${k}-concept_th">แนวคิด</label><textarea id="${k}-concept_th" maxlength="4000"></textarea></div>
-    <div class="field"><label for="${k}-concept_en">แนวคิด (ภาษาอังกฤษ)</label><textarea id="${k}-concept_en" maxlength="4000"></textarea></div>
-    <p><button type="button" class="btn btn-ghost remove-work">ลบผลงานชิ้นนี้</button></p>
+    ${area('concept_th', 'concept')}
+    <details class="translations">
+      <summary>${esc(t('translations'))}</summary>
+      <div class="grid-2">
+        ${input('title_en', 'titleEn', { lang: 'en' })}
+        ${input('title_zh', 'titleZh', { lang: 'zh-Hans' })}
+        ${input('technique_en', 'techniqueEn', { lang: 'en' })}
+        ${input('technique_zh', 'techniqueZh', { lang: 'zh-Hans' })}
+      </div>
+      ${area('concept_en', 'conceptEn', 'en')}
+      ${area('concept_zh', 'conceptZh', 'zh-Hans')}
+    </details>
+    <p><button type="button" class="btn btn-ghost remove-work">${esc(t('removeWork'))}</button></p>
   </fieldset>`;
 }
 
@@ -87,7 +107,8 @@ function setupTurnstile(siteKey) {
     window.onTurnstileLoad = () => {
       window.turnstile.render('#turnstile', {
         sitekey: siteKey,
-        callback: async (token) => { try { await getTicket(token); resolve(); } catch (e) { toast(e.message, 'error'); } }
+        language: { th: 'th', en: 'en', zh: 'zh-cn' }[document.documentElement.lang.slice(0, 2)] || 'auto',
+        callback: async (token) => { try { await getTicket(token); resolve(); } catch (e) { toast(localError(e.message), 'error'); } }
       });
     };
     const s = document.createElement('script');
@@ -105,31 +126,31 @@ function openPicker(drop) {
   $('picker').click();
 }
 
+const FILE_ERR = { noFile: 'errNoFile', type: 'errFileType', big: 'errFileBig' };
+
 async function handleFile(drop, file) {
   const key = drop.dataset.target;
-  const problem = checkImageFile(file);
-  if (problem) { toast(problem, 'error'); return; }
-  if (!ticket) { toast('กรุณายืนยันว่าไม่ใช่โปรแกรมอัตโนมัติก่อน', 'error'); return; }
+  const problem = imageProblem(file);
+  if (problem) { toast(t(FILE_ERR[problem]), 'error'); return; }
+  if (!ticket) { toast(t('errHuman'), 'error'); return; }
   const preview = URL.createObjectURL(file);
   uploads[key] = { busy: true, file: null };
   drop.classList.add('has-image');
-  drop.innerHTML = `<img src="${preview}" alt="ภาพที่เลือก"><div class="progress" aria-label="ความคืบหน้า"><span></span></div><span class="drop-text">กำลังเตรียมไฟล์…</span>`;
+  drop.innerHTML = `<img src="${preview}" alt="${esc(t('chosenImage'))}"><div class="progress" aria-label="${esc(t('progress'))}"><span></span></div><span class="drop-text">${esc(t('preparing'))}</span>`;
   const bar = drop.querySelector('.progress > span');
   const label = drop.querySelector('.drop-text');
   try {
     const { upload } = await api(`/api/x/${encodeURIComponent(slug)}/upload-auth`, { method: 'POST', body: { ticket, kind: drop.dataset.kind } });
     const fitted = await fitForUpload(file, upload.maxBytes, upload.maxPixels);
-    label.textContent = fitted.resized ? `กำลังอัปโหลด (ย่อเป็น ${fitted.width}×${fitted.height} px)…` : 'กำลังอัปโหลด…';
+    label.textContent = fitted.resized ? t('uploadingResized', { w: fitted.width, h: fitted.height }) : t('uploading');
     const res = await uploadImage(fitted.file, upload, (p) => { bar.style.width = `${p}%`; });
     uploads[key] = { busy: false, file: res };
-    label.textContent = fitted.resized
-      ? `อัปโหลดแล้ว (ระบบย่อเหลือ ${(fitted.file.size / 1048576).toFixed(1)} MB) · แตะเพื่อเปลี่ยนรูป`
-      : 'อัปโหลดแล้ว · แตะเพื่อเปลี่ยนรูป';
+    label.textContent = fitted.resized ? t('uploadedResized', { mb: (fitted.file.size / 1048576).toFixed(1) }) : t('uploaded');
   } catch (e) {
     uploads[key] = { busy: false, file: null };
     drop.classList.remove('has-image');
-    drop.innerHTML = `${icons.upload}<span class="drop-text">อัปโหลดไม่สำเร็จ แตะเพื่อลองใหม่</span>`;
-    toast(e.message, 'error');
+    drop.innerHTML = `${icons.upload}<span class="drop-text">${esc(t('uploadFailed'))}</span>`;
+    toast(localError(e.message), 'error');
     if (e.data && e.data.ticketExpired) ticket = '';
   }
 }
@@ -137,41 +158,45 @@ async function handleFile(drop, file) {
 function collect() {
   const val = (id) => ($(id) ? $(id).value.trim() : '');
   const artist = {
-    name_th: val('name_th'), name_en: val('name_en'), academic_title_th: val('academic_title_th'),
+    name_th: val('name_th'), name_en: val('name_en'), name_zh: val('name_zh'), academic_title_th: val('academic_title_th'),
     email: val('email'), phone: val('phone'), nationality: val('nationality'), affiliation: val('affiliation'),
-    bio_th: val('bio_th'), avatar_file: uploads.avatar?.file || undefined
+    bio_th: val('bio_th'), bio_en: val('bio_en'), bio_zh: val('bio_zh'), avatar_file: uploads.avatar?.file || undefined
   };
   const works = [...document.querySelectorAll('.work-block')].map((b) => {
     const k = b.dataset.key;
+    const f = (name) => val(`${k}-${name}`);
     return {
-      title_th: val(`${k}-title_th`), title_en: val(`${k}-title_en`), technique_th: val(`${k}-technique_th`),
-      category: val(`${k}-category`), subcategory: val(`${k}-subcategory`), video_url: val(`${k}-video_url`),
-      dimensions: val(`${k}-dimensions`), year_created: val(`${k}-year_created`),
-      concept_th: val(`${k}-concept_th`), concept_en: val(`${k}-concept_en`), file: uploads[k]?.file || null
+      category: f('category'), subcategory: f('subcategory'), video_url: f('video_url'),
+      title_th: f('title_th'), title_en: f('title_en'), title_zh: f('title_zh'),
+      technique_th: f('technique_th'), technique_en: f('technique_en'), technique_zh: f('technique_zh'),
+      dimensions: f('dimensions'), year_created: f('year_created'),
+      concept_th: f('concept_th'), concept_en: f('concept_en'), concept_zh: f('concept_zh'),
+      file: uploads[k]?.file || null
     };
   });
   return { artist, works };
 }
 
 function validate({ artist, works }) {
-  if (!artist.name_th) return ['name_th', 'กรุณากรอกชื่อ-นามสกุล'];
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(artist.email)) return ['email', 'กรุณากรอกอีเมลให้ถูกต้อง'];
+  if (!artist.name_th) return ['name_th', t('errName')];
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(artist.email)) return ['email', t('errEmail')];
   const blocks = [...document.querySelectorAll('.work-block')];
+  const cats = ex.categories || [];
   for (let i = 0; i < works.length; i++) {
-    const k = blocks[i].dataset.key;
-    const cat = (ex.categories || []).find((c) => c.name === works[i].category);
-    if ((ex.categories || []).length && !cat) return [`${k}-category`, `กรุณาเลือกกลุ่มงานของผลงานชิ้นที่ ${i + 1}`];
-    if (cat && cat.subs.length && !works[i].subcategory) return [`${k}-subcategory`, `กรุณาเลือกประเภทของผลงานชิ้นที่ ${i + 1}`];
+    const k = blocks[i].dataset.key, n = i + 1;
+    const cat = cats.find((c) => c.name === works[i].category);
+    if (cats.length && !cat) return [`${k}-category`, t('errCategory', { n })];
+    if (cat && cat.subs.length && !works[i].subcategory) return [`${k}-subcategory`, t('errSubtype', { n })];
     if (needsVideo(works[i].category, works[i].subcategory) && !/^https:\/\/\S+$/.test(works[i].video_url)) {
-      return [`${k}-video_url`, `กรุณาใส่ลิงก์วิดีโอ (https://…) ของผลงานชิ้นที่ ${i + 1}`];
+      return [`${k}-video_url`, t('errVideo', { n })];
     }
-    if (uploads[k]?.busy) return [null, `ผลงานชิ้นที่ ${i + 1} ยังอัปโหลดไม่เสร็จ`];
-    if (!works[i].file) return [null, `กรุณาอัปโหลดภาพผลงานชิ้นที่ ${i + 1}`];
-    if (!works[i].title_th) return [`${k}-title_th`, `กรุณากรอกชื่อผลงานชิ้นที่ ${i + 1}`];
-    if (!works[i].technique_th) return [`${k}-technique_th`, `กรุณากรอกเทคนิคของผลงานชิ้นที่ ${i + 1}`];
+    if (uploads[k]?.busy) return [null, t('errBusy', { n })];
+    if (!works[i].file) return [null, t('errImage', { n })];
+    if (!works[i].title_th) return [`${k}-title_th`, t('errTitle', { n })];
+    if (!works[i].technique_th) return [`${k}-technique_th`, t('errTechnique', { n })];
   }
-  if (Object.values(uploads).some((u) => u.busy)) return [null, 'รอให้อัปโหลดรูปเสร็จก่อน'];
-  if (!$('consent').checked) return ['consent', 'กรุณายืนยันการยินยอม'];
+  if (Object.values(uploads).some((u) => u.busy)) return [null, t('errWait')];
+  if (!$('consent').checked) return ['consent', t('errConsent')];
   return null;
 }
 
@@ -185,21 +210,21 @@ async function onSubmit(e) {
     return;
   }
   $('send').disabled = true;
-  $('send').textContent = 'กำลังส่ง…';
+  $('send').textContent = t('sending');
   try {
     const d = await api(`/api/x/${encodeURIComponent(slug)}/submit`, { method: 'POST', body: { ticket, consent: true, ...data } });
     $('form').hidden = true;
     $('intro').hidden = true;
     $('done').hidden = false;
-    $('done-text').textContent = `ขอบคุณ ${d.name} ระบบได้รับผลงาน ${d.received} ชิ้นแล้ว ผลงานจะแสดงในนิทรรศการหลังภัณฑารักษ์ตรวจคัดเลือก`;
+    $('done-text').textContent = t('doneText', { name: d.name, n: d.received });
     $('done-back').href = base;
     window.scrollTo(0, 0);
   } catch (err) {
-    $('form-error').textContent = err.message;
+    $('form-error').textContent = localError(err.message);
     if (err.data && err.data.ticketExpired) ticket = '';
   } finally {
     $('send').disabled = false;
-    $('send').textContent = 'ส่งผลงาน';
+    $('send').textContent = t('send');
   }
 }
 
@@ -208,25 +233,30 @@ async function main() {
     const [{ exhibition }, cfg] = await Promise.all([api(`/api/x/${encodeURIComponent(slug)}`), api('/api/config')]);
     ex = exhibition;
     applyTheme(ex);
-    document.title = `ส่งผลงาน — ${ex.title_th}`;
+    const title = pick(ex, 'title');
+    document.title = `${t('submit')} — ${title}`;
     $('back').href = base;
-    $('back').textContent = `← ${ex.title_th}`;
-    $('title').textContent = `ส่งผลงาน: ${ex.title_th}`;
+    $('back').textContent = t('backTo', { title });
+    $('title').textContent = t('submitTitle', { title });
     if (!ex.submission.open) {
-      $('intro').innerHTML = `<div class="notice">${esc(ex.submission.reason)}</div><a class="btn btn-ghost" href="${base}">กลับหน้านิทรรศการ</a>`;
+      $('intro').innerHTML = `<div class="notice">${esc(lang === 'th' ? ex.submission.reason : t('closedReason'))}</div><a class="btn btn-ghost" href="${base}">${esc(t('backToEx'))}</a>`;
       return;
     }
+    const cats = ex.categories || [];
+    const catList = cats.map((c) => (c.subs.length
+      ? `${catName(cats, c.name)} (${c.subs.map((s) => subName(cats, c.name, s)).join(', ')})`
+      : catName(cats, c.name))).join(' · ');
     $('intro').innerHTML = `<div class="notice">
-      <p style="margin:0">ส่งได้ไม่เกิน <strong>${ex.max_works_per_artist}</strong> ผลงานต่อคน
-      ${ex.submission_closes_at ? ` · ปิดรับ <strong>${esc(thDate(ex.submission_closes_at, true))}</strong>` : ''}</p>
-      ${(ex.categories || []).length ? `<p style="margin:6px 0 0">กลุ่มงาน: ${ex.categories.map((c) => esc(c.subs.length ? `${c.name} (${c.subs.join(', ')})` : c.name)).join(' · ')}</p>` : ''}
-      <p style="margin:6px 0 0" class="muted">ภาพผลงานเป็น JPG, PNG หรือ WebP ไฟล์ที่ใหญ่กว่า 10 MB ระบบจะย่อให้อัตโนมัติโดยคงความละเอียดสำหรับพิมพ์</p></div>`;
+      <p style="margin:0">${t('maxWorks', { n: Number(ex.max_works_per_artist) })}
+      ${ex.submission_closes_at ? ` · ${t('closesAt', { d: esc(fmtDate(ex.submission_closes_at, true)) })}` : ''}</p>
+      ${cats.length ? `<p style="margin:6px 0 0">${esc(t('categoriesLine', { list: catList }))}</p>` : ''}
+      <p style="margin:6px 0 0" class="muted">${esc(t('fileNote'))}</p></div>`;
     $('form').hidden = false;
     addWork();
     if (cfg.turnstileSiteKey) setupTurnstile(cfg.turnstileSiteKey);
     else await getTicket('');
   } catch (e) {
-    $('intro').innerHTML = `<p class="error-text">${esc(e.message)}</p>`;
+    $('intro').innerHTML = `<p class="error-text">${esc(localError(e.message))}</p>`;
   }
 }
 

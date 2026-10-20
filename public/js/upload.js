@@ -4,11 +4,16 @@
 const TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const SAFE_PIXELS = 16e6;   // iPhone Safari cannot draw canvases much larger than this
 
-export function checkImageFile(file) {
-  if (!file) return 'กรุณาเลือกไฟล์รูป';
-  if (!TYPES.includes(file.type)) return 'รองรับเฉพาะไฟล์ JPG, PNG หรือ WebP';
-  if (file.size > 80 * 1024 * 1024) return 'ไฟล์ใหญ่เกิน 80 MB กรุณาลดขนาดก่อนส่ง';
+// '' when the file can be used, otherwise a code: noFile | type | big.
+export function imageProblem(file) {
+  if (!file) return 'noFile';
+  if (!TYPES.includes(file.type)) return 'type';
+  if (file.size > 80 * 1024 * 1024) return 'big';
   return '';
+}
+
+export function checkImageFile(file) {
+  return { noFile: 'กรุณาเลือกไฟล์รูป', type: 'รองรับเฉพาะไฟล์ JPG, PNG หรือ WebP', big: 'ไฟล์ใหญ่เกิน 80 MB กรุณาลดขนาดก่อนส่ง' }[imageProblem(file)] || '';
 }
 
 function loadImage(file) {

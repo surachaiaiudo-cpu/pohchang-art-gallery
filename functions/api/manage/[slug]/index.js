@@ -49,13 +49,17 @@ export const onRequestPut = handle(async (context) => {
 
   t('title_th', { field: 'ชื่อนิทรรศการ', max: 200, required: true });
   t('title_en', { field: 'ชื่อภาษาอังกฤษ', max: 200 });
+  t('title_zh', { field: 'ชื่อภาษาจีน', max: 200 });
   t('subtitle_th', { field: 'คำโปรย', max: 300 });
   t('subtitle_en', { field: 'คำโปรยภาษาอังกฤษ', max: 300 });
+  t('subtitle_zh', { field: 'คำโปรยภาษาจีน', max: 300 });
   lt('statement_th', { field: 'บทภัณฑารักษ์' });
   lt('statement_en', { field: 'บทภัณฑารักษ์ภาษาอังกฤษ' });
+  lt('statement_zh', { field: 'บทภัณฑารักษ์ภาษาจีน' });
   t('venue', { field: 'สถานที่', max: 300 });
   t('badge_label_th', { field: 'ข้อความ badge', max: 80, required: true });
   t('badge_label_en', { field: 'ข้อความ badge ภาษาอังกฤษ', max: 80 });
+  t('badge_label_zh', { field: 'ข้อความ badge ภาษาจีน', max: 80 });
   if (b.status !== undefined) {
     // Staff may open/close their exhibition; archiving is for admins (admin endpoint).
     const allowed = user.role === 'admin' ? ['draft', 'open', 'closed', 'archived'] : ['draft', 'open', 'closed'];

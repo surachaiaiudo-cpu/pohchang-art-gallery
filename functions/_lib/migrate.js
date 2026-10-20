@@ -1,6 +1,6 @@
 // Small schema upgrades applied automatically, once per Worker isolate, so a deploy never
 // depends on someone remembering to run a SQL file. Each step must be safe to retry.
-import { DEFAULT_CATEGORIES } from './categories.js';
+import { DEFAULT_CATEGORIES, DEFAULT_CATEGORIES_V1 } from './categories.js';
 
 const STEPS = [
   {
@@ -39,6 +39,25 @@ const STEPS = [
       "ALTER TABLE works ADD COLUMN subcategory TEXT NOT NULL DEFAULT ''",
       "ALTER TABLE works ADD COLUMN video_url TEXT NOT NULL DEFAULT ''",
       ["UPDATE exhibitions SET categories = ? WHERE categories = ''", DEFAULT_CATEGORIES]
+    ]
+  },
+  {
+    // 0005_languages.sql: Chinese content columns; the default categories gain EN/中文 labels.
+    name: '0005_languages',
+    needed: async (db) => !(await db.prepare(
+      "SELECT 1 AS x FROM pragma_table_info('artists') WHERE name = 'bio_zh'"
+    ).first()),
+    sql: [
+      "ALTER TABLE exhibitions ADD COLUMN title_zh TEXT NOT NULL DEFAULT ''",
+      "ALTER TABLE exhibitions ADD COLUMN subtitle_zh TEXT NOT NULL DEFAULT ''",
+      "ALTER TABLE exhibitions ADD COLUMN statement_zh TEXT NOT NULL DEFAULT ''",
+      "ALTER TABLE exhibitions ADD COLUMN badge_label_zh TEXT NOT NULL DEFAULT '经专家评审入选'",
+      "ALTER TABLE works ADD COLUMN title_zh TEXT NOT NULL DEFAULT ''",
+      "ALTER TABLE works ADD COLUMN technique_zh TEXT NOT NULL DEFAULT ''",
+      "ALTER TABLE works ADD COLUMN concept_zh TEXT NOT NULL DEFAULT ''",
+      "ALTER TABLE artists ADD COLUMN name_zh TEXT NOT NULL DEFAULT ''",
+      "ALTER TABLE artists ADD COLUMN bio_zh TEXT NOT NULL DEFAULT ''",
+      ["UPDATE exhibitions SET categories = ? WHERE categories = ?", DEFAULT_CATEGORIES, DEFAULT_CATEGORIES_V1]
     ]
   }
 ];

@@ -15,17 +15,20 @@ async function loadWork(db, ex, id) {
 const WORK_TEXT = {
   title_th: { field: 'ชื่อผลงาน', max: 300, required: true },
   title_en: { field: 'ชื่อผลงานภาษาอังกฤษ', max: 300 },
+  title_zh: { field: 'ชื่อผลงานภาษาจีน', max: 300 },
   technique_th: { field: 'เทคนิค', max: 300 },
   technique_en: { field: 'เทคนิคภาษาอังกฤษ', max: 300 },
+  technique_zh: { field: 'เทคนิคภาษาจีน', max: 300 },
   dimensions: { field: 'ขนาด', max: 120 },
   year_created: { field: 'ปีที่สร้าง', max: 20 },
   price: { field: 'ราคา', max: 120 },
   zone: { field: 'โซน', max: 120 }
 };
-const WORK_LONG = { concept_th: 'แนวคิด', concept_en: 'แนวคิดภาษาอังกฤษ' };
+const WORK_LONG = { concept_th: 'แนวคิด', concept_en: 'แนวคิดภาษาอังกฤษ', concept_zh: 'แนวคิดภาษาจีน' };
 const ARTIST_TEXT = {
   name_th: { field: 'ชื่อศิลปิน', max: 200, required: true },
   name_en: { field: 'ชื่อศิลปินภาษาอังกฤษ', max: 200 },
+  name_zh: { field: 'ชื่อศิลปินภาษาจีน', max: 200 },
   academic_title_th: { field: 'ตำแหน่งทางวิชาการ', max: 200 },
   academic_title_en: { field: 'ตำแหน่งทางวิชาการภาษาอังกฤษ', max: 200 },
   phone: { field: 'โทรศัพท์', max: 40 },
@@ -79,6 +82,7 @@ export const onRequestPut = handle(async (context) => {
     if (b.artist.email !== undefined) a.email = v.email(b.artist.email);
     if (b.artist.bio_th !== undefined) a.bio_th = v.longText(b.artist.bio_th, { field: 'ประวัติศิลปิน' });
     if (b.artist.bio_en !== undefined) a.bio_en = v.longText(b.artist.bio_en, { field: 'ประวัติศิลปินภาษาอังกฤษ' });
+    if (b.artist.bio_zh !== undefined) a.bio_zh = v.longText(b.artist.bio_zh, { field: 'ประวัติศิลปินภาษาจีน' });
     const ak = Object.keys(a);
     if (ak.length) {
       stmts.push(db.prepare(`UPDATE artists SET ${ak.map((k) => `${k} = ?`).join(', ')}, updated_at = datetime('now') WHERE id = ? AND exhibition_id = ?`)

@@ -29,3 +29,14 @@ test('video art needs a video link', () => {
   assert.equal(needsVideo('Mixed media technique', 'Digital art'), false);
   assert.equal(needsVideo('Video installation', ''), true);
 });
+
+test('categories carry English and Chinese labels; works store the first (Thai) label', () => {
+  const c = parseCategories(DEFAULT_CATEGORIES);
+  assert.equal(c[0].en, 'Painting');
+  assert.equal(c[0].zh, '绘画');
+  assert.equal(c[5].zh, '综合材料技法');
+  assert.deepEqual(c[5].subLabels['วิดีโออาร์ต'], { en: 'Video art', zh: '录像艺术' });
+  // round trip keeps the labels
+  assert.equal(normalizeCategories(DEFAULT_CATEGORIES), DEFAULT_CATEGORIES);
+  assert.equal(normalizeCategories('ภาพถ่าย |  | 摄影'), 'ภาพถ่าย |  | 摄影');
+});

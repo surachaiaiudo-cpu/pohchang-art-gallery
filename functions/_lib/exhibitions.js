@@ -70,10 +70,13 @@ export function publicExhibition(ex) {
     slug: ex.slug,
     title_th: ex.title_th,
     title_en: ex.title_en,
+    title_zh: ex.title_zh || '',
     subtitle_th: ex.subtitle_th,
     subtitle_en: ex.subtitle_en,
+    subtitle_zh: ex.subtitle_zh || '',
     statement_th: ex.statement_th,
     statement_en: ex.statement_en,
+    statement_zh: ex.statement_zh || '',
     venue: ex.venue,
     status: ex.status,
     starts_on: ex.starts_on,
@@ -87,6 +90,7 @@ export function publicExhibition(ex) {
     hero_url: ex.hero_url,
     badge_label_th: ex.badge_label_th,
     badge_label_en: ex.badge_label_en,
+    badge_label_zh: ex.badge_label_zh || '',
     categories: parseCategories(ex.categories),
     submission: submissionWindow(ex)
   };

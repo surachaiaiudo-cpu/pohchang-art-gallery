@@ -9,29 +9,29 @@
   <script type="module" src="/js/exhibition.js"></script>
 </head>
 <body>
-  <a class="sr-only" href="#works">ข้ามไปที่ผลงาน</a>
+  <a class="sr-only" href="#works" data-i18n="skipWorks">ข้ามไปที่ผลงาน</a>
   <header class="site-head">
     <div class="wrap">
-      <a class="brand" href="/">หอศิลป์ออนไลน์</a>
-      <nav class="nav" aria-label="เมนูนิทรรศการ" id="ex-nav"></nav>
+      <a class="brand" href="/" data-i18n="siteName">หอศิลป์ออนไลน์</a>
+      <div class="head-right"><nav class="nav" aria-label="เมนูนิทรรศการ" data-i18n-aria="exNav" id="ex-nav"></nav><span id="lang"></span></div>
     </div>
   </header>
   <div class="ornament" aria-hidden="true"></div>
   <main class="wrap" id="main">
-    <section class="hero"><div class="hero-grid" id="hero"><p class="muted">กำลังโหลด…</p></div></section>
+    <section class="hero"><div class="hero-grid" id="hero"><p class="muted" data-i18n="loading">กำลังโหลด…</p></div></section>
     <div id="statement"></div>
-    <div class="toolbar" role="region" aria-label="ตัวกรองผลงาน">
-      <div class="seg" role="group" aria-label="แสดงผลงาน">
-        <button type="button" data-filter="all" aria-pressed="true">ทั้งหมด <span id="n-all"></span></button>
-        <button type="button" data-filter="endorsed" aria-pressed="false" id="f-endorsed">ผ่านผู้ทรงคุณวุฒิ <span id="n-end"></span></button>
+    <div class="toolbar" role="region" aria-label="ตัวกรองผลงาน" data-i18n-aria="filters">
+      <div class="seg" role="group" aria-label="แสดงผลงาน" data-i18n-aria="show">
+        <button type="button" data-filter="all" aria-pressed="true"><span data-i18n="all">ทั้งหมด</span> <span id="n-all"></span></button>
+        <button type="button" data-filter="endorsed" aria-pressed="false" id="f-endorsed"><span data-i18n="endorsedFilter">ผ่านผู้ทรงคุณวุฒิ</span> <span id="n-end"></span></button>
       </div>
-      <label class="sr-only" for="cat">กลุ่มงาน</label>
+      <label class="sr-only" for="cat" data-i18n="category">กลุ่มงาน</label>
       <select class="search" id="cat" hidden style="width:auto"><option value="">ทุกกลุ่มงาน</option></select>
-      <label class="sr-only" for="q">ค้นหาผลงานหรือศิลปิน</label>
-      <input class="search" id="q" type="search" placeholder="ค้นหาชื่อผลงานหรือศิลปิน">
+      <label class="sr-only" for="q" data-i18n="search">ค้นหาผลงานหรือศิลปิน</label>
+      <input class="search" id="q" type="search" placeholder="ค้นหาชื่อผลงานหรือศิลปิน" data-i18n-ph="search">
     </div>
     <section id="works" class="works" aria-live="polite"></section>
   </main>
-  <footer class="site-foot"><div class="wrap"><a href="/">← กลับหอศิลป์</a></div></footer>
+  <footer class="site-foot"><div class="wrap"><a href="/" data-i18n="backGalleryArrow">← กลับหอศิลป์</a></div></footer>
 </body>
 </html>
