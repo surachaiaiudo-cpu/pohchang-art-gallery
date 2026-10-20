@@ -11,7 +11,7 @@ pages_build_output_dir = "public"
 [[d1_databases]]
 binding = "DB"
 database_name = "art-gallery-platform"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "c2c07697-40c2-4140-8a56-c3c8792059be"
 
 [vars]
 SITE_NAME = "หอศิลป์ออนไลน์"
