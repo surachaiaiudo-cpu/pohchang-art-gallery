@@ -80,16 +80,22 @@ export async function verifyUploadedFile(ex, env, file, kind) {
   const format = rawFormat === 'jpeg' ? 'jpg' : rawFormat;
   const cloudName = ex.cloudinary_cloud_name || DEFAULT_CLOUD_NAME;
 
+  const url = `https://res.cloudinary.com/${cloudName}/image/upload/v${version}/${publicId}.${format}`;
   if (ex.cloudinary_api_secret_enc) {
     if (!publicId.startsWith(`${folder}/`)) throw bad('ไฟล์ไม่ได้อยู่ในโฟลเดอร์ของนิทรรศการนี้');
     const expected = await sha1Hex(`public_id=${publicId}&version=${version}${await secretOf(ex, env)}`);
     if (!timingSafeEqual(String(f.signature || ''), expected)) throw bad('ยืนยันไฟล์ที่อัปโหลดไม่สำเร็จ กรุณาอัปโหลดใหม่');
+    return { fileId: publicId, url, size, width, height };
   }
-  return {
-    fileId: publicId,
-    url: `https://res.cloudinary.com/${cloudName}/image/upload/v${version}/${publicId}.${format}`,
-    size, width, height
-  };
+  // Unsigned preset: there is no signature we can check, so at least make sure the file really
+  // exists in this Cloudinary account and record its real size. With fixed folders the public_id
+  // carries the folder, which must then be this exhibition's; with dynamic folders it has none.
+  if (publicId.includes('/') && !publicId.startsWith(`${folder}/`)) throw bad('ไฟล์ไม่ได้อยู่ในโฟลเดอร์ของนิทรรศการนี้');
+  let res;
+  try { res = await fetch(url, { method: 'HEAD' }); } catch { res = null; }
+  if (!res || !res.ok) throw bad('ไม่พบไฟล์ที่อัปโหลดใน Cloudinary กรุณาอัปโหลดใหม่');
+  const real = Number(res.headers.get('content-length')) || 0;
+  return { fileId: publicId, url, size: real || size, width, height };
 }
 
 // Best effort: a failed delete is reported, never fatal.

@@ -34,6 +34,23 @@ test('unsigned upload preset mode (uukpgvmz + 20workshop) works without API secr
   assert.equal(auth.cloudName, 'uukpgvmz');
   assert.equal(auth.uploadPreset, '20workshop');
   assert.equal(auth.folder, 'poh-chang-20/works');
-  const f = await verifyUploadedFile(ex, env, { public_id: 'sample123', version: '1712345678', format: 'jpeg', bytes: 4096, width: 3000, height: 2000 }, 'work');
-  assert.equal(f.url, 'https://res.cloudinary.com/uukpgvmz/image/upload/v1712345678/sample123.jpg');
+  const realFetch = globalThis.fetch;
+  const seen = [];
+  globalThis.fetch = async (url, init) => {
+    seen.push(url);
+    const ok = /\/sample123\.jpg$|\/poh-chang-20\/works\/abc\.jpg$/.test(url);
+    return new Response(null, { status: ok ? 200 : 404, headers: ok ? { 'content-length': '5000' } : {} });
+  };
+  try {
+    const f = await verifyUploadedFile(ex, env, { public_id: 'sample123', version: '1712345678', format: 'jpeg', bytes: 4096, width: 3000, height: 2000 }, 'work');
+    assert.equal(f.url, 'https://res.cloudinary.com/uukpgvmz/image/upload/v1712345678/sample123.jpg');
+    assert.equal(f.size, 5000); // real size from Cloudinary, not what the browser claimed
+    assert.equal((await verifyUploadedFile(ex, env, { public_id: 'poh-chang-20/works/abc', version: '1', format: 'jpg' }, 'work')).size, 5000);
+    // a file that is not in the account, or sits in another exhibition's folder, is refused
+    await assert.rejects(verifyUploadedFile(ex, env, { public_id: 'missing1', version: '1', format: 'jpg' }, 'work'));
+    await assert.rejects(verifyUploadedFile(ex, env, { public_id: 'other-show/works/abc', version: '1', format: 'jpg' }, 'work'));
+    assert.equal(seen.length, 3);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
 });
