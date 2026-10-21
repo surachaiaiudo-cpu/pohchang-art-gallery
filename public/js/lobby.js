@@ -77,20 +77,32 @@ function animateStrips() {
   const strips = [...document.querySelectorAll('.room-strip')].map((el) => ({ el, track: el.firstElementChild, i: 0, onScreen: false, held: false }));
   const room = (s) => s.el.closest('.room');
   const io = 'IntersectionObserver' in window ? new IntersectionObserver((entries) => {
-    for (const en of entries) { const s = strips.find((x) => x.el === en.target); if (s) s.onScreen = en.isIntersecting; }
+    for (const en of entries) {
+      const s = strips.find((x) => x.el === en.target);
+      if (!s) continue;
+      s.onScreen = en.isIntersecting;
+      // A strip that starts below the fold waits out of sight, then its works rise in one after another.
+      if (!s.seen) {
+        if (en.isIntersecting) { s.seen = true; if (s.el.classList.contains('await')) { s.el.classList.remove('await'); s.el.classList.add('seen'); } }
+        else s.el.classList.add('await');
+      }
+    }
   }) : null;
   for (const s of strips) {
+    [...s.track.children].forEach((tile, k) => tile.style.setProperty('--k', k));
     if (io) io.observe(s.el); else s.onScreen = true;
     const r = room(s);
     r.addEventListener('mouseenter', () => { s.held = true; });
     r.addEventListener('mouseleave', () => { s.held = false; });
     r.addEventListener('focusin', () => { s.held = true; });
     r.addEventListener('focusout', () => { s.held = false; });
-    s.track.addEventListener('transitionend', () => {
+    s.track.addEventListener('transitionend', (e) => {
+      if (e.target !== s.track) return; // a tile's own hover effect, not the strip's move
       const n = Number(s.el.dataset.count);
       if (s.i >= n) { // reached the copy: jump back to the same picture in the first set, unseen
         s.track.style.transition = 'none';
         s.i -= n;
+        s.track.querySelector('.arrive')?.classList.remove('arrive');
         s.track.style.transform = `translateX(${-s.i * step(s)}px)`;
         void s.track.offsetWidth;
         s.track.style.transition = '';
@@ -108,38 +120,115 @@ function animateStrips() {
       if (s.el.classList.contains('static')) { s.i = 0; continue; } // everything already in view
       s.i += 1;
       s.track.style.transform = `translateX(${-s.i * step(s)}px)`;
+      // The work sliding in at the right edge comes out of a soft blur.
+      s.track.querySelector('.arrive')?.classList.remove('arrive');
+      s.track.children[s.i + visibleTiles(s.el) - 1]?.classList.add('arrive');
     }
   }, STEP_MS);
 }
 
-// Hero: works from every exhibition cross-fade beside the gallery's name, one every 6 seconds,
-// each shown whole with its title and artist.
-const HERO_SLIDES = 5, HERO_MS = 6000;
+// Hero: 8 works from every exhibition, one every 4 seconds. Each new work is unveiled with a
+// sideways wipe, settles from a slight zoom to its whole size, and its museum label (number, title,
+// artist) rises in line by line. The thin bars below fill with time; tapping one, the arrows, a swipe
+// or the arrow keys change the work. It pauses while pointed at, focused or in a hidden tab.
+const HERO_SLIDES = 8, HERO_MS = 4000;
+const pad2 = (n) => String(n).padStart(2, '0');
 function hero(site, name, exhibitions) {
   $('hero-title').textContent = pick(site, 'hero_title') || name;
   $('hero-lead').textContent = pick(site, 'hero_lead') || t('lobbyLead');
   const works = pickRandom(exhibitions.flatMap((e) => e.samples || []), HERO_SLIDES);
   if (!works.length) return;
+  const total = works.length;
   $('hero-slides').innerHTML = works.map((w, i) => {
-    const caption = [pick(w, 'title'), pick(w, 'name')].filter(Boolean).join(' · ');
+    const title = pick(w, 'title'), artist = pick(w, 'name');
+    const realTitle = title && title !== '-' ? title : '';
     return `<figure class="hero-slide${i ? '' : ' on'}">
       ${blurBg('hs-bg', w.url)}
-      <span class="wrap hs-frame"><span class="hs-art">
-        <img src="${esc(img(w.url, 1600))}" alt=""${i ? ' loading="lazy"' : ''}>
-        ${caption ? `<figcaption>${esc(caption)}</figcaption>` : ''}
-      </span></span>
+      <span class="wrap hs-frame"><span class="hs-art"><span class="hs-piece">
+        <span class="hs-pic"><img src="${esc(img(w.url, 1600))}" alt=""${i ? ' loading="lazy"' : ''}></span>
+        <figcaption class="hs-label">
+          <span class="hs-no mono">${pad2(i + 1)} / ${pad2(total)}</span>
+          <span class="hs-rule"></span>
+          ${realTitle ? `<span class="hs-title">${esc(realTitle)}</span>` : ''}
+          ${artist ? `<span class="hs-artist">${esc(artist)}</span>` : ''}
+        </figcaption>
+      </span></span></span>
     </figure>`;
   }).join('');
-  $('hero').classList.add('has-slides');
-  if (works.length < 2 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const band = $('hero');
+  band.classList.add('has-slides');
+  if (total < 2) return;
+
   const slides = [...$('hero-slides').children];
+  const ui = $('hero-ui');
+  $('hero-segs').innerHTML = works.map((_, i) =>
+    `<button type="button" class="hs-seg${i ? '' : ' on'}" aria-label="${esc(t('heroGoto', { n: i + 1 }))}"${i ? '' : ' aria-current="true"'}><span></span></button>`).join('');
+  const segs = [...$('hero-segs').children];
+  ui.hidden = false;
+  band.classList.add('has-ui');
+  const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (still) band.classList.add('still');
   let i = 0;
-  setInterval(() => {
-    if (document.hidden) return;
-    slides[i].classList.remove('on');
-    i = (i + 1) % slides.length;
+
+  function go(next, dir) {
+    next = (next + total) % total;
+    if (next === i) return;
+    band.dataset.dir = dir || (next > i ? 'next' : 'prev');
+    slides.forEach((el) => el.classList.remove('off'));
+    slides[i].classList.remove('on'); slides[i].classList.add('off');
+    segs[i].classList.remove('on'); segs[i].removeAttribute('aria-current');
+    segs.forEach((el, k) => el.classList.toggle('done', k < next));
+    i = next;
+    // Re-adding the class restarts the reveal and the bar's timer from zero.
+    void slides[i].offsetWidth;
     slides[i].classList.add('on');
-  }, HERO_MS);
+    segs[i].classList.add('on'); segs[i].setAttribute('aria-current', 'true');
+  }
+  // The filling bar is the clock: when its animation ends, the next work comes in.
+  segs.forEach((el, k) => {
+    el.addEventListener('click', () => go(k));
+    el.firstElementChild.addEventListener('animationend', () => { if (k === i && !still) go(i + 1, 'next'); });
+  });
+  $('hero-prev').addEventListener('click', () => go(i - 1, 'prev'));
+  $('hero-next').addEventListener('click', () => go(i + 1, 'next'));
+  ui.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') { e.preventDefault(); go(i - 1, 'prev'); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); go(i + 1, 'next'); }
+  });
+
+  // Pause while the visitor looks closely, uses the controls, or the tab is hidden.
+  const held = { hover: false, focus: false, tab: document.hidden };
+  const sync = () => band.classList.toggle('paused', held.hover || held.focus || held.tab);
+  band.addEventListener('mouseenter', () => { held.hover = true; sync(); });
+  band.addEventListener('mouseleave', () => { held.hover = false; sync(); band.style.removeProperty('--px'); band.style.removeProperty('--py'); });
+  ui.addEventListener('focusin', () => { held.focus = true; sync(); });
+  ui.addEventListener('focusout', () => { held.focus = false; sync(); });
+  document.addEventListener('visibilitychange', () => { held.tab = document.hidden; sync(); });
+  sync();
+
+  // Swipe on touch screens.
+  let x0 = null, y0 = 0;
+  band.addEventListener('touchstart', (e) => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
+  band.addEventListener('touchend', (e) => {
+    if (x0 === null) return;
+    const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
+    x0 = null;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) go(dx < 0 ? i + 1 : i - 1, dx < 0 ? 'next' : 'prev');
+  }, { passive: true });
+
+  // A little depth with a mouse: the work and its blurred backdrop drift apart as the pointer moves.
+  if (!still && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    let raf = 0;
+    band.addEventListener('mousemove', (e) => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const r = band.getBoundingClientRect();
+        band.style.setProperty('--px', ((e.clientX - r.left) / r.width - 0.5).toFixed(3));
+        band.style.setProperty('--py', ((e.clientY - r.top) / r.height - 0.5).toFixed(3));
+      });
+    });
+  }
 }
 
 const EXTERNAL = [['website', 'footWebsite'], ['facebook', 'Facebook'], ['instagram', 'Instagram'], ['youtube', 'YouTube'], ['tiktok', 'TikTok'], ['line', 'LINE']];

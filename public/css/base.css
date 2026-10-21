@@ -325,10 +325,25 @@ img.flag, .work-card img.flag, [data-layout] .work-card img.flag, .work-card:hov
 .room:focus-visible { outline-offset: -6px; outline-color: #ffffff; }
 
 /* Lobby preview strip: 3-5 works in view, moving one tile at a time (see lobby.js). Whole works, not cropped. */
-.room-strip { justify-self: stretch; overflow: hidden; margin-top: 18px; }
-.room-track { display: flex; gap: 12px; transition: transform 900ms cubic-bezier(.4, 0, .2, 1); will-change: transform; }
-.room-tile { flex: 0 0 calc((100% - 3 * 12px) / 4); aspect-ratio: 4 / 3; overflow: hidden; background: rgba(255, 255, 255, .07); padding: 6px; }
-.room-tile img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 6px 12px rgba(0, 0, 0, .4)); }
+.room-strip { justify-self: stretch; overflow: hidden; margin-top: 18px; padding-block: 6px;
+  -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 56px), transparent);
+          mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 56px), transparent); }
+.room-strip.static { -webkit-mask-image: none; mask-image: none; }
+.room-track { display: flex; gap: 12px; transition: transform 1100ms cubic-bezier(.65, 0, .35, 1); will-change: transform; }
+.room-tile { flex: 0 0 calc((100% - 3 * 12px) / 4); aspect-ratio: 4 / 3; overflow: hidden; background: rgba(255, 255, 255, .07); padding: 6px;
+  transition: opacity 400ms ease, transform 500ms cubic-bezier(.2, .7, .2, 1), background-color 400ms ease; }
+.room-tile img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 6px 12px rgba(0, 0, 0, .4)); transition: transform 700ms cubic-bezier(.2, .7, .2, 1); }
+/* Pointing at one work lifts it and quiets its neighbours. */
+.room-track:hover .room-tile { opacity: .5; }
+.room-track .room-tile:hover { opacity: 1; transform: translateY(-4px); background-color: rgba(255, 255, 255, .13); }
+.room-track .room-tile:hover img { transform: scale(1.04); }
+/* The work entering at the right edge comes out of a soft blur. */
+.room-tile.arrive img { animation: tile-arrive 1100ms cubic-bezier(.2, .7, .2, 1) both; }
+@keyframes tile-arrive { from { opacity: 0; filter: blur(10px) drop-shadow(0 6px 12px rgba(0, 0, 0, 0)); transform: scale(.94); } }
+/* A strip first seen on scroll: its works rise in one after another. */
+.room-strip.await .room-tile { opacity: 0; transform: translateY(18px); }
+.room-strip.seen .room-tile { animation: tile-rise 800ms cubic-bezier(.2, .7, .2, 1) calc(var(--k, 0) * 90ms) both; }
+@keyframes tile-rise { from { opacity: 0; transform: translateY(18px); } }
 @media (max-width: 1100px) { .room-tile { flex-basis: calc((100% - 2 * 12px) / 3); } }
 @media (max-width: 760px) { .room-track { gap: 10px; } .room-tile { flex-basis: calc((100% - 2 * 10px) / 3); padding: 4px; } }
 .room.no-cover .room-tile { background: rgba(0, 0, 0, .04); }
@@ -337,15 +352,69 @@ img.flag, .work-card img.flag, [data-layout] .work-card img.flag, .work-card:hov
 /* Lobby hero: works from all exhibitions cross-fade beside the gallery's name, each shown whole. */
 .hero-band { position: relative; display: flex; align-items: flex-end; min-height: clamp(420px, 70vh, 760px); background: #141414; color: #ffffff; overflow: hidden; }
 .hero-band.has-slides { align-items: center; min-height: clamp(480px, 78vh, 820px); }
-.hero-slides { position: absolute; inset: 0; }
-.hero-slide { position: absolute; inset: 0; margin: 0; opacity: 0; transition: opacity 1600ms ease; }
-.hero-slide.on { opacity: 1; }
-.hs-bg { position: absolute; inset: -48px; width: calc(100% + 96px); height: calc(100% + 96px); max-width: none; object-fit: cover; filter: blur(36px) brightness(.38) saturate(1.2); }
+.hero-slides { position: absolute; inset: 0; z-index: 0; }
+.hero-band { --hs-ms: 4000ms; --hs-ease: cubic-bezier(.77, 0, .18, 1); --px: 0; --py: 0; --hs-h: calc(clamp(480px, 78vh, 820px) - 96px); }
+.hero-slide { position: absolute; inset: 0; margin: 0; opacity: 0; visibility: hidden; transition: opacity 900ms ease, visibility 0s linear 1300ms; }
+.hero-slide.on { opacity: 1; visibility: visible; z-index: 2; transition: opacity 900ms ease; }
+.hero-slide.off { opacity: 0; z-index: 1; transition: opacity 1100ms ease 200ms, visibility 0s linear 1300ms; }
+.hs-bg { position: absolute; inset: -48px; width: calc(100% + 96px); height: calc(100% + 96px); max-width: none; object-fit: cover; filter: blur(36px) brightness(.38) saturate(1.2);
+  transform: translate(calc(var(--px) * -14px), calc(var(--py) * -10px)) scale(1.08); transition: transform 1200ms cubic-bezier(.2, .7, .2, 1); }
+.hero-slide.on .hs-bg { animation: hs-bg-in 1800ms ease-out both; }
+@keyframes hs-bg-in { from { opacity: 0; } }
 .hs-frame { position: relative; height: 100%; display: flex; justify-content: flex-end; padding-top: 48px; padding-bottom: 48px; }
-.hs-art { width: 44%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; min-width: 0; }
-.hs-art img { max-width: 100%; max-height: calc(100% - 2.6em); min-height: 0; width: auto; height: auto; box-shadow: 0 24px 60px rgba(0, 0, 0, .55); transform: scale(.97); transition: transform 8000ms ease-out; }
-.hero-slide.on .hs-art img { transform: scale(1); }
-.hs-art figcaption { max-width: 100%; font-size: .9rem; color: rgba(255, 255, 255, .78); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hero-band.has-ui .hs-frame { padding-bottom: 84px; }
+.hs-art { width: 44%; height: 100%; display: flex; align-items: center; justify-content: center; min-width: 0; }
+.hs-piece { display: flex; flex-direction: column; gap: 16px; max-width: 100%;
+  transform: translate(calc(var(--px) * 10px), calc(var(--py) * 8px)); transition: transform 900ms cubic-bezier(.2, .7, .2, 1); }
+/* The work is unveiled by a wipe in the direction of travel, then settles from a slight zoom to its whole size. */
+.hs-pic { position: relative; display: block; overflow: hidden; box-shadow: 0 30px 70px rgba(0, 0, 0, .6); clip-path: inset(0 0 0 100%); }
+.hero-band[data-dir="prev"] .hs-pic { clip-path: inset(0 100% 0 0); }
+.hs-pic img { display: block; max-width: 100%; max-height: calc(var(--hs-h) - 36px - 7.5em); width: auto; height: auto; transform-origin: 50% 50%; }
+.hero-slide.on .hs-pic { clip-path: inset(0); transition: clip-path 1300ms var(--hs-ease) 120ms; }
+.hero-slide.on .hs-pic img { animation: hs-settle calc(var(--hs-ms) + 800ms) cubic-bezier(.2, .6, .2, 1) both; }
+@keyframes hs-settle { from { transform: scale(1.12); } to { transform: scale(1); } }
+.hero-slide.off .hs-pic { clip-path: inset(0); transform: scale(.97); filter: brightness(.6); transition: transform 1200ms var(--hs-ease), filter 1200ms ease; }
+/* A band of light passes over the work once as it arrives, like a gallery spotlight. */
+.hs-pic::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0;
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, .22) 50%, transparent 65%); background-size: 250% 100%; }
+.hero-slide.on .hs-pic::after { animation: hs-sheen 1600ms ease-out 700ms both; }
+@keyframes hs-sheen { 0% { opacity: 1; background-position: 120% 0; } 100% { opacity: 1; background-position: -120% 0; } }
+/* Museum label: number, a short rule, title, artist — each rises in after the work. */
+.hs-label { display: grid; gap: 6px; width: 0; min-width: 100%; text-align: left; color: #ffffff; }
+.hs-label > * { opacity: 0; transform: translateY(12px); }
+.hero-slide.on .hs-label > * { opacity: 1; transform: none; transition: opacity 700ms ease, transform 800ms cubic-bezier(.2, .7, .2, 1); }
+.hero-slide.on .hs-no { transition-delay: 650ms; }
+.hero-slide.on .hs-rule { transition-delay: 720ms; }
+.hero-slide.on .hs-title { transition-delay: 800ms; }
+.hero-slide.on .hs-artist { transition-delay: 900ms; }
+.hs-no { font-size: .74rem; letter-spacing: .18em; color: rgba(255, 255, 255, .62); }
+.hs-rule { display: block; height: 1px; width: 40px; background: rgba(255, 255, 255, .55); transform-origin: left; }
+.hs-label > .hs-rule { transform: scaleX(0); }
+.hero-slide.on .hs-label > .hs-rule { transform: scaleX(1); transition: opacity 400ms ease 720ms, transform 900ms var(--hs-ease) 720ms; }
+.hs-title { font-family: var(--font-head); font-weight: var(--head-weight); font-size: 1.12rem; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hs-artist { font-size: .88rem; color: rgba(255, 255, 255, .72); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Controls: a bar per work that fills with time, and arrows. */
+.hs-ui { position: absolute; left: 0; right: 0; bottom: 22px; z-index: 3; display: flex; align-items: center; justify-content: flex-end; gap: 18px; color: #ffffff; pointer-events: none; }
+.hs-ui > * { pointer-events: auto; }
+.hs-segs { display: flex; gap: 6px; width: min(300px, 30%); }
+.hs-seg { flex: 1; height: 22px; padding: 0; border: 0; background: none; cursor: pointer; display: flex; align-items: center; }
+.hs-seg span { position: relative; display: block; width: 100%; height: 2px; background: rgba(255, 255, 255, .24); overflow: hidden; transition: height 200ms ease; }
+.hs-seg:hover span, .hs-seg:focus-visible span { height: 4px; }
+.hs-seg span::after { content: ""; position: absolute; inset: 0; background: #ffffff; transform: scaleX(0); transform-origin: left; }
+.hs-seg.done span::after { transform: scaleX(1); }
+.hs-seg.on span::after { animation: hs-fill var(--hs-ms) linear forwards; }
+@keyframes hs-fill { to { transform: scaleX(1); } }
+.hs-seg.on span { animation: hs-tick var(--hs-ms) linear forwards; } /* the clock lobby.js listens to */
+@keyframes hs-tick { to { outline-color: transparent; } }
+.hero-band.paused .hs-seg.on span, .hero-band.paused .hs-seg.on span::after { animation-play-state: paused; }
+.hero-band.still .hs-seg.on span::after { animation: none; transform: scaleX(1); }
+.hs-nav { display: flex; gap: 8px; }
+.hs-btn { width: 42px; height: 42px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .38); background: rgba(20, 20, 20, .25); color: #ffffff; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; backdrop-filter: blur(6px); transition: background-color 250ms ease, border-color 250ms ease, transform 250ms ease; }
+.hs-btn:hover { background: #ffffff; color: #141414; border-color: #ffffff; }
+.hs-btn:active { transform: scale(.94); }
+.hs-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.hs-btn:focus-visible, .hs-seg:focus-visible { outline: 2px solid #ffffff; outline-offset: 3px; }
 .hero-band-text { position: relative; z-index: 1; padding-top: 72px; padding-bottom: 64px; }
 .hero-band.has-slides .hero-band-text > * { max-width: 50%; }
 .hero-band .eyebrow { color: rgba(255, 255, 255, .78); }
@@ -353,11 +422,16 @@ img.flag, .work-card img.flag, [data-layout] .work-card img.flag, .work-card:hov
 .hero-lead { font-size: clamp(1.05rem, 1.6vw, 1.3rem); max-width: 40em; margin: 0 0 28px; color: rgba(255, 255, 255, .9); }
 .hero-cta { border-color: #ffffff; background: #ffffff; color: #141414; }
 @media (max-width: 760px) {
-  .hero-band.has-slides { align-items: flex-end; min-height: max(620px, 92vh); }
-  .hs-frame { height: 46%; justify-content: center; padding-top: 24px; padding-bottom: 0; }
+  .hero-band.has-slides { align-items: flex-end; min-height: max(640px, 94vh); --hs-h: calc(max(640px, 94vh) * .5 - 24px); }
+  .hs-frame, .hero-band.has-ui .hs-frame { height: 50%; justify-content: center; padding-top: 24px; padding-bottom: 0; }
   .hs-art { width: 100%; }
+  .hs-pic img { max-height: calc(var(--hs-h) - 6.5em); }
+  .hs-label { text-align: center; justify-items: center; }
   .hero-band.has-slides .hero-band-text { padding-top: 16px; padding-bottom: 40px; }
+  .hero-band.has-ui .hero-band-text { padding-bottom: 84px; }
   .hero-band.has-slides .hero-band-text > * { max-width: none; }
+  .hs-ui { justify-content: space-between; gap: 12px; }
+  .hs-segs { width: auto; flex: 1; }
 }
 
 /* Lobby footer */
