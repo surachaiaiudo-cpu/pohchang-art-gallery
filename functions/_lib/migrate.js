@@ -62,6 +62,16 @@ const STEPS = [
     ]
   },
   {
+    // 0007_site_settings.sql: gallery-wide settings (home page hero, footer).
+    name: '0007_site_settings',
+    needed: async (db) => !(await db.prepare(
+      "SELECT 1 AS x FROM sqlite_master WHERE type = 'table' AND name = 'site_settings'"
+    ).first()),
+    sql: [
+      "CREATE TABLE IF NOT EXISTS site_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL DEFAULT '{}', updated_at TEXT NOT NULL DEFAULT (datetime('now')))"
+    ]
+  },
+  {
     // Nationality became a country code: turn the free text typed so far ("Thailand", "ไทย") into codes.
     // Text that matches no known spelling is kept as typed for the curator to fix.
     name: '0006_nationality_codes',

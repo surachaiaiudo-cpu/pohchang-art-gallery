@@ -144,6 +144,11 @@ const D = {
     ruleScreen: 'ผลงานขึ้นแสดงหลังภัณฑารักษ์คัดกรอง',
     ruleBadge: 'ผ่านผู้ทรงคุณวุฒิ {k} ใน {n} เสียง ได้รับ "{badge}"',
     subtypeOf: 'ประเภทของ {cat}',
+    heroCta: 'ชมนิทรรศการ',
+    footContact: 'ติดต่อ',
+    footFollow: 'ติดตาม',
+    footExhibitions: 'นิทรรศการ',
+    footWebsite: 'เว็บไซต์หน่วยงาน',
     errGeneric: 'เกิดข้อผิดพลาด'
   },
   en: {
@@ -233,6 +238,11 @@ const D = {
     ruleScreen: 'Works appear once the curators have screened them',
     ruleBadge: '{k} of {n} panel votes earn "{badge}"',
     subtypeOf: 'Type of {cat}',
+    heroCta: 'View the exhibitions',
+    footContact: 'Contact',
+    footFollow: 'Follow',
+    footExhibitions: 'Exhibitions',
+    footWebsite: 'Website',
     errGeneric: 'Something went wrong'
   },
   zh: {
@@ -322,6 +332,11 @@ const D = {
     ruleScreen: '作品经策展人筛选后展出',
     ruleBadge: '获得 {n} 位专家中 {k} 票通过，将获"{badge}"标识',
     subtypeOf: '{cat}的类型',
+    heroCta: '参观展览',
+    footContact: '联系我们',
+    footFollow: '关注我们',
+    footExhibitions: '展览',
+    footWebsite: '官方网站',
     errGeneric: '出现错误'
   }
 };

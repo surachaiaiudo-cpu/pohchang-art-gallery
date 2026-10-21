@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>หอศิลป์ออนไลน์</title>
   <meta name="description" content="นิทรรศการศิลปะออนไลน์ ที่กำลังจัดแสดงและนิทรรศการที่ผ่านมา">
-  <link rel="stylesheet" href="/css/themes.css?v=5">
-  <link rel="stylesheet" href="/css/base.css?v=5">
+  <link rel="stylesheet" href="/css/themes.css?v=7">
+  <link rel="stylesheet" href="/css/base.css?v=7">
   <script type="module" src="/js/lobby.js?v=4"></script>
 </head>
 <body>
@@ -26,6 +26,16 @@
     </div>
   </header>
 
+  <section class="hero-band" id="hero" aria-labelledby="hero-title">
+    <div class="hero-slides" id="hero-slides" aria-hidden="true"></div>
+    <div class="wrap hero-band-text">
+      <p class="eyebrow">Online Art Gallery</p>
+      <h1 id="hero-title"></h1>
+      <p class="hero-lead" id="hero-lead"></p>
+      <a class="btn btn-lg hero-cta" href="#main" data-i18n="heroCta">ชมนิทรรศการ</a>
+    </div>
+  </section>
+
   <main id="main" class="lobby">
     <p class="wrap muted" id="loading" data-i18n="loading" style="padding-top:48px">กำลังโหลด…</p>
     <section id="now" class="rooms" aria-labelledby="now-title" hidden>
@@ -37,6 +47,18 @@
       <div id="past-list"></div>
     </section>
   </main>
-  <footer class="site-foot"><div class="wrap"><span id="foot"></span></div></footer>
+  <footer class="lobby-foot">
+    <div class="wrap foot-grid">
+      <div class="foot-col foot-org">
+        <a class="brand" href="/"><span class="brand-mark" aria-hidden="true"></span><span class="brand-name"><b id="foot-name">หอศิลป์ออนไลน์</b><small>Online Art Gallery</small></span></a>
+        <p id="foot-org" hidden></p>
+        <p id="foot-address" class="foot-address" hidden></p>
+      </div>
+      <div class="foot-col" id="foot-contact-col" hidden><h2 data-i18n="footContact">ติดต่อ</h2><ul id="foot-contact"></ul></div>
+      <div class="foot-col" id="foot-follow-col" hidden><h2 data-i18n="footFollow">ติดตาม</h2><ul id="foot-follow"></ul></div>
+      <div class="foot-col"><h2 data-i18n="footExhibitions">นิทรรศการ</h2><ul id="foot-ex"></ul></div>
+    </div>
+    <div class="wrap foot-bottom"><span id="foot"></span><span class="foot-tools"><a href="/login" data-i18n="navStaff">สำหรับผู้จัด</a><span id="foot-lang"></span></span></div>
+  </footer>
 </body>
 </html>

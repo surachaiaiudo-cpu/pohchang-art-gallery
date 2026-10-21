@@ -159,9 +159,25 @@ async function main() {
   }
   $('admin-home').hidden = false;
   $('ne-theme').innerHTML = PRESETS.map((p) => `<option value="${p.key}">${esc(p.th)}</option>`).join('');
-  tabs($('tabs'));
+  tabs($('tabs'), (tab) => { if (tab === 'site') loadSite().catch((e) => toast(e.message, 'error')); });
   await load();
 }
+
+// ---------------------------------------------------------------- gallery settings (home hero + footer)
+const SITE_FIELDS = ['hero_title', 'hero_lead', 'org_name', 'address'].flatMap((k) => ['th', 'en', 'zh'].map((l) => `${k}_${l}`))
+  .concat(['email', 'phone', 'website', 'facebook', 'instagram', 'youtube', 'tiktok', 'line']);
+async function loadSite() {
+  const { site } = await api('/api/admin/site');
+  for (const k of SITE_FIELDS) $(`st-${k}`).value = site[k] || '';
+}
+$('site-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  $('site-err').textContent = '';
+  try {
+    await api('/api/admin/site', { method: 'PUT', body: Object.fromEntries(SITE_FIELDS.map((k) => [k, $(`st-${k}`).value.trim()])) });
+    toast('บันทึกการตั้งค่าหอศิลป์แล้ว (หน้าแรกอัปเดตภายใน 1 นาที)', 'ok');
+  } catch (err) { $('site-err').textContent = err.message; }
+});
 
 // ---------------------------------------------------------------- import from the old system
 let imp = null;

@@ -20,6 +20,7 @@
       <div class="tabs" role="tablist" id="tabs">
         <button role="tab" data-tab="exhibitions" aria-controls="p-ex" id="t-ex">นิทรรศการ</button>
         <button role="tab" data-tab="users" aria-controls="p-users" id="t-users">ผู้ใช้</button>
+        <button role="tab" data-tab="site" aria-controls="p-site" id="t-site">ตั้งค่าหอศิลป์</button>
       </div>
 
       <section id="p-ex" role="tabpanel" aria-labelledby="t-ex">
@@ -48,6 +49,30 @@
           <thead><tr><th>นิทรรศการ</th><th>สถานะ</th><th>ผลงาน (แสดง/ทั้งหมด)</th><th>ที่เก็บรูป</th><th>ผู้ดูแล</th><th></th></tr></thead>
           <tbody id="ex-rows"></tbody>
         </table></div>
+      </section>
+
+      <section id="p-site" role="tabpanel" aria-labelledby="t-site" hidden>
+        <form id="site-form" novalidate>
+          <div class="card">
+            <h2>ส่วนบนหน้าแรก (hero)</h2>
+            <p class="small muted">ภาพพื้นหลังเป็นผลงานจากทุกนิทรรศการ สลับวนอัตโนมัติ เว้นว่างไว้ = ใช้ชื่อหอศิลป์และคำแนะนำมาตรฐาน · ภาษาที่เว้นว่างจะแสดงภาษาอังกฤษ แล้วจึงเป็นภาษาไทยแทน</p>
+            <div class="field"><span class="label">หัวเรื่อง</span><div class="grid-3"><div class="field" style="margin:0"><label for="st-hero_title_th" class="small muted">ไทย</label><input id="st-hero_title_th" type="text" lang="th"></div><div class="field" style="margin:0"><label for="st-hero_title_en" class="small muted">English</label><input id="st-hero_title_en" type="text" lang="en"></div><div class="field" style="margin:0"><label for="st-hero_title_zh" class="small muted">中文</label><input id="st-hero_title_zh" type="text" lang="zh-Hans"></div></div></div>
+            <div class="field"><span class="label">คำแนะนำสั้น ๆ</span><div class="grid-3"><div class="field" style="margin:0"><label for="st-hero_lead_th" class="small muted">ไทย</label><textarea id="st-hero_lead_th" rows="3" lang="th"></textarea></div><div class="field" style="margin:0"><label for="st-hero_lead_en" class="small muted">English</label><textarea id="st-hero_lead_en" rows="3" lang="en"></textarea></div><div class="field" style="margin:0"><label for="st-hero_lead_zh" class="small muted">中文</label><textarea id="st-hero_lead_zh" rows="3" lang="zh-Hans"></textarea></div></div></div>
+          </div>
+          <div class="card">
+            <h2>ท้ายหน้า (footer)</h2>
+            <div class="field"><span class="label">ชื่อหน่วยงานผู้จัด</span><div class="grid-3"><div class="field" style="margin:0"><label for="st-org_name_th" class="small muted">ไทย</label><input id="st-org_name_th" type="text" lang="th"></div><div class="field" style="margin:0"><label for="st-org_name_en" class="small muted">English</label><input id="st-org_name_en" type="text" lang="en"></div><div class="field" style="margin:0"><label for="st-org_name_zh" class="small muted">中文</label><input id="st-org_name_zh" type="text" lang="zh-Hans"></div></div></div>
+            <div class="field"><span class="label">ที่อยู่</span><div class="grid-3"><div class="field" style="margin:0"><label for="st-address_th" class="small muted">ไทย</label><textarea id="st-address_th" rows="3" lang="th"></textarea></div><div class="field" style="margin:0"><label for="st-address_en" class="small muted">English</label><textarea id="st-address_en" rows="3" lang="en"></textarea></div><div class="field" style="margin:0"><label for="st-address_zh" class="small muted">中文</label><textarea id="st-address_zh" rows="3" lang="zh-Hans"></textarea></div></div></div>
+            <div class="grid-3">
+              <div class="field"><label for="st-email">อีเมลติดต่อ</label><input id="st-email" type="email"></div>
+              <div class="field"><label for="st-phone">เบอร์โทร</label><input id="st-phone" type="tel"></div>
+            </div>
+            <div class="field"><span class="label">ลิงก์ (ต้องขึ้นต้นด้วย https://)</span><div class="grid-3">
+              <div class="field" style="margin:0"><label for="st-website" class="small muted">เว็บไซต์หน่วยงาน</label><input id="st-website" type="url" placeholder="https://"></div><div class="field" style="margin:0"><label for="st-facebook" class="small muted">Facebook</label><input id="st-facebook" type="url" placeholder="https://"></div><div class="field" style="margin:0"><label for="st-instagram" class="small muted">Instagram</label><input id="st-instagram" type="url" placeholder="https://"></div><div class="field" style="margin:0"><label for="st-youtube" class="small muted">YouTube</label><input id="st-youtube" type="url" placeholder="https://"></div><div class="field" style="margin:0"><label for="st-tiktok" class="small muted">TikTok</label><input id="st-tiktok" type="url" placeholder="https://"></div><div class="field" style="margin:0"><label for="st-line" class="small muted">LINE (ลิงก์เพิ่มเพื่อน)</label><input id="st-line" type="url" placeholder="https://"></div>
+            </div></div>
+          </div>
+          <button class="btn" type="submit">บันทึก</button> <a class="btn btn-ghost" href="/" target="_blank" rel="noopener">ดูหน้าแรก ↗</a> <span class="error-text" id="site-err"></span>
+        </form>
       </section>
 
       <section id="p-users" role="tabpanel" aria-labelledby="t-users" hidden>

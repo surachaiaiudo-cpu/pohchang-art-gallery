@@ -79,7 +79,7 @@ public/
   flags/*.svg      242 flag images (flag-icons, MIT, licence included)
   _redirects       /e/:slug, /e/:slug/work/:id, /e/:slug/submit, /manage/:slug, /review/:token rewrites
   _headers         CSS/JS revalidate every load; flags cached 7 days
-schema/0001..0005  SQL history (0001 creates everything; later files are also applied by migrate.js)
+schema/0001..0007  SQL history (0001 creates everything; later files are also applied by migrate.js; 0006 lives only in migrate.js)
 tests/*.test.js    node:test unit tests (`npm test`)
 ```
 
@@ -150,7 +150,12 @@ one full-width "room" per exhibition (cover = hero image, else first work; title
 work count; left edge in the exhibition's accent), grouped "on view" / "past". Header: gallery name, organiser
 link, language switch. White + vermilion (`#b4321f`) chrome. Each room has a preview strip: 6 works picked at random in the
 browser from a pool of up to 24 that `/api/exhibitions` returns (`samples`), 3-5 in view by screen width, moving one tile
-every 4 s; it pauses off screen, on hover/focus, in hidden tabs, and does not move with prefers-reduced-motion. Per-exhibition overrides: accent colour, heading font, ornament level, layout.
+every 4 s; it pauses off screen, on hover/focus, in hidden tabs, and does not move with prefers-reduced-motion.
+Above the rooms: a hero (works from all exhibitions cross-fading every 6 s behind the gallery name and a short intro);
+below: a dark footer (organiser, address, contact, social links, exhibition list, organiser link, language switch).
+Hero text and footer details are **edited by admins at `/admin` → "ตั้งค่าหอศิลป์"** in th/en/zh (`site_settings` table,
+`GET /api/site`, `GET/PUT /api/admin/site`, `functions/_lib/site.js`); empty fields are hidden. Never invent these
+details: the owner fills them in. Per-exhibition overrides: accent colour, heading font, ornament level, layout.
 
 ### 6.8 Importing old events
 `/admin` → "นำเข้างานจากระบบเดิม": preview (`step: preview`), then create a DRAFT exhibition and import in chunks of
@@ -166,6 +171,7 @@ ever deleted from old accounts); emails kept private, phones not imported.
 | `GET /api/x/:slug`, `GET /api/x/:slug/works/:id` | public | exhibition + shown works; one work with prev/next |
 | `POST /api/x/:slug/ticket`, `upload-auth`, `submit` | public | submission flow (6.1) |
 | `GET /api/config` | public | site name, Turnstile site key |
+| `GET /api/site`, `GET/PUT /api/admin/site` | public / admin | home hero text + footer details |
 | `POST /api/auth/login`, `logout`, `GET me`, `POST password` | users | session auth, forced first password change |
 | `/api/admin/users[/id]`, `/api/admin/exhibitions[/id]` | admin | users, create exhibition, slug/status/staff |
 | `POST /api/admin/import` | admin | old-event import (6.8) |
@@ -188,12 +194,12 @@ npm install
 cp .dev.vars.example .dev.vars          # fake storage, local bootstrap admin
 npm run db:init:local                   # or start with 0001 only and let migrate.js upgrade it
 npm run dev                             # http://localhost:8790
-npm test                                # 22 unit tests
+npm test                                # 23 unit tests
 ```
 - Deploy = push to `main` (Cloudflare Git integration). Check the "Cloudflare Pages" check run on the commit
   (`gh api repos/surachaiaiudo-cpu/pohchang-art-gallery/commits/<sha>/check-runs`).
   "Retry deployment" in the dashboard rebuilds the OLD commit: push a new commit instead.
-- After changing CSS, bump `?v=` on the `<link>` tags of the pages that use it (current: v=5 on public pages).
+- After changing CSS, bump `?v=` on the `<link>` tags of the pages that use it (current: v=7 on public pages).
 - End-to-end checks were done with Playwright against `wrangler pages dev` (fake storage, a stand-in old site for
   imports, a Thai `locale` because the UI follows the browser language). Chromium: `/opt/pw-browsers/chromium`.
 - Limits to respect: D1 max 100 bound parameters per statement (chunk at 90); free Workers ~50 D1 queries per
