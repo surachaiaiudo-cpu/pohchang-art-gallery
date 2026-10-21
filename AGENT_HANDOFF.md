@@ -148,7 +148,9 @@ thai-contemporary, monochrome, pop, craft, heritage (dark). Each sets colours + 
 IBM Plex Sans Thai everywhere. The home page (lobby) shows **only the exhibitions** (owner's request, 2026-10-21):
 one full-width "room" per exhibition (cover = hero image, else first work; title over it; open-call pill, deadline,
 work count; left edge in the exhibition's accent), grouped "on view" / "past". Header: gallery name, organiser
-link, language switch. White + vermilion (`#b4321f`) chrome. Per-exhibition overrides: accent colour, heading font, ornament level, layout.
+link, language switch. White + vermilion (`#b4321f`) chrome. Each room has a preview strip: 6 works picked at random in the
+browser from a pool of up to 24 that `/api/exhibitions` returns (`samples`), 3-5 in view by screen width, moving one tile
+every 4 s; it pauses off screen, on hover/focus, in hidden tabs, and does not move with prefers-reduced-motion. Per-exhibition overrides: accent colour, heading font, ornament level, layout.
 
 ### 6.8 Importing old events
 `/admin` → "นำเข้างานจากระบบเดิม": preview (`step: preview`), then create a DRAFT exhibition and import in chunks of
@@ -191,7 +193,7 @@ npm test                                # 22 unit tests
 - Deploy = push to `main` (Cloudflare Git integration). Check the "Cloudflare Pages" check run on the commit
   (`gh api repos/surachaiaiudo-cpu/pohchang-art-gallery/commits/<sha>/check-runs`).
   "Retry deployment" in the dashboard rebuilds the OLD commit: push a new commit instead.
-- After changing CSS, bump `?v=` on the `<link>` tags of the pages that use it (current: v=4 on public pages).
+- After changing CSS, bump `?v=` on the `<link>` tags of the pages that use it (current: v=5 on public pages).
 - End-to-end checks were done with Playwright against `wrangler pages dev` (fake storage, a stand-in old site for
   imports, a Thai `locale` because the UI follows the browser language). Chromium: `/opt/pw-browsers/chromium`.
 - Limits to respect: D1 max 100 bound parameters per statement (chunk at 90); free Workers ~50 D1 queries per

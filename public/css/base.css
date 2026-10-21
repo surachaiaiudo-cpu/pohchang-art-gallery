@@ -297,8 +297,8 @@ img.flag, .work-card img.flag, [data-layout] .work-card img.flag, .work-card:hov
 .rooms { padding-top: 48px; }
 .rooms-title { font-family: var(--font-body); font-weight: 600; font-size: .9rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 auto 16px; }
 .room { position: relative; display: flex; align-items: flex-end; min-height: clamp(320px, 52vh, 560px); margin-bottom: 8px; overflow: hidden; text-decoration: none; color: #ffffff; background: #141414; border-left: 8px solid var(--accent); }
-.room img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 600ms ease; }
-.room:hover img { transform: scale(1.03); }
+.room > .room-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 600ms ease; }
+.room:hover > .room-bg { transform: scale(1.03); }
 /* Scrim so the title stays readable on any picture. */
 .room::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0, 0, 0, .78) 0%, rgba(0, 0, 0, .35) 45%, rgba(0, 0, 0, 0) 75%); }
 .room.no-cover { background: var(--wall); color: var(--ink); min-height: clamp(220px, 32vh, 320px); }
@@ -309,3 +309,12 @@ img.flag, .work-card img.flag, [data-layout] .work-card img.flag, .work-card:hov
 .room-meta { font-size: .95rem; opacity: .85; }
 .room .status-pill { background: var(--accent); color: var(--accent-ink); }
 .room:focus-visible { outline-offset: -6px; outline-color: #ffffff; }
+
+/* Lobby preview strip: 3-5 works in view, moving one tile at a time (see lobby.js). */
+.room-strip { justify-self: stretch; overflow: hidden; margin-top: 18px; }
+.room-track { display: flex; gap: 12px; transition: transform 900ms cubic-bezier(.4, 0, .2, 1); will-change: transform; }
+.room-tile { flex: 0 0 calc((100% - 4 * 12px) / 5); aspect-ratio: 4 / 3; overflow: hidden; background: rgba(255, 255, 255, .08); box-shadow: 0 8px 22px rgba(0, 0, 0, .35); }
+.room-tile img { width: 100%; height: 100%; object-fit: cover; }
+@media (max-width: 1100px) { .room-tile { flex-basis: calc((100% - 3 * 12px) / 4); } }
+@media (max-width: 760px) { .room-tile { flex-basis: calc((100% - 2 * 10px) / 3); } .room-track { gap: 10px; } }
+.room.no-cover .room-tile { box-shadow: 0 6px 16px rgba(0, 0, 0, .18); }
