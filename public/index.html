@@ -4,10 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>หอศิลป์ออนไลน์</title>
-  <meta name="description" content="นิทรรศการศิลปะออนไลน์ ที่กำลังจัดแสดง เปิดรับผลงาน และนิทรรศการที่ผ่านมา">
-  <link rel="stylesheet" href="/css/themes.css?v=3">
-  <link rel="stylesheet" href="/css/base.css?v=3">
-  <script type="module" src="/js/lobby.js?v=3"></script>
+  <meta name="description" content="นิทรรศการศิลปะออนไลน์ ที่กำลังจัดแสดงและนิทรรศการที่ผ่านมา">
+  <link rel="stylesheet" href="/css/themes.css?v=4">
+  <link rel="stylesheet" href="/css/base.css?v=4">
+  <script type="module" src="/js/lobby.js?v=4"></script>
 </head>
 <body>
   <a class="sr-only" href="#main" data-i18n="skip">ข้ามไปเนื้อหา</a>
@@ -19,9 +19,6 @@
       </a>
       <div class="head-right">
         <nav class="nav" aria-label="เมนูหลัก" data-i18n-aria="mainMenu">
-          <a href="#now" data-i18n="navNow">กำลังจัดแสดง</a>
-          <a href="#past" data-i18n="navPast">นิทรรศการที่ผ่านมา</a>
-          <a href="#how" data-i18n="navHow">วิธีส่งผลงาน</a>
           <a href="/login" class="quiet" data-i18n="navStaff">สำหรับผู้จัด</a>
         </nav>
         <span id="lang"></span>
@@ -29,42 +26,17 @@
     </div>
   </header>
 
-  <main id="main">
-    <div class="wrap">
-      <section class="lobby-hero" id="hero" aria-live="polite"><p class="muted" data-i18n="loading">กำลังโหลด…</p></section>
-    </div>
-
-    <div class="wrap" id="now-wrap" hidden>
-      <section id="now" class="lobby-section" style="padding-top:0" aria-labelledby="now-title">
-        <div class="section-head rule"><h2 id="now-title" data-i18n="nowTitle">กำลังจัดแสดงและเปิดรับผลงาน</h2></div>
-        <div class="ex-grid" id="now-list"></div>
-      </section>
-    </div>
-
-    <section class="band" id="how" aria-labelledby="how-title">
-      <div class="wrap">
-        <div class="section-head">
-          <h2 id="how-title" data-i18n="howTitle">ส่งผลงานได้ใน 3 ขั้นตอน</h2>
-          <p class="muted" style="margin:0;max-width:36em" data-i18n="howLead">ไม่ต้องสมัครสมาชิก รูปใหญ่ส่งได้เลย ระบบย่อไฟล์ให้อัตโนมัติ</p>
-        </div>
-        <ol class="steps">
-          <li><span class="no">01</span><b data-i18n="step1t">เลือกนิทรรศการที่เปิดรับ</b><span data-i18n="step1b"></span></li>
-          <li><span class="no">02</span><b data-i18n="step2t">กรอกข้อมูลและอัปโหลดรูป</b><span data-i18n="step2b"></span></li>
-          <li><span class="no">03</span><b data-i18n="step3t">คัดกรองและคัดเลือก</b><span data-i18n="step3b"></span></li>
-        </ol>
-      </div>
+  <main id="main" class="lobby">
+    <p class="wrap muted" id="loading" data-i18n="loading" style="padding-top:48px">กำลังโหลด…</p>
+    <section id="now" class="rooms" aria-labelledby="now-title" hidden>
+      <h2 class="wrap rooms-title" id="now-title" data-i18n="navNow">กำลังจัดแสดง</h2>
+      <div id="now-list"></div>
     </section>
-
-    <div class="wrap">
-      <section id="past" class="lobby-section" style="padding-bottom:96px" aria-labelledby="past-title">
-        <div class="section-head rule">
-          <h2 id="past-title" data-i18n="pastTitle">นิทรรศการที่ผ่านมา</h2>
-          <span class="muted" data-i18n="archiveLead">ชมผลงานย้อนหลังได้ตลอด</span>
-        </div>
-        <div class="ex-grid" id="past-list"></div>
-      </section>
-    </div>
+    <section id="past" class="rooms" aria-labelledby="past-title" hidden>
+      <h2 class="wrap rooms-title" id="past-title" data-i18n="pastTitle">นิทรรศการที่ผ่านมา</h2>
+      <div id="past-list"></div>
+    </section>
   </main>
-  <footer class="site-foot dark"><div class="wrap"><b id="foot-name">หอศิลป์ออนไลน์</b><span id="foot"></span></div></footer>
+  <footer class="site-foot"><div class="wrap"><span id="foot"></span></div></footer>
 </body>
 </html>
