@@ -173,6 +173,13 @@ work count; left edge in the exhibition's accent), grouped "on view" / "past". H
 link, language switch. White + vermilion (`#b4321f`) chrome. Each room has a preview strip: 6 works picked at random in the
 browser from a pool of up to 24 that `/api/exhibitions` returns (`samples`: id, url, title, artist name; no contact data), 3-4 in view by screen width, moving one tile
 every 4 s; it pauses off screen, on hover/focus, in hidden tabs, and does not move with prefers-reduced-motion.
+**Room cards (2026-10-21): 7 styles, one per theme** — white-cube = gallery wall, thai-classic = gilded Thai
+frame (art left, centred text, gold seal pill), thai-contemporary = indigo diagonal poster, monochrome = catalogue
+page with No. NN, pop = dotted sticker poster (art left, tilted, work-count sticker), craft = taped photo/polaroids,
+heritage = night gallery (dark, spotlight, gold glow). `exhibitions.card_style` ('' = follow theme; migration 0010),
+set by admins (`/admin` drawer) and the exhibition's staff (manage settings). The room takes `data-card` and
+`data-theme` = that style, so colours/heading font are the style's. CSS: base.css "Lobby room cards"; labels and
+fonts: `CARD_STYLES` in public/js/presets.js. Works stay whole; on phones art above text.
 Strips (2026-10-21): soft right-edge fade, the arriving tile comes out of a blur, hovered tile lifts while others dim,
 tiles rise in one by one when first scrolled to.
 Above the rooms: a hero beside the gallery name and a short intro: **8 works, 4 s each**, chosen fairly (exhibitions in
