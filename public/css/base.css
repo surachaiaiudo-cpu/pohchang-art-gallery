@@ -394,7 +394,13 @@ img.flag, .work-card img.flag, [data-layout] .work-card img.flag, .work-card:hov
 .hero-slide.on .hs-label > .hs-rule { transform: scaleX(1); transition: opacity 400ms ease 720ms, transform 900ms var(--hs-ease) 720ms; }
 .hs-title { font-family: var(--font-head); font-weight: var(--head-weight); font-size: 1.12rem; line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
 .hs-artist { font-size: .88rem; color: rgba(255, 255, 255, .72); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.hs-from { font-size: .76rem; letter-spacing: .04em; color: rgba(255, 255, 255, .56); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-top: 2px; }
+.hs-from { justify-self: start; max-width: 100%; font-size: .76rem; letter-spacing: .04em; color: rgba(255, 255, 255, .62); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  padding-block: 6px 2px; text-decoration: none; background: linear-gradient(currentColor, currentColor) left bottom / 0 1px no-repeat; transition: color 250ms ease, background-size 350ms ease; }
+.hs-from:hover, .hs-from:focus-visible { color: #ffffff; background-size: 100% 1px; }
+.hs-from:focus-visible { outline: 2px solid #ffffff; outline-offset: 3px; }
+/* The text column spans the band; let clicks through to the work's label beside it. */
+.hero-band.has-slides .hero-band-text { pointer-events: none; }
+.hero-band.has-slides .hero-band-text > * { pointer-events: auto; }
 /* Controls: a bar per work that fills with time, and arrows. */
 .hs-ui { position: absolute; left: 0; right: 0; bottom: 22px; z-index: 3; display: flex; align-items: center; justify-content: flex-end; gap: 18px; color: #ffffff; pointer-events: none; }
 .hs-ui > * { pointer-events: auto; }
@@ -429,6 +435,7 @@ img.flag, .work-card img.flag, [data-layout] .work-card img.flag, .work-card:hov
   .hs-art { width: 100%; }
   .hs-pic img { max-height: calc(var(--hs-h) - 8em); }
   .hs-label { text-align: center; justify-items: center; }
+  .hs-from { justify-self: center; }
   .hero-band.has-slides .hero-band-text { padding-top: 16px; padding-bottom: 40px; }
   .hero-band.has-ui .hero-band-text { padding-bottom: 84px; }
   .hero-band.has-slides .hero-band-text > * { max-width: none; }

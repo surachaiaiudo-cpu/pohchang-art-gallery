@@ -135,10 +135,10 @@ const HERO_SLIDES = 8, HERO_MS = 4000;
 const pad2 = (n) => String(n).padStart(2, '0');
 // Every exhibition with works gets a turn: exhibitions in random order, each with its own
 // shuffled works, taken one from each in rotation until the hero is full. Each work keeps the
-// title of the exhibition it came from, for its label.
+// title and address of the exhibition it came from, for its label's link.
 function fairPick(exhibitions, n) {
   const queues = pickRandom(exhibitions.filter((e) => (e.samples || []).length), exhibitions.length)
-    .map((e) => pickRandom(e.samples, e.samples.length).map((w) => ({ ...w, from: pick(e, 'title') })));
+    .map((e) => pickRandom(e.samples, e.samples.length).map((w) => ({ ...w, from: pick(e, 'title'), slug: e.slug })));
   const seen = new Set(), out = [];
   while (out.length < n && queues.some((q) => q.length)) {
     for (const q of queues) {
@@ -169,7 +169,7 @@ function hero(site, name, exhibitions) {
           <span class="hs-rule"></span>
           ${realTitle ? `<span class="hs-title">${esc(realTitle)}</span>` : ''}
           ${artist ? `<span class="hs-artist">${esc(artist)}</span>` : ''}
-          ${w.from ? `<span class="hs-from">${esc(t('heroFrom', { name: w.from }))}</span>` : ''}
+          ${w.from ? `<a class="hs-from" href="/e/${encodeURIComponent(w.slug)}">${esc(t('heroFrom', { name: w.from }))}<span aria-hidden="true"> →</span></a>` : ''}
         </figcaption>
       </span></span></span>
     </figure>`;
@@ -220,8 +220,10 @@ function hero(site, name, exhibitions) {
   const sync = () => band.classList.toggle('paused', held.hover || held.focus || held.tab);
   band.addEventListener('mouseenter', () => { held.hover = true; sync(); });
   band.addEventListener('mouseleave', () => { held.hover = false; sync(); band.style.removeProperty('--px'); band.style.removeProperty('--py'); });
-  ui.addEventListener('focusin', () => { held.focus = true; sync(); });
-  ui.addEventListener('focusout', () => { held.focus = false; sync(); });
+  for (const el of [ui, $('hero-slides')]) {
+    el.addEventListener('focusin', () => { held.focus = true; sync(); });
+    el.addEventListener('focusout', () => { held.focus = false; sync(); });
+  }
   document.addEventListener('visibilitychange', () => { held.tab = document.hidden; sync(); });
   sync();
 
