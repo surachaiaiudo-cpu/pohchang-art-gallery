@@ -41,6 +41,8 @@ function heroHtml(ex, works) {
       ${subtitle ? `<p class="subtitle">${esc(subtitle)}</p>` : ''}
       <div class="hero-meta">
         ${sub.open ? `<span class="status-pill">${esc(t('openCall'))}</span>` : ''}
+        ${sub.phase === 'ended' ? `<span class="status-pill quiet">${esc(t('callEnded'))}</span>` : ''}
+        ${sub.phase === 'upcoming' && ex.submission_opens_at ? `<span class="status-pill quiet">${esc(t('callUpcoming', { d: `${fmtDate(ex.submission_opens_at)} · ${fmtTime(ex.submission_opens_at)}` }))}</span>` : ''}
         ${sub.open && ex.submission_closes_at ? `<span>${esc(t('closesOn', { d: `${fmtDate(ex.submission_closes_at)} · ${fmtTime(ex.submission_closes_at)}` }))}</span>` : ''}
         ${dates ? `<span>${esc(dates)}</span>` : ''}
         ${ex.venue ? `<span>${esc(ex.venue)}</span>` : ''}

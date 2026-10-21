@@ -17,10 +17,20 @@ export async function findBySlug(db, slug) {
   return ex;
 }
 
-// Public view: drafts are hidden.
+// Exhibition status (owner's model, 2026-10-21). The stored values are kept from the first schema
+// because its CHECK constraint cannot be changed in place; what each one means now:
+//   draft    = ร่าง  being prepared (imports go here); not public
+//   open     = เปิด  on view, listed under "on view"; accepts work only inside its submission dates
+//   archived = ปิด   finished, listed under past exhibitions; never accepts work
+//   closed   = ซ่อน  hidden from the public (was shown before); never accepts work
+// Accepting submissions is decided by the dates alone; there is no separate switch.
+export const PUBLIC_STATUSES = ['open', 'archived'];
+export const isPublic = (ex) => PUBLIC_STATUSES.includes(ex.status);
+
+// Public view: drafts and hidden exhibitions are not found.
 export async function loadPublicExhibition(db, slug) {
   const ex = await findBySlug(db, slug);
-  if (!ex || ex.status === 'draft') throw notFound('ไม่พบนิทรรศการ');
+  if (!ex || !isPublic(ex)) throw notFound('ไม่พบนิทรรศการ');
   return ex;
 }
 
@@ -44,16 +54,16 @@ export function hasStorage(ex) {
   return !!(ex.cloudinary_cloud_name && (ex.cloudinary_upload_preset || ex.cloudinary_api_secret_enc));
 }
 
+// phase: 'none' (no call for work), 'upcoming', 'open' or 'ended' - what the public pages show.
 export function submissionWindow(ex, at = Date.now()) {
-  if (ex.status !== 'open') return { open: false, reason: 'นิทรรศการนี้ไม่ได้เปิดรับผลงาน' };
+  if (ex.status !== 'open') return { open: false, phase: 'none', reason: 'นิทรรศการนี้ไม่ได้เปิดรับผลงาน' };
+  if (!ex.submission_closes_at) return { open: false, phase: 'none', reason: 'ยังไม่ได้กำหนดวันปิดรับผลงาน' };
+  if (at > Date.parse(ex.submission_closes_at)) return { open: false, phase: 'ended', reason: 'ปิดรับผลงานแล้ว' };
   if (ex.submission_opens_at && at < Date.parse(ex.submission_opens_at)) {
-    return { open: false, reason: 'ยังไม่ถึงวันเปิดรับผลงาน' };
+    return { open: false, phase: 'upcoming', reason: 'ยังไม่ถึงวันเปิดรับผลงาน' };
   }
-  if (ex.submission_closes_at && at > Date.parse(ex.submission_closes_at)) {
-    return { open: false, reason: 'ปิดรับผลงานแล้ว' };
-  }
-  if (!hasStorage(ex)) return { open: false, reason: 'นิทรรศการยังไม่ได้ตั้งค่าที่เก็บรูป' };
-  return { open: true, reason: '' };
+  if (!hasStorage(ex)) return { open: false, phase: 'none', reason: 'นิทรรศการยังไม่ได้ตั้งค่าที่เก็บรูป' };
+  return { open: true, phase: 'open', reason: '' };
 }
 
 export function parseOverrides(ex) {

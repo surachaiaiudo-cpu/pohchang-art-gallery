@@ -1,5 +1,5 @@
 import { api, esc, bytes, thDate, toast } from './core.js';
-import { requireLogin, tabs, copyText, STATUS_TH } from './backoffice.js';
+import { requireLogin, tabs, copyText, STATUS_TH, STATUS_HINT, submissionText } from './backoffice.js';
 import { PRESETS, presetName } from './presets.js';
 
 const $ = (id) => document.getElementById(id);
@@ -27,16 +27,13 @@ function tempPasswordHtml(user, pw) {
 }
 
 // ---------------------------------------------------------------- exhibitions
-// Open/close submissions straight from the table (curators can still do it in their own settings).
+// Whether work is being accepted is decided by the submission dates (set in the exhibition's own
+// settings); the table only reports it, with the closing time while it is open.
 function submissionCell(e) {
-  if (e.status !== 'open' && e.status !== 'closed') return '';
+  if (e.status !== 'open') return '';
   const s = e.submission || {};
-  const state = s.open ? '<span class="small" style="color:var(--ok)">● กำลังรับผลงาน</span>'
-    : `<span class="small muted">● ไม่รับผลงาน${e.status === 'open' && s.reason ? `: ${esc(s.reason)}` : ''}</span>`;
-  const btn = e.status === 'open'
-    ? `<button class="btn btn-danger btn-sm" data-sub-toggle="${e.id}" data-to="closed">ปิดรับผลงาน</button>`
-    : `<button class="btn btn-ghost btn-sm" data-sub-toggle="${e.id}" data-to="open">เปิดรับผลงานอีกครั้ง</button>`;
-  return `<div style="margin-top:6px;display:grid;gap:4px;justify-items:start">${state}${btn}</div>`;
+  const until = s.open && e.submission_closes_at ? ` ถึง ${new Date(e.submission_closes_at).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Bangkok' })}` : '';
+  return `<div class="small ${s.open ? '' : 'muted'}" style="margin-top:6px;${s.open ? 'color:var(--ok)' : ''}">${esc(submissionText(e) + until)}</div>`;
 }
 
 function renderExRows() {
@@ -62,8 +59,9 @@ function exEditor(e) {
       <div class="field"><label for="ee-slug">slug</label><input id="ee-slug" type="text" value="${esc(e.slug)}">
         <span class="hint">เปลี่ยนได้ ระบบจะพาลิงก์เดิมไปยัง slug ใหม่ให้อัตโนมัติ</span></div>
       <div class="field"><label for="ee-status">สถานะ</label><select id="ee-status">
-        ${Object.entries(STATUS_TH).map(([k, v]) => `<option value="${k}" ${k === e.status ? 'selected' : ''}>${esc(v)}</option>`).join('')}
-      </select></div>
+        ${Object.entries(STATUS_TH).map(([k, v]) => `<option value="${k}" ${k === e.status ? 'selected' : ''}>${esc(`${v} — ${STATUS_HINT[k]}`)}</option>`).join('')}
+      </select>
+        <span class="hint">การเปิดรับผลงานกำหนดด้วยวันเปิด–ปิดรับในหน้าจัดการของนิทรรศการ</span></div>
       <div class="field"><span class="label">ผู้ดูแลนิทรรศการนี้</span>
         ${staffUsers.map((u) => `<label class="check"><input type="checkbox" name="staff" value="${u.id}" ${staffIds.has(u.id) ? 'checked' : ''}> ${esc(u.name)} <span class="muted small">${esc(u.email)}</span></label>`).join('') || '<p class="muted">ยังไม่มีผู้ใช้ เพิ่มได้ที่แท็บผู้ใช้</p>'}
       </div>
@@ -278,22 +276,6 @@ document.addEventListener('click', async (e) => {
   if (c) { toast((await copyText(c.dataset.copy)) ? 'คัดลอกแล้ว' : 'คัดลอกไม่ได้ กรุณาเลือกข้อความเอง'); return; }
   const ee = e.target.closest('[data-ex-edit]');
   if (ee) { exEditor(exhibitions.find((x) => x.id === Number(ee.dataset.exEdit))); return; }
-  const st = e.target.closest('[data-sub-toggle]');
-  if (st) {
-    const ex = exhibitions.find((x) => x.id === Number(st.dataset.subToggle));
-    const closing = st.dataset.to === 'closed';
-    const msg = closing
-      ? `ปิดรับผลงาน "${ex.title_th}"?\n\nฟอร์มส่งผลงานจะปิดทันที นิทรรศการและผลงานยังแสดงตามปกติ เปิดกลับได้ภายหลัง`
-      : `เปิดรับผลงาน "${ex.title_th}" อีกครั้ง?${ex.submission_closes_at && Date.parse(ex.submission_closes_at) < Date.now() ? '\n\nหมายเหตุ: วันปิดรับที่ตั้งไว้ผ่านไปแล้ว ฟอร์มจะยังไม่รับผลงานจนกว่าจะแก้วันปิดรับในหน้าจัดการ' : ''}`;
-    if (!confirm(msg)) return;
-    st.disabled = true;
-    try {
-      await api(`/api/admin/exhibitions/${ex.id}`, { method: 'PUT', body: { status: st.dataset.to } });
-      toast(closing ? 'ปิดรับผลงานแล้ว' : 'เปิดรับผลงานแล้ว', 'ok');
-      await load();
-    } catch (err) { st.disabled = false; toast(err.message, 'error'); }
-    return;
-  }
   const ue = e.target.closest('[data-user-edit]');
   if (ue) userEditor(users.find((x) => x.id === Number(ue.dataset.userEdit)));
 });

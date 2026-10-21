@@ -63,7 +63,7 @@ export const onRequestPut = handle(async (context) => {
   t('badge_label_en', { field: 'ข้อความ badge ภาษาอังกฤษ', max: 80 });
   t('badge_label_zh', { field: 'ข้อความ badge ภาษาจีน', max: 80 });
   if (b.status !== undefined) {
-    // Staff may open/close their exhibition; archiving is for admins (admin endpoint).
+    // Staff may set ร่าง / เปิด / ซ่อน (draft / open / closed); ปิด (archived) is for admins.
     const allowed = user.role === 'admin' ? ['draft', 'open', 'closed', 'archived'] : ['draft', 'open', 'closed'];
     set.status = v.oneOf(b.status, allowed, { field: 'สถานะ' });
   }

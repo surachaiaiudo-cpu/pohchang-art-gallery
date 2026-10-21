@@ -31,6 +31,16 @@ function strip(samples) {
   </span></span>`;
 }
 
+// A call for work that has not opened yet, or has ended, is still named on the room, quietly.
+function callNote(e) {
+  const phase = e.submission && e.submission.phase;
+  if (phase === 'ended') return `<span class="status-pill quiet">${esc(t('callEnded'))}</span>`;
+  if (phase === 'upcoming' && e.submission_opens_at) {
+    return `<span class="status-pill quiet">${esc(t('callUpcoming', { d: `${fmtDate(e.submission_opens_at)} · ${fmtTime(e.submission_opens_at)}` }))}</span>`;
+  }
+  return '';
+}
+
 function room(e) {
   const live = e.submission && e.submission.open;
   const cover = e.hero_url || e.cover_url;
@@ -44,7 +54,7 @@ function room(e) {
     ${cover ? blurBg('room-bg', cover) : ''}
     <span class="room-inner wrap">
       <span class="room-text">
-        ${live ? `<span class="status-pill">${esc(t('openCall'))}</span>` : ''}
+        ${live ? `<span class="status-pill">${esc(t('openCall'))}</span>` : callNote(e)}
         <span class="room-title">${esc(pick(e, 'title'))}</span>
         ${other ? `<span class="room-sub">${esc(other)}</span>` : ''}
         ${meta ? `<span class="room-meta">${esc(meta)}</span>` : ''}
@@ -286,7 +296,7 @@ async function main() {
     footer(site, name, exhibitions);
     // Open calls first (closing soonest), then the rest on view; past exhibitions newest first.
     const deadline = (e) => (e.submission && e.submission.open ? Date.parse(e.submission_closes_at || '') || 8.64e15 : 9e15);
-    const now = exhibitions.filter((e) => e.status === 'open' || e.status === 'closed').sort((a, b) => deadline(a) - deadline(b));
+    const now = exhibitions.filter((e) => e.status === 'open').sort((a, b) => deadline(a) - deadline(b));
     const past = exhibitions.filter((e) => e.status === 'archived');
     $('now-list').innerHTML = now.map(room).join('');
     $('past-list').innerHTML = past.map(room).join('');

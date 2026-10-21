@@ -1,5 +1,5 @@
 import { api, esc, img, bytes, thDate, toast, toLocalInput, fromLocalInput, slugFromPath } from './core.js';
-import { requireLogin, tabs, copyText, STATUS_TH } from './backoffice.js';
+import { requireLogin, tabs, copyText, STATUS_TH, STATUS_HINT, submissionText } from './backoffice.js';
 import { PRESETS } from './presets.js';
 import { checkImageFile, uploadImage, fitForUpload } from './upload.js';
 import { countryOptions, isCountryCode, countryName, flagImg } from './countries.js';
@@ -77,7 +77,7 @@ async function loadOverview() {
   S.headingFonts = d.headingFonts;
   document.title = `จัดการ: ${S.ex.title_th}`;
   $('ex-title').textContent = S.ex.title_th;
-  $('ex-sub').textContent = `/e/${S.ex.slug} · ${STATUS_TH[S.ex.status]} · ${S.ex.submission.open ? 'กำลังเปิดรับผลงาน' : S.ex.submission.reason}`;
+  $('ex-sub').textContent = `/e/${S.ex.slug} · ${STATUS_TH[S.ex.status]} · ${submissionText(S.ex).slice(2)}`;
   $('view-public').href = `/e/${encodeURIComponent(S.ex.slug)}`;
   const quota = S.ex.storage_quota_bytes || 1;
   $('stats').innerHTML = `
@@ -335,8 +335,10 @@ function downloadCsv() {
 function fillSettings() {
   const ex = S.ex;
   for (const k of ['title_th', 'title_en', 'title_zh', 'subtitle_th', 'subtitle_en', 'subtitle_zh', 'venue', 'statement_th', 'statement_en', 'statement_zh']) $(`s-${k}`).value = ex[k] || '';
-  $('s-status').innerHTML = ['draft', 'open', 'closed'].concat(ex.status === 'archived' ? ['archived'] : [])
-    .map((k) => `<option value="${k}" ${k === ex.status ? 'selected' : ''}>${STATUS_TH[k]}</option>`).join('');
+  // Staff may choose ร่าง / เปิด / ซ่อน; ปิด (archived) is set by an admin, so it is listed for admins or when already set.
+  const canArchive = S.me && S.me.role === 'admin';
+  $('s-status').innerHTML = Object.keys(STATUS_TH).filter((k) => k !== 'archived' || canArchive || ex.status === 'archived')
+    .map((k) => `<option value="${k}" ${k === ex.status ? 'selected' : ''}>${esc(`${STATUS_TH[k]} — ${STATUS_HINT[k]}`)}</option>`).join('');
   $('s-starts_on').value = ex.starts_on || '';
   $('s-ends_on').value = ex.ends_on || '';
   $('s-opens').value = toLocalInput(ex.submission_opens_at);
@@ -579,7 +581,8 @@ $('hero-remove').addEventListener('click', async () => {
 });
 
 async function main() {
-  await requireLogin();
+  const me = await requireLogin();
+  S.me = (me && me.user) || null;
   try {
     await loadOverview();
   } catch (e) {

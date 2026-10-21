@@ -96,6 +96,19 @@ const STEPS = [
       `UPDATE artists SET nationality = ? WHERE nationality NOT GLOB '[A-Z][A-Z]'
           AND lower(trim(nationality)) IN (${names.map(() => '?').join(',')})`, code, ...names
     ])
+  },
+  {
+    // Status model of 2026-10-21: 'closed' used to mean "on view, not accepting work" and now means
+    // ซ่อน (hidden). Those exhibitions stay on view as 'open'; their dates decide submissions.
+    // Runs once (marker row), so exhibitions hidden later are never turned back.
+    name: '0009_status_model',
+    needed: async (db) => !(await db.prepare(
+      "SELECT 1 AS x FROM site_settings WHERE key = 'migration:0009_status_model'"
+    ).first()),
+    sql: [
+      "UPDATE exhibitions SET status = 'open' WHERE status = 'closed'",
+      "INSERT OR IGNORE INTO site_settings (key, value) VALUES ('migration:0009_status_model', '{}')"
+    ]
   }
 ];
 

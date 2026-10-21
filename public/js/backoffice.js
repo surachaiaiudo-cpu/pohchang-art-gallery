@@ -43,4 +43,18 @@ export async function copyText(text) {
   try { await navigator.clipboard.writeText(text); return true; } catch { return false; }
 }
 
-export const STATUS_TH = { draft: 'ร่าง (ซ่อน)', open: 'เปิด', closed: 'ปิดรับผลงาน', archived: 'คลังนิทรรศการ' };
+// Listed in this order in every status picker. Stored values are older than the labels: see
+// functions/_lib/exhibitions.js (closed = ซ่อน, archived = ปิด).
+export const STATUS_TH = { draft: 'ร่าง', open: 'เปิด', archived: 'ปิด', closed: 'ซ่อน' };
+export const STATUS_HINT = {
+  draft: 'กำลังเตรียม คนทั่วไปมองไม่เห็น',
+  open: 'แสดงในหน้าแรกหมวดกำลังจัดแสดง รับผลงานเฉพาะช่วงวันเปิด–ปิดรับ',
+  archived: 'จบแล้ว ย้ายไปหมวดนิทรรศการที่ผ่านมา ไม่รับผลงาน',
+  closed: 'ซ่อนจากคนทั่วไป ผู้ดูแลยังแก้ไขได้ ไม่รับผลงาน'
+};
+// Short state of the call for work, for the back office.
+export function submissionText(e) {
+  const s = e.submission || {};
+  if (s.open) return '● กำลังรับผลงาน';
+  return `● ไม่รับผลงาน${s.reason ? `: ${s.reason}` : ''}`;
+}

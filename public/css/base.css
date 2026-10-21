@@ -65,6 +65,8 @@ h1, h2, h3 {
 .status-pill { display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px; border-radius: 999px; font-size: .88rem; font-weight: 600; background: var(--accent); color: var(--accent-ink); }
 .status-pill::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 .status-pill.quiet { background: transparent; color: var(--muted); border: 1px solid var(--line-strong); }
+.room .status-pill.quiet { color: rgba(255, 255, 255, .86); border-color: rgba(255, 255, 255, .45); }
+.room.no-cover .status-pill.quiet { color: var(--muted); border-color: var(--line-strong); }
 
 /* Exhibition hero */
 .crumbs { display: flex; flex-wrap: wrap; gap: 8px; font-size: .9rem; color: var(--muted); margin-bottom: 14px; }

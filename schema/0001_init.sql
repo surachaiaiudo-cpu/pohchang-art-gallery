@@ -45,8 +45,8 @@ CREATE TABLE IF NOT EXISTS exhibitions (
   statement_th           TEXT NOT NULL DEFAULT '',
   statement_en           TEXT NOT NULL DEFAULT '',
   venue                  TEXT NOT NULL DEFAULT '',
-  -- draft: hidden; open: public page + submissions per dates; closed: public, no submissions;
-  -- archived: read-only in the archive list
+  -- draft = ร่าง (being prepared, not public); open = เปิด (on view, submissions only inside the dates);
+  -- archived = ปิด (past exhibitions); closed = ซ่อน (hidden). See functions/_lib/exhibitions.js.
   status                 TEXT NOT NULL DEFAULT 'draft'
                          CHECK (status IN ('draft', 'open', 'closed', 'archived')),
   starts_on              TEXT,            -- exhibition dates (display)
