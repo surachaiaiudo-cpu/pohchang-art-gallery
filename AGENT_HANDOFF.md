@@ -149,9 +149,12 @@ IBM Plex Sans Thai everywhere. The home page (lobby) shows **only the exhibition
 one full-width "room" per exhibition (cover = hero image, else first work; title over it; open-call pill, deadline,
 work count; left edge in the exhibition's accent), grouped "on view" / "past". Header: gallery name, organiser
 link, language switch. White + vermilion (`#b4321f`) chrome. Each room has a preview strip: 6 works picked at random in the
-browser from a pool of up to 24 that `/api/exhibitions` returns (`samples`), 3-5 in view by screen width, moving one tile
+browser from a pool of up to 24 that `/api/exhibitions` returns (`samples`: id, url, title, artist name; no contact data), 3-4 in view by screen width, moving one tile
 every 4 s; it pauses off screen, on hover/focus, in hidden tabs, and does not move with prefers-reduced-motion.
-Above the rooms: a hero (works from all exhibitions cross-fading every 6 s behind the gallery name and a short intro);
+Above the rooms: a hero (works from all exhibitions cross-fading every 6 s beside the gallery name and a short intro,
+with title · artist under each); **works are never cropped** anywhere in the lobby (owner's request, 2026-10-21: portraits
+lost their heads): the hero work, the room cover and strip tiles are shown whole (`contain`) in front of a dark,
+blurred copy of the same image (400 px version + CSS blur);
 below: a dark footer (organiser, address, contact, social links, exhibition list, organiser link, language switch).
 Hero text and footer details are **edited by admins at `/admin` → "ตั้งค่าหอศิลป์"** in th/en/zh (`site_settings` table,
 `GET /api/site`, `GET/PUT /api/admin/site`, `functions/_lib/site.js`); empty fields are hidden. Never invent these

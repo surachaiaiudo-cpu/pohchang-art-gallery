@@ -11,14 +11,19 @@ const SAMPLES = 6;          // works per strip, picked at random on every visit
 const STEP_MS = 4000;       // one tile further every 4 seconds
 
 function pickRandom(list, n) {
-  const a = [...new Set(list)];
+  const seen = new Set();
+  const a = list.filter((x) => { const k = x.url || x; if (seen.has(k)) return false; seen.add(k); return true; });
   for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
   return a.slice(0, n);
 }
 
+// Works are never cropped: each one is shown whole, in front of a dark, blurred copy of itself.
+const blurBg = (cls, u) => `<img class="${cls}" src="${esc(img(u, 400))}" alt="" loading="lazy">`;
+
 // The strip shows 3-5 works (by screen width) and moves one tile at a time. The tiles are listed
 // twice so it can loop without a jump; the second copy is hidden from screen readers.
-function strip(urls) {
+function strip(samples) {
+  const urls = samples.map((x) => x.url || x);
   if (!urls.length) return '';
   const tile = (u, copy) => `<span class="room-tile"${copy ? ' aria-hidden="true"' : ''}><img src="${esc(img(u, 400))}" alt="" loading="lazy"></span>`;
   return `<span class="room-strip" data-count="${urls.length}"><span class="room-track">
@@ -36,13 +41,16 @@ function room(e) {
     e.work_count ? t('nWorks', { n: e.work_count }) : ''
   ].filter(Boolean).join(' · ');
   return `<a class="room${cover ? '' : ' no-cover'}" data-theme="${esc(e.theme_preset)}" href="/e/${encodeURIComponent(e.slug)}">
-    ${cover ? `<img class="room-bg" src="${esc(img(cover, 2400))}" alt="" loading="lazy">` : ''}
-    <span class="room-text wrap">
-      ${live ? `<span class="status-pill">${esc(t('openCall'))}</span>` : ''}
-      <span class="room-title">${esc(pick(e, 'title'))}</span>
-      ${other ? `<span class="room-sub">${esc(other)}</span>` : ''}
-      ${meta ? `<span class="room-meta">${esc(meta)}</span>` : ''}
-      ${strip(pickRandom(e.samples || [], SAMPLES))}
+    ${cover ? blurBg('room-bg', cover) : ''}
+    <span class="room-inner wrap">
+      <span class="room-text">
+        ${live ? `<span class="status-pill">${esc(t('openCall'))}</span>` : ''}
+        <span class="room-title">${esc(pick(e, 'title'))}</span>
+        ${other ? `<span class="room-sub">${esc(other)}</span>` : ''}
+        ${meta ? `<span class="room-meta">${esc(meta)}</span>` : ''}
+        ${strip(pickRandom(e.samples || [], SAMPLES))}
+      </span>
+      ${cover ? `<span class="room-art"><img src="${esc(img(cover, 1600))}" alt="" loading="lazy"></span>` : ''}
     </span>
   </a>`;
 }
@@ -104,16 +112,26 @@ function animateStrips() {
   }, STEP_MS);
 }
 
-// Hero: works from every exhibition cross-fade behind the gallery's name, one every 6 seconds.
+// Hero: works from every exhibition cross-fade beside the gallery's name, one every 6 seconds,
+// each shown whole with its title and artist.
 const HERO_SLIDES = 5, HERO_MS = 6000;
 function hero(site, name, exhibitions) {
   $('hero-title').textContent = pick(site, 'hero_title') || name;
   $('hero-lead').textContent = pick(site, 'hero_lead') || t('lobbyLead');
-  const urls = pickRandom(exhibitions.flatMap((e) => e.samples || []), HERO_SLIDES);
-  if (!urls.length) return;
-  $('hero-slides').innerHTML = urls.map((u, i) => `<img src="${esc(img(u, 2400))}" alt=""${i ? ' loading="lazy"' : ''} class="${i ? '' : 'on'}">`).join('');
+  const works = pickRandom(exhibitions.flatMap((e) => e.samples || []), HERO_SLIDES);
+  if (!works.length) return;
+  $('hero-slides').innerHTML = works.map((w, i) => {
+    const caption = [pick(w, 'title'), pick(w, 'name')].filter(Boolean).join(' · ');
+    return `<figure class="hero-slide${i ? '' : ' on'}">
+      ${blurBg('hs-bg', w.url)}
+      <span class="wrap hs-frame"><span class="hs-art">
+        <img src="${esc(img(w.url, 1600))}" alt=""${i ? ' loading="lazy"' : ''}>
+        ${caption ? `<figcaption>${esc(caption)}</figcaption>` : ''}
+      </span></span>
+    </figure>`;
+  }).join('');
   $('hero').classList.add('has-slides');
-  if (urls.length < 2 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (works.length < 2 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const slides = [...$('hero-slides').children];
   let i = 0;
   setInterval(() => {
