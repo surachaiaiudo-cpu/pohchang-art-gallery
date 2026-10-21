@@ -127,16 +127,34 @@ function animateStrips() {
   }, STEP_MS);
 }
 
-// Hero: 8 works from every exhibition, one every 4 seconds. Each new work is unveiled with a
+// Hero: 8 works shared fairly between the exhibitions, one every 4 seconds. Each new work is unveiled with a
 // sideways wipe, settles from a slight zoom to its whole size, and its museum label (number, title,
 // artist) rises in line by line. The thin bars below fill with time; tapping one, the arrows, a swipe
 // or the arrow keys change the work. It pauses while pointed at, focused or in a hidden tab.
 const HERO_SLIDES = 8, HERO_MS = 4000;
 const pad2 = (n) => String(n).padStart(2, '0');
+// Every exhibition with works gets a turn: exhibitions in random order, each with its own
+// shuffled works, taken one from each in rotation until the hero is full. Each work keeps the
+// title of the exhibition it came from, for its label.
+function fairPick(exhibitions, n) {
+  const queues = pickRandom(exhibitions.filter((e) => (e.samples || []).length), exhibitions.length)
+    .map((e) => pickRandom(e.samples, e.samples.length).map((w) => ({ ...w, from: pick(e, 'title') })));
+  const seen = new Set(), out = [];
+  while (out.length < n && queues.some((q) => q.length)) {
+    for (const q of queues) {
+      while (q.length && seen.has(q[0].url)) q.shift();
+      const w = q.shift();
+      if (!w) continue;
+      seen.add(w.url); out.push(w);
+      if (out.length >= n) break;
+    }
+  }
+  return out;
+}
 function hero(site, name, exhibitions) {
   $('hero-title').textContent = pick(site, 'hero_title') || name;
   $('hero-lead').textContent = pick(site, 'hero_lead') || t('lobbyLead');
-  const works = pickRandom(exhibitions.flatMap((e) => e.samples || []), HERO_SLIDES);
+  const works = fairPick(exhibitions, HERO_SLIDES);
   if (!works.length) return;
   const total = works.length;
   $('hero-slides').innerHTML = works.map((w, i) => {
@@ -151,6 +169,7 @@ function hero(site, name, exhibitions) {
           <span class="hs-rule"></span>
           ${realTitle ? `<span class="hs-title">${esc(realTitle)}</span>` : ''}
           ${artist ? `<span class="hs-artist">${esc(artist)}</span>` : ''}
+          ${w.from ? `<span class="hs-from">${esc(t('heroFrom', { name: w.from }))}</span>` : ''}
         </figcaption>
       </span></span></span>
     </figure>`;
