@@ -87,7 +87,7 @@ tests/*.test.js    node:test unit tests (`npm test`)
 ## 5. Data model (D1)
 
 - `users` (role `admin` | `staff`), `sessions`, `rate_limits`, `audit_log`
-- `exhibitions`: slug, titles/subtitles/statements in `_th` `_en` `_zh`, status `draft|open|closed|archived`,
+- `exhibitions`: slug, titles/subtitles/statements in `_th` `_en` `_zh`, status `draft|open|closed|archived` (= ร่าง / เปิด / ซ่อน / ปิด, see 6.3),
   submission dates, `max_works_per_artist`, `theme_preset`, `layout` (grid|masonry|salon),
   `theme_overrides` (JSON: accent, headingFont, ornament), hero image, Cloudinary settings
   (`cloudinary_cloud_name`, `cloudinary_upload_preset`, `cloudinary_api_key`, `cloudinary_api_secret_enc`),
@@ -123,10 +123,16 @@ Shown works appear publicly at once. Reviewers get personal links `/review/<toke
 `functions/_lib/review.js`: endorsed when approvals ≥ threshold; `needs_curator` when too many abstain to reach
 it; `not_endorsed` when it can no longer be reached. A curator `badge_override` wins. Badge label per exhibition.
 
-### 6.3 Submissions open/closed
-`submissionWindow(ex)`: status must be `open`, now within the optional dates, storage configured. Admin table in
-`/admin` has a one-click "ปิดรับผลงาน / เปิดรับผลงานอีกครั้ง" (sets status closed/open). Curators can still change
-status and dates in their settings (owner's choice).
+### 6.3 Exhibition status and submissions (owner's model, 2026-10-21)
+Stored values are from the first schema (its CHECK cannot change in place); meanings now:
+`draft` = **ร่าง** (preparing, imports, not public) · `open` = **เปิด** (on view, lobby "on view") ·
+`archived` = **ปิด** (lobby "past exhibitions") · `closed` = **ซ่อน** (hidden, was shown). Public = `open`/`archived`
+(`PUBLIC_STATUSES` in `functions/_lib/exhibitions.js`). Staff may set ร่าง/เปิด/ซ่อน; ปิด is admin-only.
+**Submissions are decided by dates alone** (no switch): `submissionWindow(ex)` needs status `open`, a
+`submission_closes_at` in the future (no closing date = no call), `submission_opens_at` past or empty, storage set.
+It returns `phase` none|upcoming|open|ended; public pages show "ปิดรับผลงานแล้ว" / "เปิดรับผลงาน <date>".
+Migration `0009_status_model` (marker row in `site_settings`) turned old `closed` (on view, no submissions) into `open`.
+**Preview deployments share the production D1**: visiting a preview runs its migrations on the real data.
 
 ### 6.4 Languages
 Public pages + submission + reviewer page in Thai / English / Chinese. Choice: `?lang=th|en|zh`, then saved choice,
@@ -191,7 +197,7 @@ ever deleted from old accounts); emails kept private, phones not imported.
 
 | Route | Who | Purpose |
 |---|---|---|
-| `GET /api/exhibitions` | public | lobby list (non-draft) with counts and cover |
+| `GET /api/exhibitions` | public | lobby list (status open/archived) with counts and cover |
 | `GET /api/x/:slug`, `GET /api/x/:slug/works/:id` | public | exhibition + shown works; one work with prev/next |
 | `POST /api/x/:slug/ticket`, `upload-auth`, `submit` | public | submission flow (6.1) |
 | `GET /api/config` | public | site name, Turnstile site key |
