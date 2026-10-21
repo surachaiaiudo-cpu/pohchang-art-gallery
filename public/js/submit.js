@@ -1,6 +1,6 @@
 import { api, esc, applyTheme, toast, icons, slugFromPath } from './core.js';
 import { imageProblem, uploadImage, fitForUpload } from './upload.js';
-import { t, pick, fmtDate, fmtTime, catName, subName, applyStatic, mountSwitcher, localError, lang, locale } from './i18n.js';
+import { t, pick, fmtDate, fmtTime, catName, subName, techName, applyStatic, mountSwitcher, localError, lang, locale } from './i18n.js';
 import { countryOptions, flagUrl, canShowFlagEmoji } from './countries.js';
 
 applyStatic();
@@ -52,6 +52,16 @@ function syncCategory(k) {
   $(`${k}-sub-wrap`).hidden = !subs.length && !video;
 }
 
+// With a technique list the artist picks one group and may add their own wording as detail.
+function techniqueFields(k, input) {
+  const techs = ex.techniques || [];
+  if (!techs.length) return input('technique_th', 'techniqueReq', { required: true, ph: 'techniquePh' });
+  return `<div class="field"><label for="${k}-technique_group">${esc(t('technique'))} ${req}</label>
+      <select id="${k}-technique_group"><option value="">${esc(t('pickTechnique'))}</option>
+        ${techs.map((x) => `<option value="${esc(x.name)}">${esc(techName(techs, x.name))}</option>`).join('')}</select></div>
+    ${input('technique_th', 'techniqueDetail', { ph: 'techniqueDetailPh' })}`;
+}
+
 function workBlock(n) {
   const k = `work${n}`;
   const input = (f, label, { ph = '', required = false, max = 300, lang = '' } = {}) =>
@@ -71,7 +81,7 @@ function workBlock(n) {
     </div>
     <div class="grid-2">
       ${input('title_th', 'title', { required: true })}
-      ${input('technique_th', 'techniqueReq', { required: true, ph: 'techniquePh' })}
+      ${techniqueFields(k, input)}
       ${input('dimensions', 'size', { max: 120, ph: 'sizePh' })}
       ${input('year_created', 'year', { max: 20, ph: 'yearPh' })}
     </div>
@@ -188,6 +198,7 @@ function collect() {
     return {
       category: checked(`${k}-cat`), subcategory: checked(`${k}-sub`), video_url: f('video_url'),
       title_th: f('title_th'), title_en: f('title_en'), title_zh: f('title_zh'),
+      technique_group: f('technique_group'),
       technique_th: f('technique_th'), technique_en: f('technique_en'), technique_zh: f('technique_zh'),
       dimensions: f('dimensions'), year_created: f('year_created'),
       concept_th: f('concept_th'), concept_en: f('concept_en'), concept_zh: f('concept_zh'),
@@ -214,7 +225,9 @@ function validate({ artist, works }) {
     if (uploads[k]?.busy) return [null, t('errBusy', { n })];
     if (!works[i].file) return [null, t('errImage', { n })];
     if (!works[i].title_th) return [`${k}-title_th`, t('errTitle', { n })];
-    if (!works[i].technique_th) return [`${k}-technique_th`, t('errTechnique', { n })];
+    if ((ex.techniques || []).length) {
+      if (!works[i].technique_group) return [`${k}-technique_group`, t('errTechniquePick', { n })];
+    } else if (!works[i].technique_th) return [`${k}-technique_th`, t('errTechnique', { n })];
   }
   if (Object.values(uploads).some((u) => u.busy)) return [null, t('errWait')];
   if (!$('consent').checked) return ['consent', t('errConsent')];

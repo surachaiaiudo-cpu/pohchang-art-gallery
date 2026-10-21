@@ -1,3 +1,4 @@
+import { DEFAULT_TECHNIQUES } from '../../_lib/techniques.js';
 import { handle, json, readJson, bad, HttpError } from '../../_lib/http.js';
 import { requireAdmin, actorOf } from '../../_lib/auth.js';
 import { audit } from '../../_lib/exhibitions.js';
@@ -33,11 +34,12 @@ export const onRequestPost = handle(async (context) => {
     if (taken) throw bad('slug นี้ถูกใช้แล้ว');
     const list = await fetchWorks(source);
     // Draft: nobody outside sees it until an admin checks it and sets the status to "คลัง".
-    // Old events had no categories; storage settings are the defaults (imported images stay on the old accounts).
+    // Old events had no categories; techniques get the default list so a curator can confirm the
+    // suggested group of each work. Storage settings are the defaults (imported images stay on the old accounts).
     const res = await db.prepare(
-      `INSERT INTO exhibitions (slug, title_th, title_en, theme_preset, status, categories, cloudinary_cloud_name, cloudinary_upload_preset)
-       VALUES (?, ?, ?, ?, 'draft', '', ?, ?)`
-    ).bind(slug, title_th, title_en, theme_preset, DEFAULT_CLOUD_NAME, DEFAULT_UPLOAD_PRESET).run();
+      `INSERT INTO exhibitions (slug, title_th, title_en, theme_preset, status, categories, techniques, cloudinary_cloud_name, cloudinary_upload_preset)
+       VALUES (?, ?, ?, ?, 'draft', '', ?, ?, ?)`
+    ).bind(slug, title_th, title_en, theme_preset, DEFAULT_TECHNIQUES, DEFAULT_CLOUD_NAME, DEFAULT_UPLOAD_PRESET).run();
     const id = res.meta.last_row_id;
     await audit(db, id, actorOf(admin), 'exhibition.import.start', { slug, source, works: list.length });
     return json({ ok: true, exhibition: { id, slug }, total: list.length, chunk: CHUNK }, { status: 201 });

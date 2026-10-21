@@ -65,7 +65,9 @@ const D = {
     openCall: 'เปิดรับผลงาน', nWorks: '{n} ผลงาน', nEndorsed: 'ผ่านผู้ทรงคุณวุฒิ {n}',
     exNav: 'เมนูนิทรรศการ', works: 'ผลงาน', submit: 'ส่งผลงาน', submitCta: 'ส่งผลงานเข้าร่วม', untilDate: 'รับผลงานถึง {d}',
     filters: 'ตัวกรองผลงาน', show: 'แสดงผลงาน', all: 'ทั้งหมด', endorsedFilter: 'ผ่านผู้ทรงคุณวุฒิ',
-    category: 'กลุ่มงาน', allCategories: 'ทุกกลุ่มงาน', search: 'ค้นหาชื่อผลงานหรือศิลปิน',
+    category: 'กลุ่มงาน', allCategories: 'ทุกกลุ่มงาน', allTechniques: 'ทุกเทคนิค', allCountries: 'ทุกประเทศ', noCountry: 'ไม่ระบุประเทศ', country: 'ประเทศ', clearFilters: 'ล้างตัวกรอง',
+    techniqueDetail: 'รายละเอียดเทคนิค', techniqueDetailPh: 'เช่น บนผ้าใบ, ผสมทองคำเปลว', pickTechnique: '— เลือกเทคนิค —', errTechniquePick: 'กรุณาเลือกเทคนิคของผลงานชิ้นที่ {n}',
+     search: 'ค้นหาชื่อผลงานหรือศิลปิน',
     noMatch: 'ไม่พบผลงานตามเงื่อนไข', noWorks: 'ยังไม่มีผลงานจัดแสดง', by: '{title} โดย {artist}',
     notFoundEx: 'ไม่พบนิทรรศการ', backGallery: 'กลับหอศิลป์', backGalleryArrow: '← กลับหอศิลป์',
     notFoundWork: 'ไม่พบผลงาน', backExhibition: 'กลับนิทรรศการ', zoom: 'ภาพขยาย',
@@ -161,7 +163,9 @@ const D = {
     openCall: 'Open call', nWorks: '{n} works', nEndorsed: '{n} selected by the panel',
     exNav: 'Exhibition menu', works: 'Works', submit: 'Submit work', submitCta: 'Submit your work', untilDate: 'Submissions until {d}',
     filters: 'Filter works', show: 'Show', all: 'All', endorsedFilter: 'Selected by the panel',
-    category: 'Category', allCategories: 'All categories', search: 'Search titles or artists',
+    category: 'Category', allCategories: 'All categories', allTechniques: 'All techniques', allCountries: 'All countries', noCountry: 'Country not given', country: 'Country', clearFilters: 'Clear filters',
+    techniqueDetail: 'Technique details', techniqueDetailPh: 'e.g. on canvas, with gold leaf', pickTechnique: '— Choose a technique —', errTechniquePick: 'Please choose the technique of work {n}.',
+     search: 'Search titles or artists',
     noMatch: 'No works match your search.', noWorks: 'No works on view yet.', by: '{title} by {artist}',
     notFoundEx: 'Exhibition not found', backGallery: 'Back to the gallery', backGalleryArrow: '← Back to the gallery',
     notFoundWork: 'Work not found', backExhibition: 'Back to the exhibition', zoom: 'Enlarged image',
@@ -255,7 +259,9 @@ const D = {
     openCall: '征集中', nWorks: '{n} 件作品', nEndorsed: '{n} 件经专家评审入选',
     exNav: '展览菜单', works: '作品', submit: '投稿', submitCta: '提交参展作品', untilDate: '征集截止 {d}',
     filters: '筛选作品', show: '显示', all: '全部', endorsedFilter: '经专家评审入选',
-    category: '作品类别', allCategories: '全部类别', search: '搜索作品名称或艺术家',
+    category: '作品类别', allCategories: '全部类别', allTechniques: '全部媒材', allCountries: '全部国家/地区', noCountry: '未注明国家/地区', country: '国家/地区', clearFilters: '清除筛选',
+    techniqueDetail: '媒材说明', techniqueDetailPh: '例如：布面、贴金箔', pickTechnique: '— 选择媒材 —', errTechniquePick: '请选择第 {n} 件作品的媒材。',
+     search: '搜索作品名称或艺术家',
     noMatch: '没有符合条件的作品。', noWorks: '暂无展出作品。', by: '{artist}《{title}》',
     notFoundEx: '未找到该展览', backGallery: '返回美术馆', backGalleryArrow: '← 返回美术馆',
     notFoundWork: '未找到该作品', backExhibition: '返回展览', zoom: '放大图片',
@@ -390,6 +396,27 @@ export function subName(cats, name, sub) {
   const l = c && c.subLabels ? c.subLabels[sub] : null;
   if (!l || lang === 'th') return sub;
   return l[lang] || l.en || sub;
+}
+// Technique groups: same idea, one level.
+export function techName(list, name) {
+  const x = (list || []).find((y) => y.name === name);
+  if (!x || lang === 'th') return name;
+  return x[lang] || x.en || name;
+}
+// "Technique : " came with the old system's data; it is hidden, not removed.
+export const cleanTechnique = (s) => String(s || '').replace(/^\s*technique\s*:\s*/i, '').trim();
+// What a visitor reads for the technique: the group, plus the artist's own wording when it adds
+// something ("สีอะคริลิก · บนผ้าใบ"); old text that already names the group is shown on its own.
+// A visitor reading in English or Chinese gets the translated group rather than Thai-only detail.
+export function techniqueLabel(list, w) {
+  if (!w.technique_group) return cleanTechnique(pick(w, 'technique'));
+  const label = techName(list, w.technique_group);
+  const own = lang === 'th' ? w.technique_th : (w[`technique_${lang}`] || (lang === 'zh' ? w.technique_en : ''));
+  const detail = cleanTechnique(own);
+  if (!detail) return label;
+  const item = (list || []).find((y) => y.name === w.technique_group) || {};
+  const words = [label, w.technique_group, item.en || '', item.zh || ''].flatMap((x) => x.split(/[/()]/)).map((x) => x.trim().toLowerCase()).filter((x) => x.length > 1);
+  return words.some((x) => detail.toLowerCase().includes(x)) ? detail : `${label} · ${detail}`;
 }
 export function catLabel(cats, w) {
   return [w.category ? catName(cats, w.category) : '', w.subcategory ? subName(cats, w.category, w.subcategory) : '']

@@ -1,6 +1,7 @@
 // Small schema upgrades applied automatically, once per Worker isolate, so a deploy never
 // depends on someone remembering to run a SQL file. Each step must be safe to retry.
 import { DEFAULT_CATEGORIES, DEFAULT_CATEGORIES_V1 } from './categories.js';
+import { DEFAULT_TECHNIQUES } from './techniques.js';
 import { COUNTRY_ALIASES } from '../../public/js/countries.js';
 
 const STEPS = [
@@ -69,6 +70,19 @@ const STEPS = [
     ).first()),
     sql: [
       "CREATE TABLE IF NOT EXISTS site_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL DEFAULT '{}', updated_at TEXT NOT NULL DEFAULT (datetime('now')))"
+    ]
+  },
+  {
+    // 0008_techniques.sql: technique groups for the exhibition filter; existing exhibitions get the default list.
+    // Old works keep only their free text until a curator confirms a group (suggested by guessTechnique).
+    name: '0008_techniques',
+    needed: async (db) => !(await db.prepare(
+      "SELECT 1 AS x FROM pragma_table_info('works') WHERE name = 'technique_group'"
+    ).first()),
+    sql: [
+      "ALTER TABLE exhibitions ADD COLUMN techniques TEXT NOT NULL DEFAULT ''",
+      "ALTER TABLE works ADD COLUMN technique_group TEXT NOT NULL DEFAULT ''",
+      ["UPDATE exhibitions SET techniques = ? WHERE techniques = ''", DEFAULT_TECHNIQUES]
     ]
   },
   {

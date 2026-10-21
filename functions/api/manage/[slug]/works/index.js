@@ -3,6 +3,7 @@ import { actorOf } from '../../../../_lib/auth.js';
 import { requireManager, audit } from '../../../../_lib/exhibitions.js';
 import { recompute } from '../../../../_lib/review.js';
 import * as v from '../../../../_lib/validate.js';
+import { parseTechniques, guessTechnique } from '../../../../_lib/techniques.js';
 
 // GET /api/manage/:slug/works?status=submitted|shown|rejected|all
 // Everything the curator needs, including private artist contacts and the panel tally.
@@ -27,7 +28,12 @@ export const onRequestGet = handle(async (context) => {
       WHERE ${where.join(' AND ')}
       ORDER BY w.display_order, w.id`
   ).bind(...params).all();
-  return json({ ok: true, works: results || [] });
+  // Works without a technique group (imported, or sent before the list existed) carry a suggestion
+  // from their free text; nothing is saved or shown publicly until a curator confirms it.
+  const techs = parseTechniques(ex.techniques);
+  const works = (results || []).map((w) => (w.technique_group ? w
+    : { ...w, technique_guess: guessTechnique(techs, w.technique_th) || guessTechnique(techs, w.technique_en) }));
+  return json({ ok: true, works });
 });
 
 // POST /api/manage/:slug/works { ids: [], status } - screen many works at once.

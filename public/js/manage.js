@@ -7,7 +7,7 @@ import { countryOptions, isCountryCode, countryName, flagImg } from './countries
 const slug = slugFromPath(1);
 const M = `/api/manage/${encodeURIComponent(slug)}`;
 const $ = (id) => document.getElementById(id);
-const S = { ex: null, counts: {}, works: [], status: 'submitted', q: '', cat: '', selected: new Set(), reviewers: [], shownWorks: 0, headingFonts: [] };
+const S = { ex: null, counts: {}, works: [], status: 'submitted', q: '', cat: '', tech: '', selected: new Set(), reviewers: [], shownWorks: 0, headingFonts: [] };
 
 const RESULT_TH = { pending: 'รอผล', endorsed: 'ได้ badge', not_endorsed: 'ไม่ได้ badge', needs_curator: 'ให้ภัณฑารักษ์ตัดสิน' };
 const DECISION = { approve: '✓', reject: '✕', abstain: '–' };
@@ -19,6 +19,20 @@ const catText = (list) => list.map((c) => {
   if (!c.subs.length) return head;
   return `${head}: ${c.subs.map((s) => labelled({ name: s, ...((c.subLabels || {})[s] || {}) })).join(', ')}`;
 }).join('\n');
+
+// Technique groups: works store the Thai label in technique_group; old works carry technique_guess
+// (from their free text) until a curator confirms it.
+const techText = (list) => list.map(labelled).join('\n');
+const techOptions = (selected, blank) => `<option value="">${blank}</option>${(S.ex.techniques || [])
+  .map((x) => `<option value="${esc(x.name)}"${x.name === selected ? ' selected' : ''}>${esc(x.name)}</option>`).join('')}`;
+const UNCONFIRMED = '__none__';
+const cleanTechnique = (s) => String(s || '').replace(/^\s*technique\s*:\s*/i, '').trim();
+
+async function saveTechniques(items) {
+  const d = await api(`${M}/techniques`, { method: 'POST', body: { items } });
+  toast(`ยืนยันเทคนิค ${d.updated} ผลงานแล้ว`, 'ok');
+  await loadWorks();
+}
 
 // ------------------------------------------------------------------ helpers
 function openDrawer(title, html) {
@@ -86,12 +100,27 @@ async function loadWorks() {
   $('w-cat').innerHTML = `<option value="">ทุกกลุ่มงาน</option>${names.map((n) => `<option value="${esc(n)}">${esc(n)} (${count(n)})</option>`).join('')}`;
   if (!names.includes(S.cat)) S.cat = '';
   $('w-cat').value = S.cat;
+  // Technique filter: unconfirmed first (the curator's to-do), then each group in the exhibition's order.
+  const techs = S.ex.techniques || [];
+  const todo = S.works.filter((w) => !w.technique_group);
+  const guessed = todo.filter((w) => w.technique_guess);
+  const tcount = (n) => S.works.filter((w) => w.technique_group === n).length;
+  const used = [...new Set([...techs.map((x) => x.name), ...S.works.map((w) => w.technique_group).filter(Boolean)])].filter((n) => tcount(n));
+  $('w-tech').hidden = !techs.length;
+  $('w-tech').innerHTML = `<option value="">ทุกเทคนิค</option>${todo.length ? `<option value="${UNCONFIRMED}">ยังไม่ยืนยันเทคนิค (${todo.length})</option>` : ''}${used.map((n) => `<option value="${esc(n)}">${esc(n)} (${tcount(n)})</option>`).join('')}`;
+  if (S.tech && S.tech !== UNCONFIRMED && !used.includes(S.tech)) S.tech = '';
+  if (S.tech === UNCONFIRMED && !todo.length) S.tech = '';
+  $('w-tech').value = S.tech;
+  $('tech-notice').hidden = !techs.length || !todo.length;
+  $('tech-notice-text').textContent = `มี ${todo.length} ผลงานยังไม่ได้ยืนยันเทคนิค (ระบบเดาให้ ${guessed.length} งาน) ผลงานจะขึ้นในตัวกรองเทคนิคหน้านิทรรศการเมื่อยืนยันแล้ว`;
+  $('bulk-tech').hidden = !guessed.length;
   renderWorks();
 }
 
 function visibleWorks() {
   const q = S.q.trim().toLowerCase();
-  return S.works.filter((w) => (S.status === 'all' || w.status === S.status) && (!S.cat || w.category === S.cat) &&
+  const techOk = (w) => !S.tech || (S.tech === UNCONFIRMED ? !w.technique_group : w.technique_group === S.tech);
+  return S.works.filter((w) => (S.status === 'all' || w.status === S.status) && (!S.cat || w.category === S.cat) && techOk(w) &&
     (!q || [w.title_th, w.title_en, w.artist_name_th, w.artist_email].some((t) => (t || '').toLowerCase().includes(q))));
 }
 
@@ -106,8 +135,9 @@ function renderWorks() {
       <div class="body">
         <div class="t">${esc(w.title_th)}</div>
         <div class="small muted">${flagImg(w.nationality, { alt: countryName(w.nationality, 'th') }, esc)}${esc([w.academic_title_th, w.artist_name_th].filter(Boolean).join(' '))}</div>
-        <div class="small muted">${esc(w.technique_th)}${w.dimensions ? ` · ${esc(w.dimensions)}` : ''}</div>
+        <div class="small muted">${esc(cleanTechnique(w.technique_th))}${w.dimensions ? ` · ${esc(w.dimensions)}` : ''}</div>
         ${catLabel(w) ? `<div class="small"><span class="tag">${esc(catLabel(w))}</span>${w.video_url ? ' <span class="small muted">มีวิดีโอ</span>' : ''}</div>` : ''}
+        ${techCell(w)}
         <div class="row">${statusTag(w)} ${reviewTag(w)}
           ${w.status === 'shown' ? `<span class="small muted">✓${w.approvals} ✕${w.rejections} –${w.abstentions}</span>` : ''}</div>
       </div>
@@ -117,6 +147,17 @@ function renderWorks() {
         ${w.status !== 'rejected' ? `<button class="btn btn-danger btn-sm" data-quick="rejected" data-id="${w.id}">ไม่ผ่าน</button>` : ''}
       </div>
     </article>`).join('') || '<p class="muted">ไม่มีผลงานในหมวดนี้</p>';
+}
+
+function techCell(w) {
+  if (!(S.ex.techniques || []).length && !w.technique_group) return '';
+  if (w.technique_group) return `<div class="small"><span class="tag">เทคนิค: ${esc(w.technique_group)}</span></div>`;
+  return `<div class="small tech-confirm">
+      <label class="sr-only" for="tc-${w.id}">เทคนิคของ ${esc(w.title_th)}</label>
+      <select id="tc-${w.id}" data-tech-sel="${w.id}">${techOptions(w.technique_guess || '', '— เลือกเทคนิค —')}</select>
+      <button class="btn btn-sm" type="button" data-tech-ok="${w.id}">ยืนยัน</button>
+      <span class="muted">${w.technique_guess ? 'ระบบเดาจากข้อความเทคนิค' : 'ระบบเดาไม่ได้ กรุณาเลือก'}</span>
+    </div>`;
 }
 
 async function setStatus(ids, status) {
@@ -146,6 +187,9 @@ function workEditor(w) {
         <div class="field"><label for="we-category">กลุ่มงาน</label><select id="we-category"></select></div>
         <div class="field"><label for="we-subcategory">ประเภท</label><select id="we-subcategory"></select></div>
       </div>
+      ${(S.ex.techniques || []).length || w.technique_group ? `<div class="field"><label for="we-technique_group">เทคนิค (สำหรับตัวกรอง)</label>
+        <select id="we-technique_group">${techOptions(w.technique_group, '— ยังไม่ยืนยัน —')}${w.technique_group && !(S.ex.techniques || []).some((x) => x.name === w.technique_group) ? `<option value="${esc(w.technique_group)}" selected>${esc(w.technique_group)} (ไม่อยู่ในรายการแล้ว)</option>` : ''}</select>
+        ${!w.technique_group && w.technique_guess ? `<span class="hint">ระบบแนะนำ: ${esc(w.technique_guess)} <button class="btn btn-ghost btn-sm" type="button" id="we-use-guess">ใช้คำแนะนำ</button></span>` : ''}</div>` : ''}
       ${f('video_url', 'ลิงก์วิดีโอ', w.video_url, 'url')}
       ${w.video_url ? `<p class="small" style="margin-top:-6px"><a href="${esc(w.video_url)}" target="_blank" rel="noopener noreferrer">เปิดวิดีโอ ↗</a></p>` : ''}
       <div class="grid-2">${f('title_th', 'ชื่อผลงาน')}${f('title_en', 'ชื่อภาษาอังกฤษ')}${f('title_zh', 'ชื่อภาษาจีน')}
@@ -181,6 +225,7 @@ function workEditor(w) {
   };
   syncSub(w.subcategory);
   $('we-category').addEventListener('change', () => syncSub(''));
+  if ($('we-use-guess')) $('we-use-guess').addEventListener('click', () => { $('we-technique_group').value = w.technique_guess; });
   const val = (k) => $(`we-${k}`).value;
   $('we-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -190,6 +235,7 @@ function workEditor(w) {
         body: {
           status: val('status'), badge_override: val('override') || null,
           category: val('category'), subcategory: val('subcategory'), video_url: val('video_url').trim(),
+          ...($('we-technique_group') ? { technique_group: val('technique_group') } : {}),
           title_th: val('title_th'), title_en: val('title_en'), title_zh: val('title_zh'),
           technique_th: val('technique_th'), technique_en: val('technique_en'), technique_zh: val('technique_zh'),
           dimensions: val('dimensions'), year_created: val('year_created'), zone: val('zone'), display_order: Number(val('display_order') || 0),
@@ -297,6 +343,7 @@ function fillSettings() {
   $('s-closes').value = toLocalInput(ex.submission_closes_at);
   $('s-max').value = ex.max_works_per_artist;
   $('s-categories').value = catText(ex.categories || []);
+  $('s-techniques').value = techText(ex.techniques || []);
   $('sub-state').textContent = ex.submission.open ? 'ขณะนี้เปิดรับผลงานอยู่' : `ขณะนี้ไม่รับผลงาน: ${ex.submission.reason}`;
   $('s-layout').value = ex.layout;
   const o = ex.theme_overrides || {};
@@ -362,7 +409,7 @@ async function saveSettings(e) {
         starts_on: v('s-starts_on'), ends_on: v('s-ends_on'),
         submission_opens_at: fromLocalInput(v('s-opens')), submission_closes_at: fromLocalInput(v('s-closes')),
         max_works_per_artist: Number(v('s-max') || 3),
-        categories: v('s-categories'),
+        categories: v('s-categories'), techniques: v('s-techniques'),
         theme_preset: chosenPreset, layout: v('s-layout'),
         theme_overrides: { accent: v('s-accent').trim(), headingFont: v('s-font'), ornament: v('s-ornament') }
       }
@@ -399,6 +446,33 @@ document.addEventListener('click', async (e) => {
   if (open) { workEditor(S.works.find((w) => w.id === Number(open.dataset.open))); return; }
   const quick = t.closest('[data-quick]');
   if (quick) { try { await setStatus([Number(quick.dataset.id)], quick.dataset.quick); } catch (err) { toast(err.message, 'error'); } return; }
+  const tok = t.closest('[data-tech-ok]');
+  if (tok) {
+    const id = Number(tok.dataset.techOk);
+    const value = $(`tc-${id}`).value;
+    if (!value) { toast('กรุณาเลือกเทคนิคก่อน'); $(`tc-${id}`).focus(); return; }
+    try { await saveTechniques([{ id, technique_group: value }]); } catch (err) { toast(err.message, 'error'); }
+    return;
+  }
+  if (t.closest('#bulk-tech')) {
+    // Selected works if any, otherwise every unconfirmed work on screen; only those with a suggestion.
+    const pool = S.selected.size ? S.works.filter((w) => S.selected.has(w.id)) : visibleWorks();
+    const items = pool.filter((w) => !w.technique_group && w.technique_guess).map((w) => ({ id: w.id, technique_group: w.technique_guess }));
+    if (!items.length) { toast('ไม่มีผลงานที่มีคำแนะนำในรายการนี้'); return; }
+    const by = {};
+    for (const it of items) by[it.technique_group] = (by[it.technique_group] || 0) + 1;
+    const summary = Object.entries(by).map(([k, n]) => `${k} ${n}`).join(', ');
+    if (!confirm(`ยืนยันเทคนิคตามคำแนะนำ ${items.length} ผลงาน?\n${summary}\n(ตรวจทีละงานก่อนได้ที่ตัวกรอง "ยังไม่ยืนยันเทคนิค")`)) return;
+    try { S.selected.clear(); await saveTechniques(items); } catch (err) { toast(err.message, 'error'); }
+    return;
+  }
+  if (t.closest('#tech-notice-show')) {
+    S.tech = UNCONFIRMED; S.status = 'all';
+    document.querySelectorAll('#w-filter [data-status]').forEach((b) => { const on = b.dataset.status === 'all'; b.setAttribute('aria-pressed', String(on)); b.classList.toggle('btn-ghost', !on); });
+    $('w-tech').value = UNCONFIRMED;
+    renderWorks();
+    return;
+  }
   const bulk = t.closest('[data-bulk]');
   if (bulk) {
     if (!S.selected.size) { toast('ยังไม่ได้เลือกผลงาน'); return; }
@@ -434,6 +508,7 @@ $('sel-all').addEventListener('change', (e) => {
   renderWorks();
 });
 $('w-cat').addEventListener('change', (e) => { S.cat = e.target.value; renderWorks(); });
+$('w-tech').addEventListener('change', (e) => { S.tech = e.target.value; renderWorks(); });
 $('w-q').addEventListener('input', (e) => { S.q = e.target.value; renderWorks(); });
 $('res-csv').addEventListener('click', downloadCsv);
 $('set-form').addEventListener('submit', saveSettings);

@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>นิทรรศการ</title>
   <link rel="stylesheet" href="/css/themes.css?v=7">
-  <link rel="stylesheet" href="/css/base.css?v=8">
-  <script type="module" src="/js/exhibition.js?v=3"></script>
+  <link rel="stylesheet" href="/css/base.css?v=9">
+  <script type="module" src="/js/exhibition.js?v=4"></script>
 </head>
 <body>
   <a class="sr-only" href="#works" data-i18n="skipWorks">ข้ามไปที่ผลงาน</a>
@@ -31,6 +31,10 @@
         <div class="toolbar-right">
           <label class="sr-only" for="cat" data-i18n="category">กลุ่มงาน</label>
           <select class="search" id="cat" hidden><option value="">ทุกกลุ่มงาน</option></select>
+          <label class="sr-only" for="tech" data-i18n="technique">เทคนิค</label>
+          <select class="search" id="tech" hidden><option value="">ทุกเทคนิค</option></select>
+          <label class="sr-only" for="country" data-i18n="country">ประเทศ</label>
+          <span class="with-flag" id="country-wrap" hidden><select class="search" id="country"><option value="">ทุกประเทศ</option></select><img id="country-flag" class="flag" alt="" width="24" height="18" hidden></span>
           <label class="sr-only" for="sort" data-i18n="sortBy">เรียงลำดับ</label>
           <select class="search" id="sort">
             <option value="order" data-i18n="sortOrder">ตามลำดับนิทรรศการ</option>

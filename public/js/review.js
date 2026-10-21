@@ -1,5 +1,5 @@
 import { api, esc, img, toast, icons, paras, loadFonts } from './core.js';
-import { t, pick, pickOther, fmtDate, catLabel, applyStatic, mountSwitcher, localError } from './i18n.js';
+import { t, pick, pickOther, fmtDate, catLabel, cleanTechnique, applyStatic, mountSwitcher, localError } from './i18n.js';
 
 applyStatic();
 mountSwitcher(document.getElementById('lang'));
@@ -48,7 +48,7 @@ function render() {
       ${titleOther ? `<p class="muted" style="margin-top:-6px">${esc(titleOther)}</p>` : ''}
       ${w.category ? `<p class="small" style="margin:0"><span class="tag">${esc(catLabel(S.ex.categories, w))}</span></p>` : ''}
       ${w.video_url ? `<p class="small"><a href="${esc(w.video_url)}" target="_blank" rel="noopener noreferrer">${esc(t('watchVideo'))} ↗</a></p>` : ''}
-      <p class="small">${artist ? `${esc(artist)}<br>` : ''}${esc(pick(w, 'technique'))}${w.dimensions ? ` · ${esc(w.dimensions)}` : ''}${w.year_created ? ` · ${esc(w.year_created)}` : ''}</p>
+      <p class="small">${artist ? `${esc(artist)}<br>` : ''}${esc(cleanTechnique(pick(w, 'technique')))}${w.dimensions ? ` · ${esc(w.dimensions)}` : ''}${w.year_created ? ` · ${esc(w.year_created)}` : ''}</p>
       ${concept ? `<details><summary>${esc(t('conceptOfWork'))}</summary><div class="small">${paras(concept)}</div></details>` : ''}
       <div class="decide" role="group" aria-label="${esc(t('decision'))}">
         <button type="button" data-d="approve" aria-pressed="${v.decision === 'approve'}" ${S.open ? '' : 'disabled'}>${icons.check} ${esc(t('approve'))}</button>

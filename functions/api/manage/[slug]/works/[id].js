@@ -5,6 +5,7 @@ import { verifyUploadedFile, deleteFile } from '../../../../_lib/storage.js';
 import { recompute } from '../../../../_lib/review.js';
 import * as v from '../../../../_lib/validate.js';
 import { parseCategories, checkCategory } from '../../../../_lib/categories.js';
+import { parseTechniques, checkTechnique } from '../../../../_lib/techniques.js';
 
 async function loadWork(db, ex, id) {
   const w = await db.prepare('SELECT * FROM works WHERE id = ? AND exhibition_id = ? AND deleted_at IS NULL').bind(id, ex.id).first();
@@ -51,6 +52,7 @@ export const onRequestPut = handle(async (context) => {
   if (b.category !== undefined || b.subcategory !== undefined) {
     Object.assign(set, checkCategory(parseCategories(ex.categories), b.category ?? work.category, b.subcategory ?? work.subcategory));
   }
+  if (b.technique_group !== undefined) set.technique_group = checkTechnique(parseTechniques(ex.techniques), b.technique_group, { required: false });
   if (b.video_url !== undefined) set.video_url = v.httpsUrl(b.video_url, { field: 'ลิงก์วิดีโอ' });
   if (b.display_order !== undefined) set.display_order = v.int(b.display_order, { field: 'ลำดับ', min: 0, max: 100000 });
   if (b.status !== undefined) set.status = v.oneOf(b.status, ['submitted', 'shown', 'rejected'], { field: 'สถานะ' });

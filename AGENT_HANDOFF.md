@@ -43,7 +43,7 @@ review and badge. It replaces an older system of one Cloudflare project per even
   shifted columns (artist name "Thailand", email in the nationality field) and "Kurdistan" ×2.
 - Open questions to the owner (do not decide them yourself):
   1. Keep the dark `heritage` theme dark, or make it light? (they picked "colour + heading font", not "dark allowed")
-  2. Strip "Technique :" / "size" prefixes from imported old data automatically?
+  2. ~~Technique prefix~~ decided 2026-10-21: "Technique :" is hidden on display only (data kept). "size" prefix: not asked yet.
   3. What to do with the Sirikit exhibition's open submissions?
   4. Who runs the 18 Poh Chang import, with which slug/titles (proposed `poh-chang-18`)?
 - Design canvas (Claude Design artifact, private to the owner): https://claude.ai/artifact/7VQCsWFiH7Rf4HKfjkchJw
@@ -64,6 +64,7 @@ functions/
     storage.js          Cloudinary: signed or unsigned upload auth, upload verification, delete, usage
     review.js           tally() for the expert panel + recompute()
     categories.js       per-exhibition category lists ("ไทย | English | 中文" labels, sub-types)
+    techniques.js       per-exhibition technique groups, default 15, guessTechnique() for old free text
     import-old.js       reading the old event sites and mapping their rows
     country-names.js    generated en/th/zh country name -> ISO code table (for the importer)
     validate.js http.js crypto.js ratelimit.js ticket.js reviewer.js public.js themes.js
@@ -91,11 +92,12 @@ tests/*.test.js    node:test unit tests (`npm test`)
   `theme_overrides` (JSON: accent, headingFont, ornament), hero image, Cloudinary settings
   (`cloudinary_cloud_name`, `cloudinary_upload_preset`, `cloudinary_api_key`, `cloudinary_api_secret_enc`),
   review settings (`review_open`, `review_deadline`, `review_threshold` default 3, `review_panel_size` default 5,
-  `review_blind`), badge labels `_th` `_en` `_zh`, `categories` (text, see 6.5)
+  `review_blind`), badge labels `_th` `_en` `_zh`, `categories` (text, see 6.5), `techniques` (text, see 6.5b)
 - `slug_redirects` (old slug -> exhibition), `exhibition_members` (staff <-> exhibition)
 - `artists` (per exhibition; `_th` is the primary/original name, `_en` `_zh` optional; `email`, `phone`
   private; `nationality` = ISO code)
-- `works`: titles/technique/concept in `_th` `_en` `_zh`, `category`, `subcategory`, `video_url`, image fields,
+- `works`: titles/technique/concept in `_th` `_en` `_zh` (technique text = free detail), `category`, `subcategory`,
+  `technique_group` (chosen group, Thai label; '' = not confirmed), `video_url`, image fields,
   `status` `submitted|shown|rejected`, `review_result`, `badge_override`, `endorsed`, `display_order`, soft delete
 - `reviewers` (token stored as SHA-256 hash), `votes` (approve|reject|abstain + comment)
 
@@ -110,7 +112,8 @@ to IP + slug; Turnstile when configured) → `POST /api/x/:slug/upload-auth` →
 (`public/js/upload.js`) and uploads straight to Cloudinary → `POST /api/x/:slug/submit` with the Cloudinary
 response. The server verifies each file: signed mode checks Cloudinary's response signature; unsigned-preset mode
 HEADs the delivery URL and takes the real size, and refuses a public_id in another exhibition's folder.
-Required: name, nationality (ISO list), email, consent; per work: image, title, technique, category (+ sub-type,
+Required: name, nationality (ISO list), email, consent; per work: image, title, technique group (from the
+exhibition's list; the technique text is then optional detail), category (+ sub-type,
 + video link for video art). Emails/phones never leave the back office.
 Rate limits per IP per hour: ticket 150, upload 240, submit 60; per exhibition uploads 1500/h.
 
@@ -136,6 +139,19 @@ Back office stays Thai.
 `Mixed media technique | Mixed media technique | 综合材料技法: 2D | 2D | 平面 (2D), วิดีโออาร์ต | Video art | 录像艺术`.
 Works store the first label. Default list (6 groups) in `categories.js`. A sub-type containing วิดีโอ/video
 requires a video link. Empty text = no categories.
+
+### 6.5b Techniques and the exhibition filters (owner's decisions, 2026-10-21)
+`exhibitions.techniques`: one group per line, `ไทย | English | 中文` (default 15 in `techniques.js`: oil, acrylic,
+watercolour, tempera, pastel, drawing, printmaking, modelling/casting, carving, ceramic, digital, photography, video,
+mixed media, other). Curators edit it in the exhibition settings. Artists pick **one** group per work (`technique_group`)
+and may type detail in `technique_th/en/zh`. Old works (imported, or sent before 0008) have only free text:
+`GET /api/manage/:slug/works` adds `technique_guess` (keyword rules; two or more different media → mixed media); the
+manage page shows "ยังไม่ยืนยันเทคนิค", per-card confirm and a bulk "ยืนยันเทคนิคตามคำแนะนำ"
+(`POST /api/manage/:slug/techniques`). A guess is never public until confirmed. Display: `techniqueLabel()` in
+`i18n.js` (group in the visitor's language + detail when it adds something; "Technique :" prefix hidden).
+Exhibition page filters: category, technique (groups with works, counts), country (countries with works, flag + count,
+plus "ไม่ระบุประเทศ" for blank/unrecognised nationality), sort, search; state is kept in the URL
+(`?cat=&tech=&country=&q=&sort=&show=endorsed`) so a filtered view can be shared. On phones the filter bar is not sticky.
 
 ### 6.6 Nationality and flags
 Stored as ISO 3166-1 alpha-2. Names come from `Intl.DisplayNames` in the page language. Flags are local SVGs.
@@ -178,7 +194,7 @@ ever deleted from old accounts); emails kept private, phones not imported.
 | `POST /api/auth/login`, `logout`, `GET me`, `POST password` | users | session auth, forced first password change |
 | `/api/admin/users[/id]`, `/api/admin/exhibitions[/id]` | admin | users, create exhibition, slug/status/staff |
 | `POST /api/admin/import` | admin | old-event import (6.8) |
-| `/api/manage/:slug` (+ `works`, `works/:id`, `reviewers`, `reviewers/:id`, `results`, `storage`, `hero`, `upload-auth`) | staff of that exhibition | settings, screening, panel, results, Cloudinary |
+| `/api/manage/:slug` (+ `works`, `works/:id`, `techniques`, `reviewers`, `reviewers/:id`, `results`, `storage`, `hero`, `upload-auth`) | staff of that exhibition | settings, screening, panel, results, Cloudinary |
 | `GET/POST /api/review/:token[/vote]` | reviewer link | review works, vote |
 | `GET /api/dev/placeholder` | dev only | fake image when `DEV_FAKE_STORAGE=1` |
 

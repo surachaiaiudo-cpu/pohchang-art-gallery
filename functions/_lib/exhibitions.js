@@ -3,6 +3,7 @@
 import { forbidden, notFound } from './http.js';
 import { requireUser } from './auth.js';
 import { parseCategories } from './categories.js';
+import { parseTechniques } from './techniques.js';
 
 export async function findBySlug(db, slug) {
   if (typeof slug !== 'string' || slug.length > 60) return null;
@@ -94,6 +95,7 @@ export function publicExhibition(ex) {
     review_threshold: ex.review_threshold,
     review_panel_size: ex.review_panel_size,
     categories: parseCategories(ex.categories),
+    techniques: parseTechniques(ex.techniques),
     submission: submissionWindow(ex)
   };
 }

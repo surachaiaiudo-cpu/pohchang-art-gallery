@@ -1,5 +1,5 @@
 import { api, esc, img, applyTheme, paras, badgeHtml, icons, slugFromPath } from './core.js';
-import { t, pick, pickOther, catLabel, applyStatic, mountSwitcher, localError, locale } from './i18n.js';
+import { t, pick, pickOther, catLabel, techniqueLabel, applyStatic, mountSwitcher, localError, locale } from './i18n.js';
 import { countryName, flagImg } from './countries.js';
 
 applyStatic();
@@ -45,7 +45,7 @@ async function main() {
         </div>
         <dl class="facts">
           ${fact(t('category'), catLabel(ex.categories, w))}
-          ${fact(t('technique'), pick(w, 'technique'))}
+          ${fact(t('technique'), techniqueLabel(ex.techniques, w))}
           ${fact(t('size'), w.dimensions)}
           ${fact(t('year'), w.year_created)}
           ${fact(t('nationality'), country, flagImg(w.nationality))}
