@@ -1,6 +1,6 @@
 # Agent handoff — Poh-Chang online art gallery (new system)
 
-Last updated: 2026-10-20 (Asia/Bangkok). Read this whole file before changing anything.
+Last updated: 2026-10-21 (Asia/Bangkok). Read this whole file before changing anything.
 Owner-facing setup steps are in `README.md` (Thai); this file is for AI agents and developers.
 
 ## 1. What this is
@@ -145,8 +145,10 @@ Old free text was converted by migration 0006 / the importer; unknown text is ke
 "Gallery wall + museum labels": works hang on `--wall` with a label (catalogue No., title, flag + artist,
 category, technique, size). Seven presets in `themes.css` (keys unchanged since launch): white-cube, thai-classic,
 thai-contemporary, monochrome, pop, craft, heritage (dark). Each sets colours + heading font; body font is
-IBM Plex Sans Thai everywhere. The lobby is always white + vermilion (`#b4321f`); each exhibition card shows its
-own theme accent. Per-exhibition overrides: accent colour, heading font, ornament level, layout.
+IBM Plex Sans Thai everywhere. The home page (lobby) shows **only the exhibitions** (owner's request, 2026-10-21):
+one full-width "room" per exhibition (cover = hero image, else first work; title over it; open-call pill, deadline,
+work count; left edge in the exhibition's accent), grouped "on view" / "past". Header: gallery name, organiser
+link, language switch. White + vermilion (`#b4321f`) chrome. Per-exhibition overrides: accent colour, heading font, ornament level, layout.
 
 ### 6.8 Importing old events
 `/admin` → "นำเข้างานจากระบบเดิม": preview (`step: preview`), then create a DRAFT exhibition and import in chunks of
@@ -189,7 +191,7 @@ npm test                                # 22 unit tests
 - Deploy = push to `main` (Cloudflare Git integration). Check the "Cloudflare Pages" check run on the commit
   (`gh api repos/surachaiaiudo-cpu/pohchang-art-gallery/commits/<sha>/check-runs`).
   "Retry deployment" in the dashboard rebuilds the OLD commit: push a new commit instead.
-- After changing CSS, bump `?v=` on the `<link>` tags of the pages that use it (current: v=3 on public pages).
+- After changing CSS, bump `?v=` on the `<link>` tags of the pages that use it (current: v=4 on public pages).
 - End-to-end checks were done with Playwright against `wrangler pages dev` (fake storage, a stand-in old site for
   imports, a Thai `locale` because the UI follows the browser language). Chromium: `/opt/pw-browsers/chromium`.
 - Limits to respect: D1 max 100 bound parameters per statement (chunk at 90); free Workers ~50 D1 queries per
