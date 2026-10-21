@@ -2,6 +2,7 @@ import { handle, json, readJson, bad, notFound } from '../../../_lib/http.js';
 import { requireAdmin, actorOf } from '../../../_lib/auth.js';
 import { audit } from '../../../_lib/exhibitions.js';
 import * as v from '../../../_lib/validate.js';
+import { CARD_STYLES } from '../../../_lib/themes.js';
 
 // PUT /api/admin/exhibitions/:id { slug?, status?, staff_user_ids? }
 // Admin-only changes: renaming the slug (old one keeps redirecting), archiving, assigning staff.
@@ -27,6 +28,10 @@ export const onRequestPut = handle(async (context) => {
   if (body.status !== undefined) {
     const status = v.oneOf(body.status, ['draft', 'open', 'closed', 'archived'], { field: 'สถานะ' });
     stmts.push(db.prepare("UPDATE exhibitions SET status = ?, updated_at = datetime('now') WHERE id = ?").bind(status, id));
+  }
+  if (body.card_style !== undefined) {
+    const card = v.oneOf(body.card_style, CARD_STYLES, { field: 'สไตล์การ์ดหน้าแรก' });
+    stmts.push(db.prepare("UPDATE exhibitions SET card_style = ?, updated_at = datetime('now') WHERE id = ?").bind(card, id));
   }
   if (Array.isArray(body.staff_user_ids)) {
     stmts.push(db.prepare('DELETE FROM exhibition_members WHERE exhibition_id = ?').bind(id));

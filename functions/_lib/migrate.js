@@ -109,6 +109,14 @@ const STEPS = [
       "UPDATE exhibitions SET status = 'open' WHERE status = 'closed'",
       "INSERT OR IGNORE INTO site_settings (key, value) VALUES ('migration:0009_status_model', '{}')"
     ]
+  },
+  {
+    // Home page card style per exhibition (2026-10-21); '' follows the exhibition's theme.
+    name: '0010_card_style',
+    needed: async (db) => !(await db.prepare(
+      "SELECT 1 AS x FROM pragma_table_info('exhibitions') WHERE name = 'card_style'"
+    ).first()),
+    sql: ["ALTER TABLE exhibitions ADD COLUMN card_style TEXT NOT NULL DEFAULT ''"]
   }
 ];
 

@@ -1,6 +1,6 @@
 import { api, esc, bytes, thDate, toast } from './core.js';
 import { requireLogin, tabs, copyText, STATUS_TH, STATUS_HINT, submissionText } from './backoffice.js';
-import { PRESETS, presetName } from './presets.js';
+import { PRESETS, presetName, cardOptions } from './presets.js';
 
 const $ = (id) => document.getElementById(id);
 let exhibitions = [];
@@ -62,6 +62,8 @@ function exEditor(e) {
         ${Object.entries(STATUS_TH).map(([k, v]) => `<option value="${k}" ${k === e.status ? 'selected' : ''}>${esc(`${v} — ${STATUS_HINT[k]}`)}</option>`).join('')}
       </select>
         <span class="hint">การเปิดรับผลงานกำหนดด้วยวันเปิด–ปิดรับในหน้าจัดการของนิทรรศการ</span></div>
+      <div class="field"><label for="ee-card">สไตล์การ์ดหน้าแรก</label><select id="ee-card">${cardOptions(e.card_style || '', e.theme_preset)}</select>
+        <span class="hint">หน้าตาการ์ดของนิทรรศการนี้ในหน้าแรก ผู้ดูแลนิทรรศการเปลี่ยนเองได้ในหน้าจัดการ</span></div>
       <div class="field"><span class="label">ผู้ดูแลนิทรรศการนี้</span>
         ${staffUsers.map((u) => `<label class="check"><input type="checkbox" name="staff" value="${u.id}" ${staffIds.has(u.id) ? 'checked' : ''}> ${esc(u.name)} <span class="muted small">${esc(u.email)}</span></label>`).join('') || '<p class="muted">ยังไม่มีผู้ใช้ เพิ่มได้ที่แท็บผู้ใช้</p>'}
       </div>
@@ -75,6 +77,7 @@ function exEditor(e) {
         body: {
           slug: $('ee-slug').value.trim(),
           status: $('ee-status').value,
+          card_style: $('ee-card').value,
           staff_user_ids: [...document.querySelectorAll('input[name="staff"]:checked')].map((x) => Number(x.value))
         }
       });

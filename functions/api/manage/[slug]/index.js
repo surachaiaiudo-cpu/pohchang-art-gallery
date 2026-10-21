@@ -1,7 +1,7 @@
 import { handle, json, readJson, bad } from '../../../_lib/http.js';
 import { actorOf } from '../../../_lib/auth.js';
 import { requireManager, hasStorage, audit, parseOverrides, submissionWindow } from '../../../_lib/exhibitions.js';
-import { PRESETS, HEADING_FONTS, ORNAMENTS } from '../../../_lib/themes.js';
+import { PRESETS, HEADING_FONTS, ORNAMENTS, CARD_STYLES } from '../../../_lib/themes.js';
 import { recompute, reviewOpen } from '../../../_lib/review.js';
 import * as v from '../../../_lib/validate.js';
 import { normalizeCategories, parseCategories } from '../../../_lib/categories.js';
@@ -75,6 +75,7 @@ export const onRequestPut = handle(async (context) => {
   if (b.techniques !== undefined) set.techniques = normalizeTechniques(b.techniques);
   if (b.max_works_per_artist !== undefined) set.max_works_per_artist = v.int(b.max_works_per_artist, { field: 'จำนวนผลงานต่อคน', min: 1, max: 20 });
   if (b.theme_preset !== undefined) set.theme_preset = v.oneOf(b.theme_preset, Object.keys(PRESETS), { field: 'ธีม' });
+  if (b.card_style !== undefined) set.card_style = v.oneOf(b.card_style, CARD_STYLES, { field: 'สไตล์การ์ดหน้าแรก' });
   if (b.layout !== undefined) set.layout = v.oneOf(b.layout, ['grid', 'masonry', 'salon'], { field: 'รูปแบบการจัดวาง' });
   if (b.theme_overrides !== undefined) {
     const o = b.theme_overrides && typeof b.theme_overrides === 'object' ? b.theme_overrides : {};

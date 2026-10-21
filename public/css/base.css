@@ -306,7 +306,7 @@ img.flag, .work-card img.flag, [data-layout] .work-card img.flag, .work-card:hov
 .lobby { padding-bottom: 32px; }
 .rooms { padding-top: 48px; }
 .rooms-title { font-family: var(--font-body); font-weight: 600; font-size: .9rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 auto 16px; }
-.room { position: relative; display: flex; align-items: stretch; min-height: clamp(320px, 52vh, 560px); margin-bottom: 8px; overflow: hidden; text-decoration: none; color: #ffffff; background: #141414; border-left: 8px solid var(--accent); }
+.room { position: relative; display: flex; align-items: stretch; min-height: clamp(320px, 52vh, 560px); margin-bottom: 8px; overflow: hidden; text-decoration: none; color: #ffffff; background: #141414; }
 /* Works are never cropped: the cover hangs whole, in front of a dark, blurred copy of itself. */
 .room > .room-bg { position: absolute; inset: -48px; width: calc(100% + 96px); height: calc(100% + 96px); max-width: none; object-fit: cover; filter: blur(34px) brightness(.42) saturate(1.15); }
 .room.no-cover { background: var(--wall); color: var(--ink); min-height: clamp(220px, 32vh, 320px); }
@@ -314,8 +314,10 @@ img.flag, .work-card img.flag, [data-layout] .work-card img.flag, .work-card:hov
 .room.no-cover .room-inner { grid-template-columns: minmax(0, 1fr); align-items: end; }
 .room-text { display: grid; gap: 8px; justify-items: start; align-self: end; min-width: 0; }
 .room-art { display: flex; align-items: center; justify-content: center; height: clamp(240px, 42vh, 460px); min-width: 0; }
-.room-art img { max-width: 100%; max-height: 100%; width: auto; height: auto; box-shadow: 0 18px 48px rgba(0, 0, 0, .5); transition: transform 600ms ease; }
-.room:hover .room-art img { transform: translateY(-6px); }
+.room-art { position: relative; transition: transform 600ms cubic-bezier(.2, .7, .2, 1); }
+.room-frame { position: relative; display: inline-flex; max-width: 100%; max-height: 100%; box-sizing: border-box; }
+.room-art img { display: block; max-width: 100%; max-height: clamp(200px, 36vh, 400px); width: auto; height: auto; box-shadow: 0 18px 48px rgba(0, 0, 0, .5); }
+.room:hover .room-art { transform: translateY(-6px); }
 @media (max-width: 760px) {
   .room-inner { grid-template-columns: minmax(0, 1fr); padding-top: 28px; padding-bottom: 32px; }
   .room-art { order: -1; height: clamp(200px, 36vh, 320px); }
@@ -350,6 +352,124 @@ img.flag, .work-card img.flag, [data-layout] .work-card img.flag, .work-card:hov
 @media (max-width: 760px) { .room-track { gap: 10px; } .room-tile { flex-basis: calc((100% - 2 * 10px) / 3); padding: 4px; } }
 .room.no-cover .room-tile { background: rgba(0, 0, 0, .04); }
 .room.no-cover .room-tile img { filter: drop-shadow(0 4px 8px rgba(0, 0, 0, .18)); }
+
+/* Lobby room cards: one look per style (data-card, chosen per exhibition, default = its theme).
+   data-theme is set to the same key, so var(--accent), --wall, --font-head… are the style's own.
+   Works stay whole everywhere (no cropping). Extra parts are hidden unless a style uses them. */
+.room[data-card] { color: var(--ink); background: var(--wall); }
+.room[data-card] > .room-bg { display: none; }
+.room-deco { position: absolute; inset: 0; pointer-events: none; }
+.room-no, .room-sticker, .room-rule { display: none; }
+.room[data-card] .room-meta { color: var(--muted); opacity: 1; }
+.room[data-card] .room-sub { opacity: .85; }
+.room[data-card] .room-strip { padding: 8px 6px; margin-left: -6px; }
+.room[data-card] .room-tile img { filter: none; }
+.room[data-card] .room-art img { box-shadow: none; }
+.room[data-card] .status-pill.quiet { color: var(--muted); border-color: var(--line-strong); }
+
+/* 1 White cube: a work hung on a pale gallery wall, a short accent rule under the title. */
+.room[data-card="white-cube"] .room-frame { background: #ffffff; padding: 18px; box-shadow: 0 22px 44px rgba(20, 20, 20, .16); }
+.room[data-card="white-cube"] .room-rule { display: block; width: 48px; height: 2px; background: var(--accent); margin-block: 4px; }
+.room[data-card="white-cube"] .room-tile { background: #ffffff; box-shadow: 0 6px 14px rgba(20, 20, 20, .10); }
+
+/* 2 Thai classic: double gold border, Thai pattern bands, the work in a gilded frame, centred text, a gold seal. */
+.room[data-card="thai-classic"] { background: var(--bg); }
+.room[data-card="thai-classic"] .room-deco { inset: 14px; border: 2px solid var(--gold); outline: 1px solid var(--gold); outline-offset: -8px;
+  background: var(--ornament) center 14px / calc(100% - 56px) 8px no-repeat, var(--ornament) center calc(100% - 14px) / calc(100% - 56px) 8px no-repeat; }
+.room[data-card="thai-classic"] .room-inner { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); padding-top: 56px; padding-bottom: 56px; }
+.room[data-card="thai-classic"] .room-art { order: -1; }
+.room[data-card="thai-classic"] .room-text { justify-items: center; text-align: center; align-self: center; }
+.room[data-card="thai-classic"] .room-title { line-height: 1.2; }
+.room[data-card="thai-classic"] .room-frame { padding: 10px; background: linear-gradient(135deg, #d6b25e, #8f6d1f 45%, #e4c77c 70%, #8f6d1f); box-shadow: 0 10px 22px rgba(43, 27, 18, .22); }
+.room[data-card="thai-classic"] .room-art img { border: 10px solid var(--wall); }
+.room[data-card="thai-classic"] .status-pill { width: 88px; height: 88px; padding: 8px; border-radius: 50%; justify-content: center; text-align: center; line-height: 1.25;
+  background: transparent; color: var(--accent); border: 2px solid var(--gold); outline: 1px solid var(--gold); outline-offset: 3px; font-family: var(--font-head); white-space: normal; }
+.room[data-card="thai-classic"] .status-pill::before { display: none; }
+.room[data-card="thai-classic"] .room-rule { display: block; position: relative; width: 140px; height: 9px; margin-block: 2px;
+  background: linear-gradient(var(--gold), var(--gold)) left center / 56px 1px no-repeat, linear-gradient(var(--gold), var(--gold)) right center / 56px 1px no-repeat; }
+.room[data-card="thai-classic"] .room-rule::after { content: ""; position: absolute; left: 50%; top: 50%; width: 7px; height: 7px; background: var(--gold); transform: translate(-50%, -50%) rotate(45deg); }
+.room[data-card="thai-classic"] .room-strip { -webkit-mask-image: none; mask-image: none; }
+.room[data-card="thai-classic"] .room-tile { background: var(--wall); border: 2px solid #b08a3e; padding: 4px; }
+
+/* 3 Thai contemporary: an indigo panel cut on the diagonal with a gold edge; the work casts a gold block shadow. */
+.room[data-card="thai-contemporary"] { color: #ffffff; background: linear-gradient(135deg, #e0a43c 25%, transparent 25%) 0 100% / 14px 14px repeat-x, var(--wall); }
+.room[data-card="thai-contemporary"] .room-deco { right: auto; width: 62%; background: var(--accent); clip-path: polygon(0 0, 100% 0, 78% 100%, 0 100%); }
+.room[data-card="thai-contemporary"] .room-deco::after { content: ""; position: absolute; inset: 0; background: #e0a43c; clip-path: polygon(97% 0, 100% 0, 78% 100%, 75% 100%); }
+.room[data-card="thai-contemporary"] .room-meta { color: rgba(255, 255, 255, .85); }
+.room[data-card="thai-contemporary"] .status-pill { background: #e0a43c; color: #1f1b18; border-radius: 0; }
+.room[data-card="thai-contemporary"] .status-pill.quiet { background: transparent; color: #ffffff; border-color: rgba(255, 255, 255, .6); }
+.room[data-card="thai-contemporary"] .room-title { line-height: 1.15; }
+.room[data-card="thai-contemporary"] .room-art { justify-content: flex-end; }
+.room[data-card="thai-contemporary"] .room-frame { box-shadow: 18px 18px 0 #e0a43c; }
+.room[data-card="thai-contemporary"] .room-tile { background: rgba(255, 255, 255, .08); }
+
+/* 4 Monochrome: a catalogue page in black rules, with the card's number. */
+.room[data-card="monochrome"] { background: #ffffff; border-top: 6px solid #000000; border-bottom: 1px solid #000000; }
+.room[data-card="monochrome"] .room-inner { align-items: stretch; }
+.room[data-card="monochrome"] .room-text { align-self: stretch; align-content: start; }
+.room[data-card="monochrome"] .room-no { display: block; font-family: var(--font-head); font-weight: 600; font-size: 3rem; line-height: 1; }
+.room[data-card="monochrome"] .room-no .mono { font-size: .8rem; letter-spacing: .08em; vertical-align: top; }
+.room[data-card="monochrome"] .room-title { width: 100%; padding-bottom: 12px; border-bottom: 1px solid #000000; }
+.room[data-card="monochrome"] .room-meta { color: #000000; font-family: var(--font-mono); font-size: .82rem; letter-spacing: .04em; }
+.room[data-card="monochrome"] .status-pill { background: #000000; color: #ffffff; border-radius: 0; }
+.room[data-card="monochrome"] .status-pill.quiet { background: transparent; color: #000000; border-color: #000000; }
+.room[data-card="monochrome"] .room-art { height: auto; min-height: clamp(240px, 42vh, 460px); border-left: 1px solid #000000; padding-left: 40px; }
+.room[data-card="monochrome"] .room-frame { border: 1px solid #000000; }
+.room[data-card="monochrome"] .room-tile { background: transparent; border: 1px solid #000000; padding: 4px; }
+
+/* 5 Pop: dotted poster, the work tilted with a hard ink shadow, the work count as a sticker. */
+.room[data-card="pop"] { background: radial-gradient(circle, var(--accent) 2.5px, transparent 3px) 0 0 / 22px 22px, var(--wall); }
+.room[data-card="pop"] .room-inner { grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); }
+.room[data-card="pop"] .room-art { order: -1; }
+.room[data-card="pop"] .room-frame { border: 3px solid var(--ink); border-radius: 14px; overflow: hidden; background: #ffffff; box-shadow: 10px 10px 0 var(--ink); transform: rotate(-3deg); }
+.room[data-card="pop"] .room-sticker { position: absolute; right: 4%; top: 4%; display: flex; align-items: center; justify-content: center; width: 104px; height: 104px; padding: 10px; box-sizing: border-box;
+  border-radius: 50%; border: 3px solid var(--ink); background: var(--accent-2); color: #ffffff; text-align: center; font-family: var(--font-head); font-weight: 800; font-size: 1.05rem; line-height: 1.1;
+  box-shadow: 4px 4px 0 var(--ink); transform: rotate(10deg); }
+.room[data-card="pop"] .room-title { line-height: .98; }
+.room[data-card="pop"] .room-meta { justify-self: start; padding: 2px 10px; background: var(--wall); color: var(--ink); }
+.room[data-card="pop"] .status-pill { border: 2px solid var(--ink); transform: rotate(-2deg); }
+.room[data-card="pop"] .status-pill.quiet { background: #ffffff; color: var(--ink); border-color: var(--ink); }
+.room[data-card="pop"] .room-strip { padding: 10px 10px 14px; margin-left: -10px; }
+.room[data-card="pop"] .room-tile { background: #ffffff; border: 2px solid var(--ink); border-radius: 10px; box-shadow: 4px 4px 0 var(--ink); }
+.room[data-card="pop"] .room-tile:nth-child(odd) { transform: rotate(-2deg); }
+.room[data-card="pop"] .room-tile:nth-child(even) { transform: rotate(2deg); }
+
+/* 6 Craft: kraft paper inside a stitched border, the work as a taped photo, the strip as polaroids. */
+.room[data-card="craft"] { background: repeating-linear-gradient(0deg, rgba(52, 41, 31, .035) 0 2px, transparent 2px 6px), var(--wall); }
+.room[data-card="craft"] .room-deco { inset: 14px; border: 2px dashed var(--accent); border-radius: 10px; }
+.room[data-card="craft"] .status-pill { border-radius: 4px 999px 999px 4px; }
+.room[data-card="craft"] .status-pill::before { background: var(--wall); }
+.room[data-card="craft"] .room-frame { padding: 14px 14px 40px; background: #fffdf9; box-shadow: 0 10px 0 rgba(52, 41, 31, .14), 0 18px 30px rgba(52, 41, 31, .14); transform: rotate(2.5deg); }
+.room[data-card="craft"] .room-art img { max-height: clamp(180px, 32vh, 360px); }
+.room[data-card="craft"] .room-frame::before, .room[data-card="craft"] .room-frame::after { content: ""; position: absolute; top: 8px; width: 88px; height: 24px; background: rgba(236, 218, 160, .82); }
+.room[data-card="craft"] .room-frame::before { left: -20px; transform: rotate(-32deg); }
+.room[data-card="craft"] .room-frame::after { right: -20px; transform: rotate(32deg); }
+.room[data-card="craft"] .room-strip { padding: 10px 8px 14px; margin-left: -8px; }
+.room[data-card="craft"] .room-tile { background: #fffdf9; padding: 6px 6px 16px; box-shadow: 0 4px 0 rgba(52, 41, 31, .16); }
+.room[data-card="craft"] .room-tile:nth-child(odd) { transform: rotate(-1.5deg); }
+.room[data-card="craft"] .room-tile:nth-child(even) { transform: rotate(1.5deg); }
+
+/* 7 Heritage: night gallery, a spotlight on the work in a glowing gold frame, a gold pattern under the title. */
+.room[data-card="heritage"] { background: var(--bg); }
+.room[data-card="heritage"] > .room-bg { display: block; filter: blur(40px) brightness(.24) saturate(1.1); }
+.room[data-card="heritage"] .room-deco { background: radial-gradient(ellipse 40% 75% at 74% 45%, rgba(212, 175, 55, .20), transparent 70%); }
+.room[data-card="heritage"] .room-frame { padding: 6px; border: 3px solid #8f6d1f; background: var(--surface);
+  box-shadow: 0 0 0 1px rgba(212, 175, 55, .35), 0 24px 60px rgba(0, 0, 0, .6), 0 0 80px rgba(212, 175, 55, .18); }
+.room[data-card="heritage"] .room-rule { display: block; width: 220px; max-width: 100%; height: 6px; margin-block: 4px; background: var(--ornament); }
+.room[data-card="heritage"] .room-tile { background: transparent; border: 1px solid #8f6d1f; padding: 4px; }
+
+.room[data-card].no-cover .room-inner { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 760px) {
+  .room[data-card] .room-inner, .room[data-card="thai-classic"] .room-inner, .room[data-card="pop"] .room-inner { grid-template-columns: minmax(0, 1fr); }
+  .room[data-card] .room-art { order: -1; justify-content: center; }
+  .room[data-card] .room-art img { max-height: clamp(160px, 28vh, 260px); }
+  .room[data-card="thai-contemporary"] .room-deco { width: 100%; clip-path: none; }
+  .room[data-card="thai-contemporary"] .room-deco::after { display: none; }
+  .room[data-card="thai-contemporary"] .room-frame { box-shadow: 10px 10px 0 #e0a43c; }
+  .room[data-card="monochrome"] .room-art { border-left: 0; padding-left: 0; min-height: 0; border-bottom: 1px solid #000000; padding-bottom: 20px; }
+  .room[data-card="pop"] .room-sticker { width: 84px; height: 84px; font-size: .9rem; }
+  .room[data-card="craft"] .room-inner, .room[data-card="thai-classic"] .room-inner { padding-left: 36px; padding-right: 36px; }
+}
 
 /* Lobby hero: works from all exhibitions cross-fade beside the gallery's name, each shown whole. */
 .hero-band { position: relative; display: flex; align-items: flex-end; min-height: clamp(420px, 70vh, 760px); background: #141414; color: #ffffff; overflow: hidden; }

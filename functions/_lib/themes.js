@@ -11,3 +11,5 @@ export const PRESETS = {
 
 export const HEADING_FONTS = ['', 'Noto Serif Thai', 'Chonburi', 'Taviraj', 'Kanit', 'Mitr', 'Charm', 'Srisakdi', 'IBM Plex Sans Thai'];
 export const ORNAMENTS = ['none', 'light', 'full'];
+// Home page card style: '' = the same as the theme, else one of the preset keys.
+export const CARD_STYLES = ['', ...Object.keys(PRESETS)];

@@ -1,6 +1,6 @@
 import { api, esc, img, bytes, thDate, toast, toLocalInput, fromLocalInput, slugFromPath } from './core.js';
 import { requireLogin, tabs, copyText, STATUS_TH, STATUS_HINT, submissionText } from './backoffice.js';
-import { PRESETS } from './presets.js';
+import { PRESETS, cardOptions } from './presets.js';
 import { checkImageFile, uploadImage, fitForUpload } from './upload.js';
 import { countryOptions, isCountryCode, countryName, flagImg } from './countries.js';
 
@@ -355,6 +355,7 @@ function fillSettings() {
   $('s-accent').value = o.accent || '';
   if (o.accent) $('s-accent-pick').value = o.accent;
   renderPresets(ex.theme_preset);
+  $('s-card').innerHTML = cardOptions(ex.card_style || '', ex.theme_preset);
   $('hero-img').hidden = !ex.hero_url;
   $('hero-remove').hidden = !ex.hero_url;
   if (ex.hero_url) $('hero-img').src = img(ex.hero_url, 400);
@@ -412,7 +413,7 @@ async function saveSettings(e) {
         submission_opens_at: fromLocalInput(v('s-opens')), submission_closes_at: fromLocalInput(v('s-closes')),
         max_works_per_artist: Number(v('s-max') || 3),
         categories: v('s-categories'), techniques: v('s-techniques'),
-        theme_preset: chosenPreset, layout: v('s-layout'),
+        theme_preset: chosenPreset, card_style: v('s-card'), layout: v('s-layout'),
         theme_overrides: { accent: v('s-accent').trim(), headingFont: v('s-font'), ornament: v('s-ornament') }
       }
     });

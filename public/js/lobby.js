@@ -1,4 +1,5 @@
 import { api, esc, img, loadFonts } from './core.js';
+import { CARD_STYLES, cardStyle } from './presets.js';
 import { t, pick, pickOther, fmtDate, fmtTime, applyStatic, mountSwitcher, localError, lang } from './i18n.js';
 
 // The lobby only shows the exhibitions: one wide "room" per exhibition, cover image with its title.
@@ -41,7 +42,11 @@ function callNote(e) {
   return '';
 }
 
-function room(e) {
+// Each exhibition's card has its own look on the home page (data-card, see base.css "Lobby room
+// cards"): the style chosen in its settings, else the one matching its theme. The card also takes
+// that style's colours and heading font (data-theme), so a card always looks like its style.
+function room(e, i) {
+  const card = cardStyle(e);
   const live = e.submission && e.submission.open;
   const cover = e.hero_url || e.cover_url;
   const other = pickOther(e, 'title');
@@ -50,17 +55,21 @@ function room(e) {
     live && e.submission_closes_at ? t('closesOn', { d: `${fmtDate(e.submission_closes_at)} · ${fmtTime(e.submission_closes_at)}` }) : dates,
     e.work_count ? t('nWorks', { n: e.work_count }) : ''
   ].filter(Boolean).join(' · ');
-  return `<a class="room${cover ? '' : ' no-cover'}" data-theme="${esc(e.theme_preset)}" href="/e/${encodeURIComponent(e.slug)}">
+  const count = e.work_count ? t('nWorks', { n: e.work_count }) : '';
+  return `<a class="room${cover ? '' : ' no-cover'}" data-card="${esc(card)}" data-theme="${esc(card)}" href="/e/${encodeURIComponent(e.slug)}">
     ${cover ? blurBg('room-bg', cover) : ''}
+    <span class="room-deco" aria-hidden="true"></span>
     <span class="room-inner wrap">
       <span class="room-text">
+        <span class="room-no" aria-hidden="true"><span class="mono">No.</span> ${String(i + 1).padStart(2, '0')}</span>
         ${live ? `<span class="status-pill">${esc(t('openCall'))}</span>` : callNote(e)}
         <span class="room-title">${esc(pick(e, 'title'))}</span>
+        <span class="room-rule" aria-hidden="true"></span>
         ${other ? `<span class="room-sub">${esc(other)}</span>` : ''}
         ${meta ? `<span class="room-meta">${esc(meta)}</span>` : ''}
         ${strip(pickRandom(e.samples || [], SAMPLES))}
       </span>
-      ${cover ? `<span class="room-art"><img src="${esc(img(cover, 1600))}" alt="" loading="lazy"></span>` : ''}
+      ${cover ? `<span class="room-art"><span class="room-frame"><img src="${esc(img(cover, 1600))}" alt="" loading="lazy"></span>${count ? `<span class="room-sticker" aria-hidden="true">${esc(count)}</span>` : ''}</span>` : ''}
     </span>
   </a>`;
 }
@@ -298,6 +307,8 @@ async function main() {
     const deadline = (e) => (e.submission && e.submission.open ? Date.parse(e.submission_closes_at || '') || 8.64e15 : 9e15);
     const now = exhibitions.filter((e) => e.status === 'open').sort((a, b) => deadline(a) - deadline(b));
     const past = exhibitions.filter((e) => e.status === 'archived');
+    // Each card style brings its heading font; load only the ones on this page.
+    loadFonts([...now, ...past].map((e) => (CARD_STYLES.find((c) => c.key === cardStyle(e)) || {}).font));
     $('now-list').innerHTML = now.map(room).join('');
     $('past-list').innerHTML = past.map(room).join('');
     $('now').hidden = !now.length;

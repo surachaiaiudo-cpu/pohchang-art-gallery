@@ -96,6 +96,8 @@ export function publicExhibition(ex) {
     submission_closes_at: ex.submission_closes_at,
     max_works_per_artist: ex.max_works_per_artist,
     theme_preset: ex.theme_preset,
+    // Home page card style: '' follows the theme (cardStyle() in public/js/presets.js).
+    card_style: ex.card_style || '',
     layout: ex.layout,
     theme_overrides: parseOverrides(ex),
     hero_url: ex.hero_url,
