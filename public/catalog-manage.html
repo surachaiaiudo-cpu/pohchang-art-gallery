@@ -36,14 +36,30 @@
     <form id="form" class="cat-layout" novalidate>
       <div>
         <div class="card">
-          <h2>1. เทมเพลตหน้าผลงาน</h2>
-          <p class="small muted">เทมเพลตกำหนดตำแหน่ง ขนาดตัวอักษร สี และฟอนต์ของหน้าผลงาน รวมถึงแบบหน้าปก ใช้ได้กับทุกนิทรรศการ
+          <h2>1. หน้าปก</h2>
+          <p class="small muted">อัปโหลดรูปหน้าปกที่ออกแบบไว้แล้ว 1 รูป ใช้เป็นหน้าแรกของเล่มทั้งหน้า (แสดงเต็มภาพ ไม่ตัดขอบ)
+            ขนาดแนะนำ A4 แนวตั้ง <b>2480 × 3508 px</b> (300 dpi) ไฟล์ JPG, PNG หรือ WebP ถ้าไฟล์ใหญ่เกิน 10 MB ระบบจะย่อให้ก่อนอัปโหลด
+            ถ้ายังไม่อัปโหลด ระบบจะทำหน้าปกแบบตัวอักษรจากชื่อนิทรรศการให้ชั่วคราว</p>
+          <div class="row" style="align-items:flex-start">
+            <img id="cv-img" alt="หน้าปกปัจจุบัน" style="width:150px;border:1px solid var(--line);border-radius:4px;background:#fff" hidden>
+            <div style="display:grid;gap:8px">
+              <div class="row"><button class="btn" type="button" id="cv-pick">อัปโหลดรูปหน้าปก</button>
+                <button class="btn btn-danger btn-sm" type="button" id="cv-remove" hidden>ลบรูปหน้าปก</button></div>
+              <span class="hint" id="cv-state"></span>
+            </div>
+          </div>
+          <input type="file" id="cv-file" accept="image/jpeg,image/png,image/webp" hidden>
+        </div>
+
+        <div class="card">
+          <h2>2. เทมเพลตหน้าผลงาน</h2>
+          <p class="small muted">เทมเพลตกำหนดตำแหน่ง ขนาดตัวอักษร สี (CMYK) และฟอนต์ของหน้าผลงาน ใช้ได้กับทุกนิทรรศการ
             สร้างหรือแก้ไขเทมเพลตได้ที่ <a href="/catalog-templates">คลังเทมเพลตสูจิบัตร</a></p>
           <div class="tpl-grid" id="tpls" role="group" aria-label="เลือกเทมเพลต"></div>
         </div>
 
         <div class="card">
-          <h2>2. ภาษาในเล่ม</h2>
+          <h2>3. ภาษาในเล่ม</h2>
           <div class="grid-2">
             <div class="field"><label for="lang-main">ภาษาหลัก</label><select id="lang-main"></select>
               <span class="hint">ใช้เรียงชื่อ และเป็นบรรทัดแรกของทุกข้อความ</span></div>
@@ -53,7 +69,7 @@
         </div>
 
         <div class="card">
-          <h2>3. ส่วนประกอบของเล่ม</h2>
+          <h2>4. ส่วนประกอบของเล่ม</h2>
           <div class="check-grid" id="sections"></div>
           <div class="grid-2">
             <div class="field"><label for="order">ลำดับผลงานในเล่ม</label><select id="order"></select></div>
@@ -65,25 +81,25 @@
         </div>
 
         <div class="card">
-          <h2>4. ข้อมูลในหน้าผลงาน</h2>
+          <h2>5. ข้อมูลในหน้าผลงาน</h2>
           <p class="small muted">ติ๊กเฉพาะข้อมูลที่ต้องการให้ปรากฏ ข้อมูลที่เทมเพลตไม่มีช่องวางจะมีหมายเหตุกำกับ (แก้ได้ในตัวออกแบบเทมเพลต)
             อีเมลและเบอร์โทรของศิลปินไม่ถูกนำไปใส่ในสูจิบัตร</p>
           <div class="check-grid" id="fields"></div>
         </div>
 
         <div class="card">
-          <h2>5. หน้าคณะกรรมการผู้ทรงคุณวุฒิ</h2>
+          <h2>6. หน้าคณะกรรมการผู้ทรงคุณวุฒิ</h2>
           <p class="small muted" id="rv-hint">แสดงผู้ทรงคุณวุฒิทุกท่านที่ใช้งานอยู่ของนิทรรศการนี้ เลือกข้อมูลที่จะแสดง</p>
           <div class="check-grid" id="rfields"></div>
         </div>
 
         <div class="card">
-          <h2>6. ข้อความเพิ่มเติม</h2>
-          <div class="field"><span class="label">ข้อความบนหน้าปก (เช่น ผู้จัด / หน่วยงานร่วม)</span>
+          <h2>7. ข้อความเพิ่มเติม</h2>
+          <div class="field"><span class="label">ข้อความบนหน้าปกชั่วคราว (ใช้เฉพาะเมื่อยังไม่อัปโหลดรูปหน้าปก)</span>
             <div class="grid-3" id="note"></div></div>
           <div class="field"><span class="label">ข้อความท้ายหน้า (footer)</span>
             <div class="grid-3" id="footer"></div>
-            <span class="hint">แสดงบนปก และในหน้าผลงานถ้าเทมเพลตมีช่อง "ข้อความท้ายหน้า"</span></div>
+            <span class="hint">แสดงในหน้าผลงานถ้าเทมเพลตมีช่อง "ข้อความท้ายหน้า"</span></div>
           <p class="small muted">ชื่อนิทรรศการ คำโปรย วันที่ สถานที่ และบทภัณฑารักษ์ ดึงจาก <a id="settings-link">ตั้งค่านิทรรศการ</a></p>
         </div>
         <p><button class="btn" type="submit" id="save">บันทึกการตั้งค่าสูจิบัตร</button> <span class="error-text" id="err"></span></p>

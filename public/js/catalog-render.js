@@ -218,7 +218,7 @@ function coverHtml(ctx, works) {
     <div class="cv-meta">${dates.map((d) => `<span>${esc(d)}</span>`).join('')}${ex.venue ? `<span>${esc(ex.venue)}</span>` : ''}<span>${esc(count)}</span></div>
     ${note.length ? `<div class="cv-note">${note.map((n, i) => `<p class="${i ? 'alt' : ''}">${paragraphs(n).join('<br>')}</p>`).join('')}</div>` : ''}`;
   const picHtml = pic ? `<div class="cv-pic"><img src="${esc(img(pic, 1600))}" alt="" decoding="async"></div>` : '';
-  return `<div class="cover cover-${layout.cover}${pic ? '' : ' no-pic'}">${layout.cover === 'text' ? '' : picHtml}<div class="cv-text">${text}</div>
+  return `<div class="cover cover-image${pic ? '' : ' no-pic'}">${picHtml}<div class="cv-text">${text}</div>
     ${foot.length ? `<p class="cv-foot">${esc(foot.join(' · '))}</p>` : ''}</div>`;
 }
 
@@ -297,7 +297,13 @@ export async function renderBook(book, data, { origin = location.origin } = {}) 
   await loadBookFonts(layout);
   const S = settings.sections;
 
-  if (S.cover) newPage(book, 'cover', 'ปก / Cover').innerHTML = coverHtml(ctx, works);
+  // The cover is the uploaded cover image, shown whole on the A4 page; without one, a simple cover from the texts.
+  if (S.cover) {
+    const up = data.cover && data.cover.url;
+    newPage(book, 'cover', 'ปก / Cover').innerHTML = up
+      ? `<div class="cover-upload"><img src="${esc(img(up, 2400))}" alt="${esc(values(ex, 'title', langs)[0] || '')}" decoding="async"></div>`
+      : coverHtml(ctx, works);
+  }
 
   if (S.statement) {
     const items = [];

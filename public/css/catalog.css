@@ -84,6 +84,9 @@ body.cat-page { margin: 0; background: #e8e6e1; color: #1d1d1b; font: 16px/1.5 '
 .cover-text .cv-title { font-size: 34pt; }
 .cover-text .cv-foot { position: absolute; left: 24mm; right: 24mm; bottom: 14mm; }
 
+.cover-upload { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--c-paper); }
+.cover-upload img { width: 100%; height: 100%; object-fit: contain; display: block; }
+
 /* flowing pages: statement, expert panel, list of works */
 .flow { position: absolute; inset: 20mm 20mm 22mm; overflow: hidden; }
 .flow-h { margin: 0 0 7mm; font-family: var(--f-head); font-size: 17pt; font-weight: 700; line-height: 1.25; padding-bottom: 3mm; border-bottom: 0.4mm solid var(--c-accent); }

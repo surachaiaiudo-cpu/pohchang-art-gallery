@@ -49,7 +49,7 @@
       </div>
       <div class="dz-panel">
         <div class="card">
-          <h2>หน้ากระดาษและหน้าปก</h2>
+          <h2>สีและฟอนต์ของเล่ม</h2>
           <div class="grid-2">
           </div>
           <p class="small muted" style="margin:0 0 8px">สีทั้งหมดกำหนดเป็น CMYK (0–100) สำหรับงานพิมพ์ สีบนจอเป็นค่าประมาณที่แปลงเป็น RGB</p>
@@ -58,17 +58,19 @@
             <div class="field"><label for="f-head">ฟอนต์หัวเรื่อง</label><select id="f-head" data-font="head"></select></div>
             <div class="field"><label for="f-body">ฟอนต์เนื้อความ</label><select id="f-body" data-font="body"></select></div>
           </div>
-          <div class="field"><label for="cover">แบบหน้าปก</label><select id="cover"></select>
-            <span class="hint">หน้าบทภัณฑารักษ์ คณะกรรมการ และรายชื่อผลงาน ใช้สีและฟอนต์ชุดนี้</span></div>
+          <p class="hint">หน้าบทภัณฑารักษ์ คณะกรรมการ และรายชื่อผลงาน ใช้สีและฟอนต์ชุดนี้ · หน้าปกไม่อยู่ในเทมเพลต: อัปโหลดรูปหน้าปกในหน้าสูจิบัตรของแต่ละนิทรรศการ</p>
           <div class="field"><label for="desc">คำอธิบายเทมเพลต</label><textarea id="desc" rows="2" maxlength="400" style="min-height:60px"></textarea></div>
         </div>
         <div class="card">
           <h2>ส่วนประกอบในหน้าผลงาน</h2>
-          <div class="row" style="margin-bottom:8px">
-            <label class="sr-only" for="add-f">เพิ่มส่วนประกอบ</label><select id="add-f" style="flex:1"></select>
-            <button class="btn btn-sm" type="button" id="add">เพิ่ม</button>
-          </div>
-          <ul class="blist" id="blist" role="listbox" aria-label="ส่วนประกอบ"></ul>
+          <div class="field" style="margin-bottom:8px"><label for="add-f">เลือกส่วนประกอบที่จะเพิ่ม</label>
+            <div class="row"><select id="add-f" style="flex:1"></select>
+            <button class="btn btn-sm" type="button" id="add">+ เพิ่ม</button></div>
+            <span class="hint">✓ = มีในหน้าแล้ว (เพิ่มซ้ำได้ เช่น ข้อความอิสระ เส้น กล่องสี)</span></div>
+          <ul class="blist" id="blist" role="listbox" aria-label="ส่วนประกอบในหน้า"></ul>
+          <div class="row" style="margin-top:8px;justify-content:space-between">
+            <span class="small muted" id="bcount"></span>
+            <button class="btn btn-danger btn-sm" type="button" id="del-sel" disabled>ลบส่วนประกอบที่เลือก</button></div>
         </div>
         <div class="card" id="props-card">
           <h2 id="props-title">คุณสมบัติ</h2>

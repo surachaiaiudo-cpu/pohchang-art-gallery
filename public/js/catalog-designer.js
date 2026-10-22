@@ -4,7 +4,7 @@
 import { api, esc, toast } from './core.js';
 import { requireLogin } from './backoffice.js';
 import {
-  ALL_FIELDS, CATALOG_FONTS, COVER_STYLES, LANG_CODES, LANG_NAMES, PAGE, normalizeLayout, normalizeSettings,
+  ALL_FIELDS, CATALOG_FONTS, LANG_CODES, LANG_NAMES, PAGE, normalizeLayout, normalizeSettings,
   isImageField, MAX_BLOCKS, DATA_FIELDS, NAMED_COLORS, PRINT_PALETTE, cmykToHex, cmykText, cmykOf
 } from './catalog-core.js';
 import { blocksHtml, fitText, themeVars, loadBookFonts } from './catalog-render.js';
@@ -80,7 +80,15 @@ const boxStyle = (b) => `left:${mm(b.x)};top:${mm(b.y)};width:${mm(Math.max(b.w,
 
 function drawList() {
   $('blist').innerHTML = S.layout.blocks.map((b, i) => `<li role="option" data-id="${esc(b.id)}" aria-selected="${b.id === S.sel}">
-    <span class="k">${i + 1}. ${esc(fieldName(b.field))}</span><span class="xy">${b.x},${b.y} · ${b.w}×${b.h}</span></li>`).join('');
+    <span class="k">${i + 1}. ${esc(fieldName(b.field))}</span><span class="xy">${b.x},${b.y} · ${b.w}×${b.h}</span>
+    <button type="button" class="icon-btn" data-del-id="${esc(b.id)}" aria-label="ลบ ${esc(fieldName(b.field))}" title="ลบ" style="min-width:32px;min-height:32px;padding:4px;color:var(--bad)">✕</button></li>`).join('')
+    || '<li class="muted">ยังไม่มีส่วนประกอบ เลือกแล้วกด "+ เพิ่ม"</li>';
+  $('bcount').textContent = `${S.layout.blocks.length} ส่วนประกอบ`;
+  $('del-sel').disabled = !S.sel;
+  const used = new Set(S.layout.blocks.map((b) => b.field));
+  const cur = $('add-f').value;
+  $('add-f').innerHTML = ALL_FIELDS.map((f) => `<option value="${f.key}">${used.has(f.key) ? '✓ ' : ''}${esc(f.th)}</option>`).join('');
+  if (cur) $('add-f').value = cur;
 }
 
 function drawPanel() {
@@ -88,7 +96,6 @@ function drawPanel() {
   $('page-colors').innerHTML = PAGE_COLORS.map(([k, label]) => cmykField(`page:${k}`, label, L.colors[k])).join('');
   $('f-head').value = L.fonts.head;
   $('f-body').value = L.fonts.body;
-  $('cover').value = L.cover;
   drawProps();
 }
 
@@ -199,7 +206,7 @@ function act(kind) {
   const b = block(S.sel);
   if (!b) return;
   const i = S.layout.blocks.indexOf(b);
-  if (kind === 'del') { update(() => { S.layout.blocks.splice(i, 1); }); S.sel = null; drawLayer(); drawProps(); return; }
+  if (kind === 'del') { update(() => { S.layout.blocks.splice(i, 1); }); S.sel = null; drawLayer(); drawList(); drawProps(); return; }
   if (kind === 'dup') {
     if (S.layout.blocks.length >= MAX_BLOCKS) return;
     const id = newId(b.field);
@@ -253,7 +260,13 @@ const endDrag = () => {
 $('layer').addEventListener('pointerup', endDrag);
 $('layer').addEventListener('pointercancel', endDrag);
 
-$('blist').addEventListener('click', (e) => { const li = e.target.closest('[data-id]'); if (li) select(li.dataset.id); });
+$('blist').addEventListener('click', (e) => {
+  const del = e.target.closest('[data-del-id]');
+  if (del) { S.sel = del.dataset.delId; act('del'); return; }
+  const li = e.target.closest('[data-id]');
+  if (li) select(li.dataset.id);
+});
+$('del-sel').addEventListener('click', () => act('del'));
 $('add').addEventListener('click', () => addBlock($('add-f').value));
 $('props').addEventListener('click', (e) => { const b = e.target.closest('[data-act]'); if (b) act(b.dataset.act); });
 $('props').addEventListener('change', (e) => {
@@ -300,7 +313,6 @@ function drawPanelColors() {
 document.querySelector('.dz-panel').addEventListener('change', (e) => {
   const el = e.target;
   if (el.dataset.font) update(() => { S.layout.fonts[el.dataset.font] = el.value; }), loadBookFonts(S.layout).then(drawPage);
-  else if (el.id === 'cover') update(() => { S.layout.cover = el.value; });
 });
 
 document.addEventListener('keydown', (e) => {
@@ -394,8 +406,6 @@ async function main() {
   }
   $('f-head').innerHTML = CATALOG_FONTS.map((f) => `<option>${esc(f)}</option>`).join('');
   $('f-body').innerHTML = $('f-head').innerHTML;
-  $('cover').innerHTML = COVER_STYLES.map((c) => `<option value="${c.key}">${esc(c.th)}</option>`).join('');
-  $('add-f').innerHTML = ALL_FIELDS.map((f) => `<option value="${f.key}">${esc(f.th)}</option>`).join('');
   $('langs').innerHTML = LANG_CODES.map((l) => `<label class="check small"><input type="checkbox" data-lang-on="${l}"${S.langs.includes(l) ? ' checked' : ''}> ${LANG_NAMES[l]}</label>`).join('');
   $('src').insertAdjacentHTML('beforeend', (me.exhibitions || []).map((x) => `<option value="${esc(x.slug)}">${esc(x.title_th)}</option>`).join(''));
   S.saved = snapshot();

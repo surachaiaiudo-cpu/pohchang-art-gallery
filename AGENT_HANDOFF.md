@@ -80,7 +80,7 @@ public/
   flags/*.svg      242 flag images (flag-icons, MIT, licence included)
   _redirects       /e/:slug, /e/:slug/work/:id, /e/:slug/submit, /manage/:slug, /review/:token rewrites
   _headers         CSS/JS revalidate every load; flags cached 7 days
-schema/0001..0011  SQL history (0001 creates everything; later files are also applied by migrate.js; 0006 lives only in migrate.js)
+schema/0001..0012  SQL history (0001 creates everything; later files are also applied by migrate.js; 0006 lives only in migrate.js)
 tests/*.test.js    node:test unit tests (`npm test`)
 ```
 
@@ -223,6 +223,10 @@ the work order; there are main (built-in) templates and the preparer can make te
 - **Colours are CMYK** (owner, 2026-10-23): every template colour is stored as `{c, m, y, k}` 0-100 (`cmykOf`, `cmykToHex`
   in catalog-core; old `#rrggbb` values are converted). The designer edits C/M/Y/K boxes + a print palette; screens and the
   browser's PDF show the simple RGB conversion (the PDF itself is RGB; the print shop takes the CMYK values as reference).
+- **Cover = uploaded image** (owner, 2026-10-23): not part of templates. Uploaded on `/manage/:slug/catalog` (upload kind
+  `catalog`, folder `<slug>/catalog`, `PUT /api/manage/:slug/catalog-cover`, columns `catalog_cover_url/_file_id/_width/_height`,
+  migration `0012_catalog_cover`); shown whole (contain) on page 1, recommended 2480 × 3508 px. Without one, a simple
+  text cover is generated. The designer lists page parts with add (choose + "เพิ่ม") and delete (✕ per row / selected).
 - Artist email/phone are never put in the catalogue (not in the public work query); fields switched off are not sent.
 - Open questions: none decided beyond the above; e.g. reviewer photos/affiliation would need new reviewer columns.
 
@@ -241,7 +245,7 @@ the work order; there are main (built-in) templates and the preparer can make te
 | `/api/manage/:slug` (+ `works`, `works/:id`, `techniques`, `reviewers`, `reviewers/:id`, `results`, `storage`, `hero`, `upload-auth`) | staff of that exhibition | settings, screening, panel, results, Cloudinary |
 | `GET/POST /api/review/:token[/vote]` | reviewer link | review works, vote |
 | `GET /api/x/:slug/catalog` | public | published catalogue (settings, template layout, shown works, panel names) |
-| `GET/PUT /api/manage/:slug/catalog` | staff of that exhibition | catalogue settings, publish; `?full=1` = book data for preview |
+| `GET/PUT /api/manage/:slug/catalog`, `PUT .../catalog-cover` | staff of that exhibition | catalogue settings, publish, cover image; `?full=1` = book data for preview |
 | `GET/POST /api/catalog-templates`, `GET/PUT/DELETE /api/catalog-templates/:id` | any back-office user (edit: author/admin) | shared catalogue templates |
 | `GET /api/dev/placeholder` | dev only | fake image when `DEV_FAKE_STORAGE=1` |
 

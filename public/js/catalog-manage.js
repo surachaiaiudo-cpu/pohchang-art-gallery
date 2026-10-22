@@ -1,6 +1,7 @@
 // /manage/:slug/catalog - catalogue settings of one exhibition (staff of that exhibition and admins):
 // template, languages, sections, order, which data appear, expert panel fields, extra texts, publishing.
-import { api, esc, toast, thDate, slugFromPath } from './core.js';
+import { api, esc, toast, thDate, slugFromPath, img } from './core.js';
+import { checkImageFile, uploadImage, fitForUpload } from './upload.js';
 import { requireLogin, STATUS_TH } from './backoffice.js';
 import {
   DATA_FIELDS, REVIEWER_FIELDS, ORDERS, SECTIONS, LANG_CODES, LANG_NAMES,
@@ -115,6 +116,7 @@ async function renderPreview() {
     exhibition: S.data.exhibition,
     settings: { ...s, order: 'display', include: 'all', sections: { cover: s.sections.cover, statement: false, committee: false, works: true, index: false } },
     template: { layout },
+    cover: S.data.cover,
     works,
     reviewers: []
   });
@@ -122,6 +124,50 @@ async function renderPreview() {
   const n = orderWorks(S.data.works, s, S.data.exhibition).length;
   $('count-hint').textContent = `ผลงานในเล่ม ${n} ชิ้น${S.data.works.length ? '' : ' (ยังไม่มีผลงานที่จัดแสดง ตัวอย่างใช้ข้อมูลสมมติ)'}`;
 }
+
+// ------------------------------------------------------------------ cover image
+function showCover() {
+  const c = S.data.cover || {};
+  $('cv-img').hidden = !c.url;
+  $('cv-remove').hidden = !c.url;
+  if (c.url) $('cv-img').src = img(c.url, 400);
+  const ratio = c.width && c.height ? c.height / c.width : 0;
+  const a4 = 297 / 210;
+  $('cv-state').textContent = !c.url ? 'ยังไม่มีรูปหน้าปก'
+    : ratio && Math.abs(ratio - a4) / a4 > 0.03 ? `รูปขนาด ${c.width} × ${c.height} px สัดส่วนไม่ตรง A4 จะมีขอบว่างรอบรูป (สีกระดาษของเทมเพลต)`
+      : `รูปขนาด ${c.width || '?'} × ${c.height || '?'} px${c.width && c.width < 1700 ? ' · ความละเอียดค่อนข้างต่ำสำหรับงานพิมพ์ แนะนำกว้าง 2480 px' : ''}`;
+}
+$('cv-pick').addEventListener('click', () => { $('cv-file').value = ''; $('cv-file').click(); });
+$('cv-file').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const problem = checkImageFile(file);
+    if (problem) throw new Error(problem);
+    $('cv-pick').disabled = true;
+    $('cv-state').textContent = 'กำลังเตรียมไฟล์…';
+    const { upload } = await api(`${M}/upload-auth`, { method: 'POST', body: { kind: 'catalog' } });
+    const fitted = await fitForUpload(file, upload.maxBytes, upload.maxPixels);
+    const r = await uploadImage(fitted.file, upload, (p) => { $('cv-state').textContent = `กำลังอัปโหลด ${p}%`; });
+    const d = await api(`${M}/catalog-cover`, { method: 'PUT', body: { file: r } });
+    S.data.cover = d.cover;
+    showCover();
+    schedulePreview();
+    toast('อัปโหลดรูปหน้าปกแล้ว', 'ok');
+  } catch (err) {
+    showCover();
+    toast(err.message, 'error');
+  } finally { $('cv-pick').disabled = false; }
+});
+$('cv-remove').addEventListener('click', async () => {
+  if (!confirm('ลบรูปหน้าปก? เล่มจะใช้หน้าปกแบบตัวอักษรชั่วคราวแทน')) return;
+  try {
+    await api(`${M}/catalog-cover`, { method: 'PUT', body: { file: null } });
+    S.data.cover = { url: '', width: 0, height: 0 };
+    showCover();
+    schedulePreview();
+  } catch (err) { toast(err.message, 'error'); }
+});
 
 function showPublish() {
   const on = !!S.published;
@@ -216,6 +262,7 @@ async function main() {
       : 'นิทรรศการนี้ยังไม่มีผู้ทรงคุณวุฒิ หน้านี้จะไม่ปรากฏในเล่มจนกว่าจะเพิ่มในแท็บ "ผู้ทรงคุณวุฒิ"';
     if (d.template && d.template.missing) toast('เทมเพลตที่เคยเลือกถูกลบไปแล้ว ระบบใช้เทมเพลตหลักแทน', 'error');
     fillForm();
+    showCover();
     showPublish();
     await renderTemplates();
     await markMissing();

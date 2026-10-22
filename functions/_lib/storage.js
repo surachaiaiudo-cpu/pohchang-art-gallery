@@ -29,7 +29,7 @@ export async function signParams(params, secret) {
 }
 
 export function folderFor(ex, kind) {
-  const sub = { work: 'works', artist: 'artists', hero: 'site' }[kind];
+  const sub = { work: 'works', artist: 'artists', hero: 'site', catalog: 'catalog' }[kind];
   if (!sub) throw bad('ประเภทไฟล์ไม่ถูกต้อง');
   return `${ex.slug}/${sub}`;
 }

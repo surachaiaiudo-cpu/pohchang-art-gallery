@@ -132,6 +132,19 @@ const STEPS = [
         layout TEXT NOT NULL DEFAULT '{}', created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
         created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now')))`
     ]
+  },
+  {
+    // 0012_catalog_cover.sql: the catalogue's cover is an uploaded image (owner, 2026-10-23).
+    name: '0012_catalog_cover',
+    needed: async (db) => !(await db.prepare(
+      "SELECT 1 AS x FROM pragma_table_info('exhibitions') WHERE name = 'catalog_cover_file_id'"
+    ).first()),
+    sql: [
+      "ALTER TABLE exhibitions ADD COLUMN catalog_cover_url TEXT NOT NULL DEFAULT ''",
+      "ALTER TABLE exhibitions ADD COLUMN catalog_cover_file_id TEXT NOT NULL DEFAULT ''",
+      'ALTER TABLE exhibitions ADD COLUMN catalog_cover_width INTEGER NOT NULL DEFAULT 0',
+      'ALTER TABLE exhibitions ADD COLUMN catalog_cover_height INTEGER NOT NULL DEFAULT 0'
+    ]
   }
 ];
 

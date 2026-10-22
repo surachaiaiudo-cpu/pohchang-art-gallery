@@ -75,6 +75,8 @@ export async function catalogPayload(db, ex) {
     template: { ref: template.ref, name: template.name, layout: template.layout, missing: template.missing },
     works: clean,
     reviewers,
+    // Uploaded cover page (one image for the whole A4 cover); empty = a simple cover made from the texts.
+    cover: { url: ex.catalog_cover_url || '', width: ex.catalog_cover_width || 0, height: ex.catalog_cover_height || 0 },
     published_at: ex.catalog_published_at || null
   };
 }
