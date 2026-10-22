@@ -80,7 +80,7 @@ public/
   flags/*.svg      242 flag images (flag-icons, MIT, licence included)
   _redirects       /e/:slug, /e/:slug/work/:id, /e/:slug/submit, /manage/:slug, /review/:token rewrites
   _headers         CSS/JS revalidate every load; flags cached 7 days
-schema/0001..0007  SQL history (0001 creates everything; later files are also applied by migrate.js; 0006 lives only in migrate.js)
+schema/0001..0011  SQL history (0001 creates everything; later files are also applied by migrate.js; 0006 lives only in migrate.js)
 tests/*.test.js    node:test unit tests (`npm test`)
 ```
 
@@ -200,6 +200,29 @@ details: the owner fills them in. Per-exhibition overrides: accent colour, headi
 `/api/submissions` and `/api/config`; images keep their old Cloudinary URLs (`image_file_id` empty so nothing is
 ever deleted from old accounts); emails kept private, phones not imported.
 
+### 6.9 Exhibition catalogue / สูจิบัตร (branch `catalog`, 2026-10-23, waiting for owner approval)
+Owner's decisions (2026-10-23): admin or the exhibition's staff prepare it in a separate section and **publish it by hand**;
+visitors print or save it as PDF **from the browser** (whole book, one page, or a page list like `1, 3-5`), no uploaded
+PDF, no Adobe; **A4 portrait**; the preparer chooses the languages, which data appear, which expert-panel data appear,
+the work order; there are main (built-in) templates and the preparer can make templates that every exhibition can use.
+- Data: `exhibitions.catalog` (JSON settings, cleaned by `normalizeSettings`) and `catalog_published_at` (NULL = not
+  published); table `catalog_templates` (name, description, layout JSON, created_by). Migration `0011_catalog`.
+- `public/js/catalog-core.js` (shared with Functions): fields, built-in templates (`b:classic`, `b:side`, `b:label`),
+  `normalizeLayout`, `normalizeSettings`, `orderWorks`, `parsePageList`, book words in th/en/zh. Layout = colours
+  (paper/ink/muted/accent), heading/body font, cover style, blocks `{field, x, y, w, h}` in **mm** on 210×297, sizes in pt.
+  Template refs: `b:<key>` built-in, `t:<id>` shared.
+- `public/js/catalog-render.js` draws real A4 `<section class="sheet">` pages: cover → curatorial statement (flows over
+  pages, paragraphs split by words) → expert panel (all active reviewers, only name/title as chosen) → one page per
+  shown work (template blocks; long text shrinks to 55 %) → list of works with page numbers. QR codes drawn locally
+  (`public/js/qrcode.mjs`, qrcode-generator MIT). Print CSS in `public/css/catalog.css` (`@page` A4, margin 0).
+- Pages: `/e/:slug/catalog` (public, `catalog.html`; `?preview=1` = unpublished preview for staff), menu link
+  "สูจิบัตร" on the exhibition page when published; `/manage/:slug/catalog` (settings + live mini preview + publish);
+  `/catalog-templates` (library; built-ins read-only, copy to edit; edit/delete by author or admin; delete refused while
+  an exhibition uses it); `/catalog-templates/:id` designer (`b-classic` for built-ins): drag/resize, arrows, undo,
+  sample data or a real exhibition's works, colours/fonts/cover style.
+- Artist email/phone are never put in the catalogue (not in the public work query); fields switched off are not sent.
+- Open questions: none decided beyond the above; e.g. reviewer photos/affiliation would need new reviewer columns.
+
 ## 7. API (all JSON; writes require same-origin)
 
 | Route | Who | Purpose |
@@ -214,6 +237,9 @@ ever deleted from old accounts); emails kept private, phones not imported.
 | `POST /api/admin/import` | admin | old-event import (6.8) |
 | `/api/manage/:slug` (+ `works`, `works/:id`, `techniques`, `reviewers`, `reviewers/:id`, `results`, `storage`, `hero`, `upload-auth`) | staff of that exhibition | settings, screening, panel, results, Cloudinary |
 | `GET/POST /api/review/:token[/vote]` | reviewer link | review works, vote |
+| `GET /api/x/:slug/catalog` | public | published catalogue (settings, template layout, shown works, panel names) |
+| `GET/PUT /api/manage/:slug/catalog` | staff of that exhibition | catalogue settings, publish; `?full=1` = book data for preview |
+| `GET/POST /api/catalog-templates`, `GET/PUT/DELETE /api/catalog-templates/:id` | any back-office user (edit: author/admin) | shared catalogue templates |
 | `GET /api/dev/placeholder` | dev only | fake image when `DEV_FAKE_STORAGE=1` |
 
 ## 8. Security model (keep it)
@@ -244,7 +270,7 @@ npm test                                # 23 unit tests
 
 ## 10. Backlog (not started)
 
-Catalogue designer / PDF, catalogue library, 3D gallery, Excel import, account-wide Cloudinary quota check,
+3D gallery, Excel import, account-wide Cloudinary quota check,
 copying old-event images into the new Cloudinary account, English/Chinese back office.
 
 ## 11. Old system (still live, do not break it)

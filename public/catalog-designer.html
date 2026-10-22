@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>ออกแบบเทมเพลตสูจิบัตร</title>
+  <link rel="stylesheet" href="/css/app.css?v=3">
+  <link rel="stylesheet" href="/css/catalog.css?v=1">
+  <link rel="stylesheet" href="/css/catalog-admin.css?v=1">
+  <script type="module" src="/js/catalog-designer.js?v=1"></script>
+</head>
+<body class="cat-admin">
+  <header class="topbar" id="topbar"></header>
+  <main class="page" style="max-width:1500px">
+    <div class="page-head">
+      <div style="flex:1;min-width:260px">
+        <label class="sr-only" for="name">ชื่อเทมเพลต</label>
+        <input id="name" type="text" maxlength="120" style="font-size:1.25rem;font-weight:600" placeholder="ชื่อเทมเพลต">
+        <div class="small muted" id="meta"></div>
+      </div>
+      <div class="row">
+        <a class="btn btn-ghost" href="/catalog-templates">← คลังเทมเพลต</a>
+        <button class="btn btn-ghost" type="button" id="save-new">บันทึกเป็นแบบใหม่</button>
+        <button class="btn" type="button" id="save">บันทึก</button>
+      </div>
+    </div>
+    <div class="ro-banner" id="ro" hidden></div>
+    <div class="dz">
+      <div>
+        <div class="dz-tools">
+          <label class="small" for="src">ข้อมูลตัวอย่าง</label>
+          <select id="src"><option value="">ข้อมูลสมมติ</option></select>
+          <button class="btn btn-ghost btn-sm" type="button" id="prev" aria-label="ผลงานก่อนหน้า">‹</button>
+          <span class="small muted" id="wpos"></span>
+          <button class="btn btn-ghost btn-sm" type="button" id="next" aria-label="ผลงานถัดไป">›</button>
+          <span class="small" style="margin-left:8px">ภาษา</span><span class="row" id="langs"></span>
+          <label class="check small"><input type="checkbox" id="grid" checked> เส้นตาราง 5 มม.</label>
+          <label class="sr-only" for="zoom">ขนาดการแสดง</label>
+          <select id="zoom"><option value="fit">พอดีจอ</option><option value="0.5">50%</option><option value="0.75">75%</option><option value="1">100%</option></select>
+          <button class="btn btn-ghost btn-sm" type="button" id="undo" title="ย้อนกลับ (Ctrl+Z)">↶ ย้อนกลับ</button>
+          <button class="btn btn-ghost btn-sm" type="button" id="redo" title="ทำซ้ำ (Ctrl+Y)">↷ ทำซ้ำ</button>
+        </div>
+        <div class="dz-canvas" id="canvas">
+          <div class="dz-stage grid" id="stage"><section class="sheet sheet-work" id="sheet"></section><div class="dz-layer" id="layer"></div></div>
+        </div>
+        <p class="small muted">ลากกล่องเพื่อย้าย ลากมุมขวาล่างเพื่อปรับขนาด · ปุ่มลูกศรขยับทีละ 0.5 มม. (Shift = 5 มม.) · Delete ลบ · Ctrl+D ทำสำเนา ·
+          ขนาดหน้า A4 แนวตั้ง 210 × 297 มม. ตำแหน่งทั้งหมดเป็นมิลลิเมตร ขนาดตัวอักษรเป็นพอยต์ · ข้อความยาวเกินกล่องจะย่อลงอัตโนมัติ (กล่องที่ยังล้นจะมีขอบแดง)</p>
+      </div>
+      <div class="dz-panel">
+        <div class="card">
+          <h2>หน้ากระดาษและหน้าปก</h2>
+          <div class="grid-2">
+            <div class="field"><label for="c-paper">สีกระดาษ</label><input id="c-paper" type="color" data-color="paper"></div>
+            <div class="field"><label for="c-ink">สีตัวอักษร</label><input id="c-ink" type="color" data-color="ink"></div>
+            <div class="field"><label for="c-muted">สีรอง</label><input id="c-muted" type="color" data-color="muted"></div>
+            <div class="field"><label for="c-accent">สีเน้น</label><input id="c-accent" type="color" data-color="accent"></div>
+            <div class="field"><label for="f-head">ฟอนต์หัวเรื่อง</label><select id="f-head" data-font="head"></select></div>
+            <div class="field"><label for="f-body">ฟอนต์เนื้อความ</label><select id="f-body" data-font="body"></select></div>
+          </div>
+          <div class="field"><label for="cover">แบบหน้าปก</label><select id="cover"></select>
+            <span class="hint">หน้าบทภัณฑารักษ์ คณะกรรมการ และรายชื่อผลงาน ใช้สีและฟอนต์ชุดนี้</span></div>
+          <div class="field"><label for="desc">คำอธิบายเทมเพลต</label><textarea id="desc" rows="2" maxlength="400" style="min-height:60px"></textarea></div>
+        </div>
+        <div class="card">
+          <h2>ส่วนประกอบในหน้าผลงาน</h2>
+          <div class="row" style="margin-bottom:8px">
+            <label class="sr-only" for="add-f">เพิ่มส่วนประกอบ</label><select id="add-f" style="flex:1"></select>
+            <button class="btn btn-sm" type="button" id="add">เพิ่ม</button>
+          </div>
+          <ul class="blist" id="blist" role="listbox" aria-label="ส่วนประกอบ"></ul>
+        </div>
+        <div class="card" id="props-card">
+          <h2 id="props-title">คุณสมบัติ</h2>
+          <div id="props"><p class="small muted">เลือกกล่องในหน้า หรือในรายการด้านบน</p></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

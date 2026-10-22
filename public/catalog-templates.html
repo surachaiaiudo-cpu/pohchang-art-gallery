@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>คลังเทมเพลตสูจิบัตร</title>
+  <link rel="stylesheet" href="/css/app.css?v=3">
+  <link rel="stylesheet" href="/css/catalog.css?v=1">
+  <link rel="stylesheet" href="/css/catalog-admin.css?v=1">
+  <script type="module" src="/js/catalog-templates.js?v=1"></script>
+</head>
+<body class="cat-admin">
+  <header class="topbar" id="topbar"></header>
+  <main class="page">
+    <div class="page-head">
+      <div><h1>คลังเทมเพลตสูจิบัตร</h1>
+        <div class="small muted">เทมเพลตใช้ร่วมกันได้ทุกนิทรรศการ · เทมเพลตหลักของระบบแก้ไขไม่ได้ แต่คัดลอกเป็นแบบของตัวเองแล้วแก้ได้ ·
+          เทมเพลตที่สร้างเอง แก้ไขหรือลบได้โดยผู้สร้างและผู้ดูแลหอศิลป์</div></div>
+      <a class="btn btn-ghost" href="/admin">← กลับหน้าหลักระบบผู้จัด</a>
+    </div>
+    <div class="card">
+      <h2>สร้างเทมเพลตใหม่</h2>
+      <form id="new" class="grid-3" novalidate>
+        <div class="field"><label for="n-name">ชื่อเทมเพลต</label><input id="n-name" type="text" maxlength="120" required placeholder="เช่น เพาะช่าง 2569 แนวตั้ง"></div>
+        <div class="field"><label for="n-from">เริ่มจาก</label><select id="n-from"></select></div>
+        <div><button class="btn" type="submit">สร้างและเปิดตัวออกแบบ</button> <span class="error-text" id="n-err"></span></div>
+      </form>
+    </div>
+    <h2>เทมเพลตหลักของระบบ</h2>
+    <div class="tpl-grid" id="builtin"></div>
+    <h2 style="margin-top:28px">เทมเพลตที่สร้างเอง</h2>
+    <div class="tpl-grid" id="own"></div>
+  </main>
+</body>
+</html>

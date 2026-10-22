@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>สูจิบัตร</title>
+  <link rel="stylesheet" href="/css/app.css?v=3">
+  <link rel="stylesheet" href="/css/catalog.css?v=1">
+  <link rel="stylesheet" href="/css/catalog-admin.css?v=1">
+  <script type="module" src="/js/catalog-manage.js?v=1"></script>
+</head>
+<body class="cat-admin">
+  <header class="topbar" id="topbar"></header>
+  <main class="page">
+    <div class="page-head">
+      <div><h1 id="title">สูจิบัตร</h1><div class="small muted" id="sub"></div></div>
+      <div class="row">
+        <a class="btn btn-ghost" id="back">← กลับหน้าจัดการนิทรรศการ</a>
+        <a class="btn btn-ghost" href="/catalog-templates">คลังเทมเพลตสูจิบัตร</a>
+      </div>
+    </div>
+
+    <div class="card pub">
+      <div>
+        <div class="state" id="pub-state">กำลังโหลด…</div>
+        <div class="small muted" id="pub-hint"></div>
+      </div>
+      <div class="row">
+        <a class="btn btn-ghost" id="preview" target="_blank" rel="noopener">ดูตัวอย่างทั้งเล่ม</a>
+        <a class="btn btn-ghost" id="public" target="_blank" rel="noopener" hidden>เปิดหน้าสาธารณะ</a>
+        <button class="btn" type="button" id="publish">เผยแพร่สูจิบัตร</button>
+      </div>
+    </div>
+
+    <form id="form" class="cat-layout" novalidate>
+      <div>
+        <div class="card">
+          <h2>1. เทมเพลตหน้าผลงาน</h2>
+          <p class="small muted">เทมเพลตกำหนดตำแหน่ง ขนาดตัวอักษร สี และฟอนต์ของหน้าผลงาน รวมถึงแบบหน้าปก ใช้ได้กับทุกนิทรรศการ
+            สร้างหรือแก้ไขเทมเพลตได้ที่ <a href="/catalog-templates">คลังเทมเพลตสูจิบัตร</a></p>
+          <div class="tpl-grid" id="tpls" role="group" aria-label="เลือกเทมเพลต"></div>
+        </div>
+
+        <div class="card">
+          <h2>2. ภาษาในเล่ม</h2>
+          <div class="grid-2">
+            <div class="field"><label for="lang-main">ภาษาหลัก</label><select id="lang-main"></select>
+              <span class="hint">ใช้เรียงชื่อ และเป็นบรรทัดแรกของทุกข้อความ</span></div>
+            <div class="field"><span class="label">ภาษาเพิ่มเติม (แสดงเป็นบรรทัดรอง)</span><div class="row" id="lang-more"></div>
+              <span class="hint">ถ้าข้อมูลภาษาที่เลือกว่าง จะใช้ภาษาที่มีแทน เพื่อไม่ให้หน้าว่าง</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>3. ส่วนประกอบของเล่ม</h2>
+          <div class="check-grid" id="sections"></div>
+          <div class="grid-2">
+            <div class="field"><label for="order">ลำดับผลงานในเล่ม</label><select id="order"></select></div>
+            <div class="field"><label for="include">ผลงานที่ใส่ในเล่ม</label><select id="include">
+              <option value="all">ผลงานที่จัดแสดงทั้งหมด</option>
+              <option value="endorsed">เฉพาะผลงานที่ผ่านผู้ทรงคุณวุฒิ (มี badge)</option></select></div>
+          </div>
+          <p class="small muted" id="count-hint"></p>
+        </div>
+
+        <div class="card">
+          <h2>4. ข้อมูลในหน้าผลงาน</h2>
+          <p class="small muted">ติ๊กเฉพาะข้อมูลที่ต้องการให้ปรากฏ ข้อมูลที่เทมเพลตไม่มีช่องวางจะมีหมายเหตุกำกับ (แก้ได้ในตัวออกแบบเทมเพลต)
+            อีเมลและเบอร์โทรของศิลปินไม่ถูกนำไปใส่ในสูจิบัตร</p>
+          <div class="check-grid" id="fields"></div>
+        </div>
+
+        <div class="card">
+          <h2>5. หน้าคณะกรรมการผู้ทรงคุณวุฒิ</h2>
+          <p class="small muted" id="rv-hint">แสดงผู้ทรงคุณวุฒิทุกท่านที่ใช้งานอยู่ของนิทรรศการนี้ เลือกข้อมูลที่จะแสดง</p>
+          <div class="check-grid" id="rfields"></div>
+        </div>
+
+        <div class="card">
+          <h2>6. ข้อความเพิ่มเติม</h2>
+          <div class="field"><span class="label">ข้อความบนหน้าปก (เช่น ผู้จัด / หน่วยงานร่วม)</span>
+            <div class="grid-3" id="note"></div></div>
+          <div class="field"><span class="label">ข้อความท้ายหน้า (footer)</span>
+            <div class="grid-3" id="footer"></div>
+            <span class="hint">แสดงบนปก และในหน้าผลงานถ้าเทมเพลตมีช่อง "ข้อความท้ายหน้า"</span></div>
+          <p class="small muted">ชื่อนิทรรศการ คำโปรย วันที่ สถานที่ และบทภัณฑารักษ์ ดึงจาก <a id="settings-link">ตั้งค่านิทรรศการ</a></p>
+        </div>
+        <p><button class="btn" type="submit" id="save">บันทึกการตั้งค่าสูจิบัตร</button> <span class="error-text" id="err"></span></p>
+      </div>
+
+      <aside class="cat-side">
+        <div class="card">
+          <h2>ตัวอย่างหน้า</h2>
+          <p class="small muted">แสดงผลตามที่เลือกไว้ (ยังไม่บันทึกก็เห็น) ใช้ผลงานจริง 2 ชิ้นแรก</p>
+          <div class="book-mini" id="mini"></div>
+        </div>
+      </aside>
+    </form>
+  </main>
+</body>
+</html>

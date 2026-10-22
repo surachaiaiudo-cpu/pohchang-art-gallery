@@ -117,6 +117,21 @@ const STEPS = [
       "SELECT 1 AS x FROM pragma_table_info('exhibitions') WHERE name = 'card_style'"
     ).first()),
     sql: ["ALTER TABLE exhibitions ADD COLUMN card_style TEXT NOT NULL DEFAULT ''"]
+  },
+  {
+    // 0011_catalog.sql: exhibition catalogue settings + shared catalogue templates (2026-10-23).
+    name: '0011_catalog',
+    needed: async (db) => !(await db.prepare(
+      "SELECT 1 AS x FROM pragma_table_info('exhibitions') WHERE name = 'catalog_published_at'"
+    ).first()),
+    sql: [
+      "ALTER TABLE exhibitions ADD COLUMN catalog TEXT NOT NULL DEFAULT ''",
+      'ALTER TABLE exhibitions ADD COLUMN catalog_published_at TEXT',
+      `CREATE TABLE IF NOT EXISTS catalog_templates (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, description TEXT NOT NULL DEFAULT '',
+        layout TEXT NOT NULL DEFAULT '{}', created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now')))`
+    ]
   }
 ];
 

@@ -79,6 +79,7 @@ async function loadOverview() {
   $('ex-title').textContent = S.ex.title_th;
   $('ex-sub').textContent = `/e/${S.ex.slug} · ${STATUS_TH[S.ex.status]} · ${submissionText(S.ex).slice(2)}`;
   $('view-public').href = `/e/${encodeURIComponent(S.ex.slug)}`;
+  $('catalog-link').href = `/manage/${encodeURIComponent(S.ex.slug)}/catalog`;
   const quota = S.ex.storage_quota_bytes || 1;
   $('stats').innerHTML = `
     <div class="stat"><b>${d.counts.submitted}</b><span>รอคัดกรอง</span></div>

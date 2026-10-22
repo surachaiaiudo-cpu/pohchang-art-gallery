@@ -1,5 +1,8 @@
 /e/:slug/work/:id  /work  200
 /e/:slug/submit    /submit  200
+/e/:slug/catalog   /catalog  200
 /e/:slug           /exhibition  200
+/manage/:slug/catalog  /catalog-manage  200
 /manage/:slug      /manage  200
+/catalog-templates/:id  /catalog-designer  200
 /review/:token     /review  200

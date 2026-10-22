@@ -108,7 +108,9 @@ export function publicExhibition(ex) {
     review_panel_size: ex.review_panel_size,
     categories: parseCategories(ex.categories),
     techniques: parseTechniques(ex.techniques),
-    submission: submissionWindow(ex)
+    submission: submissionWindow(ex),
+    // The catalogue page link shows only after the curator publishes it.
+    catalog: !!ex.catalog_published_at
   };
 }
 

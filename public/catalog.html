@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>สูจิบัตร</title>
+  <link rel="stylesheet" href="/css/catalog.css?v=1">
+  <script type="module" src="/js/catalog.js?v=1"></script>
+</head>
+<body class="cat-page">
+  <header class="cat-bar">
+    <div class="in">
+      <div class="ttl"><a id="back" href="/" data-i18n="catBackEx">กลับหน้านิทรรศการ</a><b id="ttl" data-i18n="catTitle">สูจิบัตรนิทรรศการ</b></div>
+      <div class="acts">
+        <span id="lang"></span>
+        <button class="cbtn" type="button" id="print-all" disabled data-i18n="catPrintAll">พิมพ์ / บันทึก PDF ทั้งเล่ม</button>
+        <form class="pick-box" id="pick-form" novalidate>
+          <label for="pick" data-i18n="catPagesLabel">เลือกหน้า</label>
+          <input id="pick" type="text" inputmode="numeric" placeholder="เช่น 1, 3-5" data-i18n-ph="catPagesPh" autocomplete="off">
+          <button class="cbtn sm" type="submit" disabled id="print-some" data-i18n="catPrintSome">พิมพ์หน้าที่เลือก</button>
+        </form>
+      </div>
+    </div>
+  </header>
+  <p class="cat-note" id="note"></p>
+  <p class="cat-note" id="tip" data-i18n="catPdfTip"></p>
+  <main class="book-scroll" id="main">
+    <p class="cat-msg" id="msg" data-i18n="catBuilding">กำลังจัดหน้าสูจิบัตร…</p>
+    <div class="book" id="book"></div>
+  </main>
+  <div class="cat-status" id="status" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

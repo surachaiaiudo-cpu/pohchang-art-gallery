@@ -173,6 +173,7 @@ async function main() {
     $('statement').innerHTML = statement ? `<div class="statement">${paras(statement)}</div>` : '';
     $('ex-nav').innerHTML = `
       <a href="#works">${esc(t('works'))}</a>
+      ${ex.catalog ? `<a href="/e/${encodeURIComponent(slug)}/catalog">${esc(t('catalog'))}</a>` : ''}
       ${ex.submission && ex.submission.open ? `<a href="/e/${encodeURIComponent(slug)}/submit">${esc(t('submit'))}</a>` : ''}`;
     const nEnd = state.works.filter((w) => w.endorsed).length;
     $('n-all').textContent = `(${state.works.length})`;
