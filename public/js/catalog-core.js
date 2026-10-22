@@ -72,6 +72,47 @@ export const COVER_STYLES = [
   { key: 'text', th: 'ตัวอักษรอย่างเดียว' }
 ];
 
+// ------------------------------------------------------------------ colours (CMYK)
+// Every colour in a template is stored as CMYK percentages { c, m, y, k } (0-100) for print work.
+// Screens and the browser's PDF use RGB, so the page shows the simple (uncalibrated) RGB conversion;
+// a print shop should take the CMYK values as the reference.
+export const K = (c, m, y, k) => ({ c, m, y, k });
+export const NAMED_COLORS = ['ink', 'muted', 'accent', 'paper'];
+const pct = (v) => Math.round(Math.min(100, Math.max(0, Number(v) || 0)));
+export function cmykToHex(v) {
+  const { c, m, y, k } = v || {};
+  const ch = (x) => Math.round(255 * (1 - pct(x) / 100) * (1 - pct(k) / 100)).toString(16).padStart(2, '0');
+  return `#${ch(c)}${ch(m)}${ch(y)}`;
+}
+export function hexToCmyk(hex) {
+  const n = parseInt(String(hex).slice(1), 16);
+  const r = ((n >> 16) & 255) / 255; const g = ((n >> 8) & 255) / 255; const b = (n & 255) / 255;
+  const k = 1 - Math.max(r, g, b);
+  if (k >= 0.999) return K(0, 0, 0, 100);
+  return K(pct(((1 - r - k) / (1 - k)) * 100), pct(((1 - g - k) / (1 - k)) * 100), pct(((1 - b - k) / (1 - k)) * 100), pct(k * 100));
+}
+export function cmykOf(v, fallback) {
+  if (v && typeof v === 'object' && ['c', 'm', 'y', 'k'].every((x) => Number.isFinite(Number(v[x])))) return K(pct(v.c), pct(v.m), pct(v.y), pct(v.k));
+  if (typeof v === 'string' && /^#[0-9a-fA-F]{6}$/.test(v)) return hexToCmyk(v);
+  return fallback;
+}
+export const cmykText = (v) => `C${v.c} M${v.m} Y${v.y} K${v.k}`;
+// Print palette offered in the designer (values in CMYK).
+export const PRINT_PALETTE = [
+  { th: 'ขาวกระดาษ', v: K(0, 0, 0, 0) },
+  { th: 'ครีมหอศิลป์', v: K(0, 1, 4, 5) },
+  { th: 'เทาเส้นแบ่ง', v: K(0, 0, 0, 20) },
+  { th: 'เทาคำบรรยาย', v: K(0, 5, 12, 58) },
+  { th: 'ดำตัวอักษร', v: K(0, 0, 0, 92) },
+  { th: 'ดำสนิท (Rich black)', v: K(60, 40, 40, 100) },
+  { th: 'แดงชาด', v: K(10, 85, 95, 20) },
+  { th: 'แดงเลือดหมู', v: K(15, 100, 90, 45) },
+  { th: 'น้ำตาลอิฐ', v: K(15, 85, 100, 35) },
+  { th: 'ทองเฮอริเทจ', v: K(15, 30, 60, 20) },
+  { th: 'ครามสยาม', v: K(100, 80, 20, 30) },
+  { th: 'เขียวพงไพร', v: K(80, 30, 90, 25) }
+];
+
 // ------------------------------------------------------------------ built-in templates
 const B = (id, field, x, y, w, h, style = {}) => ({ id, field, x, y, w, h, ...style });
 
@@ -82,7 +123,7 @@ export const BUILTIN_TEMPLATES = [
     description: 'ภาพผลงานเต็มความกว้างด้านบน ข้อมูลผลงานแบบป้ายพิพิธภัณฑ์ด้านล่าง',
     layout: {
       version: 1,
-      colors: { paper: '#ffffff', ink: '#1d1d1b', muted: '#6b675f', accent: '#8a2c16' },
+      colors: { paper: K(0, 0, 0, 0), ink: K(0, 0, 0, 92), muted: K(0, 5, 12, 58), accent: K(15, 85, 100, 35) },
       fonts: { head: 'Noto Serif Thai', body: 'IBM Plex Sans Thai' },
       cover: 'image',
       blocks: [
@@ -109,12 +150,12 @@ export const BUILTIN_TEMPLATES = [
     description: 'ภาพผลงานสูงเต็มหน้าทางซ้าย คอลัมน์ข้อมูลศิลปินและผลงานทางขวา มีรูปศิลปินและ QR',
     layout: {
       version: 1,
-      colors: { paper: '#ffffff', ink: '#1d1d1b', muted: '#6b675f', accent: '#1a2e40' },
+      colors: { paper: K(0, 0, 0, 0), ink: K(0, 0, 0, 92), muted: K(0, 5, 12, 58), accent: K(100, 80, 20, 30) },
       fonts: { head: 'Anuphan', body: 'IBM Plex Sans Thai' },
       cover: 'full',
       blocks: [
         B('img', 'image', 12, 15, 126, 262, { fit: 'contain', align: 'center' }),
-        B('box', 'box', 143, 0, 67, 297, { bg: '#f4f2ed' }),
+        B('box', 'box', 143, 0, 67, 297, { bg: K(0, 1, 4, 5) }),
         B('no', 'number', 148, 16, 57, 8, { size: 9, weight: 600, color: 'accent' }),
         B('avatar', 'avatar', 148, 28, 30, 30, { fit: 'cover', radius: 15 }),
         B('artist', 'artist', 148, 62, 57, 18, { size: 12, weight: 600, font: 'head' }),
@@ -138,12 +179,12 @@ export const BUILTIN_TEMPLATES = [
     description: 'ภาพผลงานกลางหน้าบนพื้นสีผนัง ป้ายข้อมูลเล็กมุมขวาล่างแบบติดผนังห้องแสดงงาน',
     layout: {
       version: 1,
-      colors: { paper: '#f3f1ec', ink: '#1d1d1b', muted: '#6b675f', accent: '#b4321f' },
+      colors: { paper: K(0, 1, 3, 5), ink: K(0, 0, 0, 92), muted: K(0, 5, 12, 58), accent: K(10, 85, 95, 20) },
       fonts: { head: 'Taviraj', body: 'IBM Plex Sans Thai' },
       cover: 'text',
       blocks: [
         B('img', 'image', 20, 22, 170, 190, { fit: 'contain' }),
-        B('box', 'box', 98, 222, 92, 58, { bg: '#ffffff' }),
+        B('box', 'box', 98, 222, 92, 58, { bg: K(0, 0, 0, 0) }),
         B('no', 'number', 103, 226, 82, 5, { size: 7.5, color: 'muted' }),
         B('title', 'title', 103, 232, 82, 14, { size: 12.5, weight: 600, font: 'head' }),
         B('artist', 'artist', 103, 247, 60, 9, { size: 9.5 }),
@@ -168,8 +209,8 @@ const num = (v, min, max, fallback) => {
   return Math.round(Math.min(max, Math.max(min, n)) * 10) / 10;
 };
 const str = (v, max) => String(v ?? '').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '').slice(0, max);
-const hex = (v, fallback) => (/^#[0-9a-fA-F]{6}$/.test(v || '') ? v.toLowerCase() : fallback);
-const colorRef = (v, fallback = 'ink') => (['ink', 'muted', 'accent', 'paper'].includes(v) ? v : hex(v, fallback));
+// A colour is CMYK; "#rrggbb" text (older data) is converted. Named page colours stay as names.
+const colorRef = (v, fallback = 'ink') => (NAMED_COLORS.includes(v) ? v : cmykOf(v, fallback));
 const one = (v, list, fallback) => (list.includes(v) ? v : fallback);
 export const MAX_BLOCKS = 60;
 
@@ -198,7 +239,7 @@ export function normalizeLayout(input) {
       out.radius = num(b.radius, 0, 100, 0);
     } else if (b.field === 'line' || b.field === 'box') {
       out.color = colorRef(b.color, 'ink');
-      if (b.field === 'box') out.bg = colorRef(b.bg, '#f4f2ed');
+      if (b.field === 'box') out.bg = colorRef(b.bg, K(0, 1, 4, 5));
       if (b.field === 'box') out.radius = num(b.radius, 0, 100, 0);
     } else {
       out.size = num(b.size, 5, 96, 10);
@@ -221,8 +262,8 @@ export function normalizeLayout(input) {
   return {
     version: 1,
     colors: {
-      paper: hex(c.paper, '#ffffff'), ink: hex(c.ink, '#1d1d1b'),
-      muted: hex(c.muted, '#6b675f'), accent: hex(c.accent, '#8a2c16')
+      paper: cmykOf(c.paper, K(0, 0, 0, 0)), ink: cmykOf(c.ink, K(0, 0, 0, 92)),
+      muted: cmykOf(c.muted, K(0, 5, 12, 58)), accent: cmykOf(c.accent, K(15, 85, 100, 35))
     },
     fonts: { head: one(f.head, CATALOG_FONTS, 'Noto Serif Thai'), body: one(f.body, CATALOG_FONTS, 'IBM Plex Sans Thai') },
     cover: one(l.cover, COVER_STYLES.map((s) => s.key), 'image'),

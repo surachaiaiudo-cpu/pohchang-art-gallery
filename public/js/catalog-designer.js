@@ -5,7 +5,7 @@ import { api, esc, toast } from './core.js';
 import { requireLogin } from './backoffice.js';
 import {
   ALL_FIELDS, CATALOG_FONTS, COVER_STYLES, LANG_CODES, LANG_NAMES, PAGE, normalizeLayout, normalizeSettings,
-  isImageField, MAX_BLOCKS, DATA_FIELDS
+  isImageField, MAX_BLOCKS, DATA_FIELDS, NAMED_COLORS, PRINT_PALETTE, cmykToHex, cmykText, cmykOf
 } from './catalog-core.js';
 import { blocksHtml, fitText, themeVars, loadBookFonts } from './catalog-render.js';
 import { SAMPLE_EXHIBITION, SAMPLE_WORKS } from './catalog-sample.js';
@@ -85,20 +85,33 @@ function drawList() {
 
 function drawPanel() {
   const L = S.layout;
-  for (const k of ['paper', 'ink', 'muted', 'accent']) $(`c-${k}`).value = L.colors[k];
+  $('page-colors').innerHTML = PAGE_COLORS.map(([k, label]) => cmykField(`page:${k}`, label, L.colors[k])).join('');
   $('f-head').value = L.fonts.head;
   $('f-body').value = L.fonts.body;
   $('cover').value = L.cover;
   drawProps();
 }
 
-function colorField(id, label, value) {
-  const named = ['ink', 'muted', 'accent', 'paper'];
-  const isNamed = named.includes(value);
-  return `<div class="field"><label for="${id}">${label}</label><div class="row">
-    <select id="${id}" data-p="${id === 'p-bg' ? 'bg' : 'color'}" style="width:auto">${named.map((n) => `<option value="${n}"${value === n ? ' selected' : ''}>${{ ink: 'สีตัวอักษร', muted: 'สีรอง', accent: 'สีเน้น', paper: 'สีกระดาษ' }[n]}</option>`).join('')}
-      <option value="custom"${isNamed ? '' : ' selected'}>กำหนดเอง</option></select>
-    <input type="color" data-pc="${id === 'p-bg' ? 'bg' : 'color'}" value="${isNamed ? S.layout.colors[value] : value}"${isNamed ? ' hidden' : ''} aria-label="${label} กำหนดเอง"></div></div>`;
+const PAGE_COLORS = [['paper', 'สีกระดาษ'], ['ink', 'สีตัวอักษร'], ['muted', 'สีรอง'], ['accent', 'สีเน้น']];
+const NAMED_TH = { ink: 'สีตัวอักษร', muted: 'สีรอง', accent: 'สีเน้น', paper: 'สีกระดาษ' };
+
+// CMYK input: swatch, C M Y K boxes (0-100) and the print palette. `target` = "page:<name>" or "blk:<prop>".
+function cmykField(target, label, v) {
+  const box = (ch) => `<input type="number" min="0" max="100" step="1" data-cmyk="${target}" data-ch="${ch}" value="${v[ch]}" aria-label="${label} ${ch.toUpperCase()}" style="padding:4px 6px;min-height:34px">`;
+  return `<div class="field"><span class="label">${label} <span class="muted small" style="font-weight:400">${cmykText(v)}</span></span>
+    <div class="cmyk-row"><span class="sw" style="background:${cmykToHex(v)}"></span>
+      <label class="small">C${box('c')}</label><label class="small">M${box('m')}</label><label class="small">Y${box('y')}</label><label class="small">K${box('k')}</label></div>
+    <select data-pal="${target}" aria-label="ชุดสีงานพิมพ์ ${label}" style="min-height:32px;padding:2px 6px;font-size:.84rem"><option value="">ชุดสีงานพิมพ์…</option>
+      ${PRINT_PALETTE.map((p, i) => `<option value="${i}">${p.th} (${cmykText(p.v)})</option>`).join('')}</select></div>`;
+}
+
+function colorField(prop, label, value) {
+  const named = NAMED_COLORS.includes(value);
+  const own = named ? S.layout.colors[value] : value;
+  return `<div class="field"><label for="p-${prop}">${label}</label>
+    <select id="p-${prop}" data-named="${prop}">${NAMED_COLORS.map((n) => `<option value="${n}"${value === n ? ' selected' : ''}>${NAMED_TH[n]} ของหน้า (${cmykText(S.layout.colors[n])})</option>`).join('')}
+      <option value="custom"${named ? '' : ' selected'}>กำหนดเอง (CMYK)</option></select></div>
+    ${named ? '' : cmykField(`blk:${prop}`, `${label} กำหนดเอง`, own)}`;
 }
 
 function drawProps() {
@@ -119,7 +132,7 @@ function drawProps() {
     if (b.field === 'avatar') h += `<div class="field">${n('radius', 'ความมนของมุม (มม.)', 0.5, 0, 100)}</div>`;
     if (b.field === 'image') h += '<p class="small muted">หน้าผลงานแสดงภาพเต็มทั้งภาพตามหลักของเว็บ แนะนำ "เต็มภาพ ไม่ตัดขอบ"</p>';
   } else if (b.field === 'line' || b.field === 'box') {
-    h += b.field === 'box' ? colorField('p-bg', 'สีกล่อง', b.bg) + `<div class="field">${n('radius', 'ความมนของมุม (มม.)', 0.5, 0, 100)}</div>` : colorField('p-color', 'สีเส้น', b.color);
+    h += b.field === 'box' ? colorField('bg', 'สีกล่อง', b.bg) + `<div class="field">${n('radius', 'ความมนของมุม (มม.)', 0.5, 0, 100)}</div>` : colorField('color', 'สีเส้น', b.color);
   } else {
     h += `<div class="num3"><div>${n('size', 'ขนาด (pt)', 0.5, 5, 96).replace('<div>', '').replace(/<\/div>$/, '')}</div>
       <div><label class="small" for="p-weight">น้ำหนัก</label><select id="p-weight" data-p="weight">${[[300, 'บาง'], [400, 'ปกติ'], [500, 'กลาง'], [600, 'หนา'], [700, 'หนามาก']].map(([v, t]) => `<option value="${v}"${b.weight === v ? ' selected' : ''}>${t}</option>`).join('')}</select></div>
@@ -127,7 +140,7 @@ function drawProps() {
     h += `<div class="grid-2">${sel('align', 'จัดแนว', [['left', 'ชิดซ้าย'], ['center', 'กึ่งกลาง'], ['right', 'ชิดขวา'], ['justify', 'เต็มบรรทัด']])}
       ${sel('vertical', 'แนวตั้ง', [['top', 'บน'], ['middle', 'กลาง'], ['bottom', 'ล่าง']])}
       ${sel('font', 'ฟอนต์', [['body', 'เนื้อความ'], ['head', 'หัวเรื่อง']])}</div>`;
-    h += colorField('p-color', 'สี', b.color);
+    h += colorField('color', 'สี', b.color);
     h += `<div class="row">${chk('italic', 'ตัวเอียง')}${chk('upper', 'ตัวพิมพ์ใหญ่ (อังกฤษ)')}${['technique', 'dimensions', 'year', 'price', 'category', 'country', 'concept', 'bio', 'affiliation'].includes(b.field) ? chk('label', 'แสดงหัวข้อ เช่น "ขนาด / Size"') : ''}</div>`;
     if (b.field === 'text') {
       h += LANG_CODES.map((l) => `<div class="field"><label for="p-t-${l}">ข้อความ (${LANG_NAMES[l]})</label><textarea id="p-t-${l}" rows="2" style="min-height:56px" data-pt="${l}">${esc(b.text[l] || '')}</textarea></div>`).join('');
@@ -247,21 +260,46 @@ $('props').addEventListener('change', (e) => {
   const b = block(S.sel);
   if (!b) return;
   const el = e.target;
-  if (el.dataset.p) {
+  if (el.dataset.cmyk || el.dataset.pal) return; // handled by the panel-wide colour handler
+  if (el.dataset.named) {
+    const k = el.dataset.named;
+    update(() => { b[k] = el.value === 'custom' ? { ...S.layout.colors[NAMED_COLORS.includes(b[k]) ? b[k] : 'ink'] } : el.value; }, { props: true });
+  } else if (el.dataset.p) {
     const k = el.dataset.p;
-    if (el.value === 'custom') { el.parentElement.querySelector('[data-pc]').hidden = false; return; }
     const val = el.type === 'checkbox' ? el.checked : el.type === 'number' || k === 'weight' ? Number(el.value) : el.value;
-    update(() => { b[k] = val; }, { props: k === 'color' || k === 'bg' });
-  } else if (el.dataset.pc) {
-    update(() => { b[el.dataset.pc] = el.value; });
+    update(() => { b[k] = val; });
   } else if (el.dataset.pt) {
     update(() => { b.text = { ...b.text, [el.dataset.pt]: el.value }; });
   }
 });
+// CMYK boxes and palette picks, for page colours and the selected block alike.
+function setColor(target, value) {
+  const [scope, key] = target.split(':');
+  if (scope === 'page') S.layout.colors[key] = value;
+  else { const b = block(S.sel); if (b) b[key] = value; }
+}
+function getColor(target) {
+  const [scope, key] = target.split(':');
+  return scope === 'page' ? S.layout.colors[key] : (block(S.sel) || {})[key];
+}
 document.querySelector('.dz-panel').addEventListener('change', (e) => {
   const el = e.target;
-  if (el.dataset.color) update(() => { S.layout.colors[el.dataset.color] = el.value; });
-  else if (el.dataset.font) update(() => { S.layout.fonts[el.dataset.font] = el.value; }), loadBookFonts(S.layout).then(drawPage);
+  if (el.dataset.cmyk) {
+    const cur = cmykOf(getColor(el.dataset.cmyk), { c: 0, m: 0, y: 0, k: 0 });
+    update(() => setColor(el.dataset.cmyk, cmykOf({ ...cur, [el.dataset.ch]: el.value }, cur)), { props: true });
+    drawPanelColors();
+  } else if (el.dataset.pal && el.value !== '') {
+    update(() => setColor(el.dataset.pal, { ...PRINT_PALETTE[Number(el.value)].v }), { props: true });
+    drawPanelColors();
+  }
+});
+function drawPanelColors() {
+  $('page-colors').innerHTML = PAGE_COLORS.map(([k, label]) => cmykField(`page:${k}`, label, S.layout.colors[k])).join('');
+}
+
+document.querySelector('.dz-panel').addEventListener('change', (e) => {
+  const el = e.target;
+  if (el.dataset.font) update(() => { S.layout.fonts[el.dataset.font] = el.value; }), loadBookFonts(S.layout).then(drawPage);
   else if (el.id === 'cover') update(() => { S.layout.cover = el.value; });
 });
 

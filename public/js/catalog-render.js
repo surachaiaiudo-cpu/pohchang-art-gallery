@@ -6,7 +6,7 @@ import { esc, img, icons, loadFonts } from './core.js';
 import { flagUrl, countryName, isCountryCode } from './countries.js';
 import qrcode from './qrcode.mjs';
 import {
-  PAGE, values, techniqueValues, listLabel, orderWorks, words, isImageField, BOOK_WORDS
+  PAGE, values, techniqueValues, listLabel, orderWorks, words, isImageField, BOOK_WORDS, NAMED_COLORS, cmykToHex
 } from './catalog-core.js';
 
 const LOCALES = { th: 'th-TH', en: 'en-GB', zh: 'zh-CN' };
@@ -24,7 +24,7 @@ const dateRange = (ex, l) => {
   return a && b ? `${a} – ${b}` : a || b;
 };
 
-const colorOf = (c) => (['ink', 'muted', 'accent', 'paper'].includes(c) ? `var(--c-${c})` : c);
+const colorOf = (c) => (NAMED_COLORS.includes(c) ? `var(--c-${c})` : cmykToHex(c));
 const pad = (n) => String(n).padStart(3, '0');
 
 // Several language versions of one text: the first is the main line, the others follow smaller.
@@ -178,7 +178,7 @@ export function fitText(root) {
 // ------------------------------------------------------------------ pages
 export function themeVars(layout) {
   const c = layout.colors;
-  return `--c-paper:${c.paper};--c-ink:${c.ink};--c-muted:${c.muted};--c-accent:${c.accent};` +
+  return `--c-paper:${cmykToHex(c.paper)};--c-ink:${cmykToHex(c.ink)};--c-muted:${cmykToHex(c.muted)};--c-accent:${cmykToHex(c.accent)};` +
     `--f-head:'${layout.fonts.head}','IBM Plex Sans Thai',sans-serif;--f-body:'${layout.fonts.body}','IBM Plex Sans Thai',sans-serif;`;
 }
 

@@ -60,3 +60,6 @@ body.cat-admin { background: var(--bg); }
 .dz-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
 .dz-tools select { width: auto; min-height: 36px; padding: 4px 8px; }
 .ro-banner { background: #eef1fb; border: 1px solid #c4cdee; color: #233a8c; border-radius: 6px; padding: 10px 12px; margin-bottom: 12px; font-size: .92rem; }
+.cmyk-row { display: grid; grid-template-columns: 34px repeat(4, 1fr); gap: 6px; align-items: end; margin-bottom: 4px; }
+.cmyk-row .sw { width: 34px; height: 34px; border-radius: 6px; border: 1px solid #cfcbc1; }
+.cmyk-row label { display: grid; gap: 2px; font-weight: 600; color: var(--muted); }

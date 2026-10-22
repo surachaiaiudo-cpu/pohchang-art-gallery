@@ -220,6 +220,9 @@ the work order; there are main (built-in) templates and the preparer can make te
   `/catalog-templates` (library; built-ins read-only, copy to edit; edit/delete by author or admin; delete refused while
   an exhibition uses it); `/catalog-templates/:id` designer (`b-classic` for built-ins): drag/resize, arrows, undo,
   sample data or a real exhibition's works, colours/fonts/cover style.
+- **Colours are CMYK** (owner, 2026-10-23): every template colour is stored as `{c, m, y, k}` 0-100 (`cmykOf`, `cmykToHex`
+  in catalog-core; old `#rrggbb` values are converted). The designer edits C/M/Y/K boxes + a print palette; screens and the
+  browser's PDF show the simple RGB conversion (the PDF itself is RGB; the print shop takes the CMYK values as reference).
 - Artist email/phone are never put in the catalogue (not in the public work query); fields switched off are not sent.
 - Open questions: none decided beyond the above; e.g. reviewer photos/affiliation would need new reviewer columns.
 

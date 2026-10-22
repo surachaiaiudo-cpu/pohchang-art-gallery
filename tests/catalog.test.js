@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  normalizeSettings, normalizeLayout, parsePageList, orderWorks, values, techniqueValues, BUILTIN_TEMPLATES, DEFAULT_SETTINGS
+  normalizeSettings, normalizeLayout, parsePageList, orderWorks, values, techniqueValues, BUILTIN_TEMPLATES, DEFAULT_SETTINGS,
+  cmykToHex, hexToCmyk, cmykOf
 } from '../public/js/catalog-core.js';
 
 test('settings: unknown values fall back, languages keep the chosen order', () => {
@@ -21,7 +22,7 @@ test('layout: blocks are clamped and unknown fields dropped', () => {
     { id: 'a', field: 'image', x: 10, y: 10, w: 100, h: 100, fit: 'stretch' },
     { id: 'z', field: 'script', x: 1, y: 1, w: 1, h: 1 }
   ] });
-  assert.equal(l.colors.paper, '#ffffff');
+  assert.deepEqual(l.colors.paper, { c: 0, m: 0, y: 0, k: 0 });
   assert.equal(l.fonts.head, 'Noto Serif Thai');
   assert.equal(l.blocks.length, 2);
   assert.equal(l.blocks[0].x, 210);
@@ -60,4 +61,17 @@ test('book order and multilingual values', () => {
   assert.deepEqual(values({ title_th: 'ทุ่ง', title_en: '' }, 'title', ['en']), ['ทุ่ง']);
   const list = [{ name: 'สีน้ำมัน', en: 'Oil', zh: '油画' }];
   assert.deepEqual(techniqueValues(list, { technique_group: 'สีน้ำมัน', technique_th: '', technique_en: 'Oil on canvas' }, ['th', 'en']), ['สีน้ำมัน', 'Oil on canvas']);
+});
+
+test('colours are CMYK; old #rrggbb values are converted', () => {
+  assert.equal(cmykToHex({ c: 0, m: 0, y: 0, k: 0 }), '#ffffff');
+  assert.equal(cmykToHex({ c: 0, m: 0, y: 0, k: 100 }), '#000000');
+  assert.equal(cmykToHex({ c: 0, m: 100, y: 100, k: 0 }), '#ff0000');
+  assert.deepEqual(hexToCmyk('#ff0000'), { c: 0, m: 100, y: 100, k: 0 });
+  assert.deepEqual(cmykOf({ c: 150, m: -3, y: '20', k: 5.6 }), { c: 100, m: 0, y: 20, k: 6 });
+  const l = normalizeLayout({ colors: { accent: '#ff0000' }, blocks: [{ id: 'b', field: 'box', x: 0, y: 0, w: 10, h: 10, bg: { c: 10, m: 20, y: 30, k: 40 } }, { id: 'l', field: 'line', x: 0, y: 0, w: 10, h: 1, color: 'accent' }] });
+  assert.deepEqual(l.colors.accent, { c: 0, m: 100, y: 100, k: 0 });
+  assert.deepEqual(l.blocks[0].bg, { c: 10, m: 20, y: 30, k: 40 });
+  assert.equal(l.blocks[1].color, 'accent');
+  for (const t of BUILTIN_TEMPLATES) for (const v of Object.values(normalizeLayout(t.layout).colors)) assert.equal(typeof v.c, 'number');
 });
