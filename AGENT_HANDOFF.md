@@ -194,6 +194,14 @@ Hero text and footer details are **edited by admins at `/admin` → "ตั้�
 `GET /api/site`, `GET/PUT /api/admin/site`, `functions/_lib/site.js`); empty fields are hidden. Never invent these
 details: the owner fills them in. Per-exhibition overrides: accent colour, heading font, ornament level, layout.
 
+**Design skill (owner's request, 2026-10-23):** `taste-skill` v2 (`design-taste-frontend`, from
+github.com/Leonxlnx/taste-skill, pinned in `skills-lock.json`) is installed at `.agents/skills/design-taste-frontend`
+(Codex, Gemini) with a symlink at `.claude/skills/` (Claude Code). The owner allows it for **all visual work**. Still:
+ask before changing direction, keep the rules above (works never cropped, 7 themes, museum labels unless the owner
+says otherwise), and preview on a branch before `main`. Its working files go to `.taste-skill/` (git-ignored).
+Its scripts need Node 22+ and Chrome/Chromium; `assets.mjs` fetches from public image archives. Update with
+`npx skills update`. Not deployed (output dir is `public/`).
+
 ### 6.8 Importing old events
 `/admin` → "นำเข้างานจากระบบเดิม": preview (`step: preview`), then create a DRAFT exhibition and import in chunks of
 40 (`step: create`, `step: chunk` with a double-send guard). Reads only the old site's public
