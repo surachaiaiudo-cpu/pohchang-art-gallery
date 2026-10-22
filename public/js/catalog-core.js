@@ -213,6 +213,17 @@ const str = (v, max) => String(v ?? '').replace(/[\u0000-\u0008\u000B\u000C\u000
 const colorRef = (v, fallback = 'ink') => (NAMED_COLORS.includes(v) ? v : cmykOf(v, fallback));
 const one = (v, list, fallback) => (list.includes(v) ? v : fallback);
 export const MAX_BLOCKS = 60;
+// Font sizes (pt) of the pages that are not built from blocks: statement, expert panel, list of works.
+export const PAGE_SIZES = [
+  { key: 'heading', th: 'หัวเรื่องประจำหน้า', def: 17 },
+  { key: 'subheading', th: 'หัวข้อย่อย (ภาษา)', def: 12 },
+  { key: 'body', th: 'เนื้อความบทภัณฑารักษ์', def: 10.5 },
+  { key: 'name', th: 'ชื่อผู้ทรงคุณวุฒิ', def: 11.5 },
+  { key: 'small', th: 'ตำแหน่ง / รายชื่อผลงาน', def: 9 },
+  { key: 'pageNo', th: 'เลขหน้า (หน้าเหล่านี้)', def: 8 }
+];
+// Point sizes offered in the designer (any value 4-96 may be typed).
+export const PT_SIZES = [6, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 12, 13, 14, 16, 18, 20, 22, 24, 28, 32, 36, 40, 48, 60, 72];
 
 // Cleans a template layout coming from the designer (never throws: unknown values fall back).
 export function normalizeLayout(input) {
@@ -242,7 +253,11 @@ export function normalizeLayout(input) {
       if (b.field === 'box') out.bg = colorRef(b.bg, K(0, 1, 4, 5));
       if (b.field === 'box') out.radius = num(b.radius, 0, 100, 0);
     } else {
-      out.size = num(b.size, 5, 96, 10);
+      out.size = num(b.size, 4, 96, 10);
+      // Size of the 2nd/3rd language lines in pt; 0 = automatic (78 % of the main size).
+      out.altSize = num(b.altSize, 0, 96, 0);
+      // false = keep the exact size even when the text overflows its box.
+      out.shrink = b.shrink !== false;
       out.weight = one(Number(b.weight), [300, 400, 500, 600, 700], 400);
       out.align = one(b.align, ['left', 'center', 'right', 'justify'], 'left');
       out.color = colorRef(b.color, 'ink');
@@ -267,6 +282,7 @@ export function normalizeLayout(input) {
     },
     fonts: { head: one(f.head, CATALOG_FONTS, 'Noto Serif Thai'), body: one(f.body, CATALOG_FONTS, 'IBM Plex Sans Thai') },
     cover: one(l.cover, COVER_STYLES.map((s) => s.key), 'image'),
+    sizes: Object.fromEntries(PAGE_SIZES.map((x) => [x.key, num((l.sizes || {})[x.key], 4, 72, x.def)])),
     blocks
   };
 }

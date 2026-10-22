@@ -5,7 +5,7 @@ import { api, esc, toast } from './core.js';
 import { requireLogin } from './backoffice.js';
 import {
   ALL_FIELDS, CATALOG_FONTS, LANG_CODES, LANG_NAMES, PAGE, normalizeLayout, normalizeSettings,
-  isImageField, MAX_BLOCKS, DATA_FIELDS, NAMED_COLORS, PRINT_PALETTE, cmykToHex, cmykText, cmykOf
+  isImageField, MAX_BLOCKS, DATA_FIELDS, PAGE_SIZES, PT_SIZES, NAMED_COLORS, PRINT_PALETTE, cmykToHex, cmykText, cmykOf
 } from './catalog-core.js';
 import { blocksHtml, fitText, themeVars, loadBookFonts } from './catalog-render.js';
 import { SAMPLE_EXHIBITION, SAMPLE_WORKS } from './catalog-sample.js';
@@ -94,11 +94,18 @@ function drawList() {
 function drawPanel() {
   const L = S.layout;
   $('page-colors').innerHTML = PAGE_COLORS.map(([k, label]) => cmykField(`page:${k}`, label, L.colors[k])).join('');
+  drawSizes();
   $('f-head').value = L.fonts.head;
   $('f-body').value = L.fonts.body;
   drawProps();
 }
 
+const ptOptions = (cur, none = false) => `${none ? '' : '<option value="">มาตรฐาน…</option>'}${PT_SIZES.map((v) => `<option value="${v}"${Number(cur) === v ? ' selected' : ''}>${v} pt</option>`).join('')}`;
+function drawSizes() {
+  $('page-sizes').innerHTML = PAGE_SIZES.map((x) => `<div class="field" style="margin:0"><label class="small" for="ps-${x.key}">${x.th}</label>
+    <div class="row"><input id="ps-${x.key}" type="number" step="0.5" min="4" max="72" data-size="${x.key}" value="${S.layout.sizes[x.key]}" list="pt-list" style="width:90px"><span class="small muted">pt</span></div></div>`).join('')
+    + `<datalist id="pt-list">${PT_SIZES.map((v) => `<option value="${v}">`).join('')}</datalist>`;
+}
 const PAGE_COLORS = [['paper', 'สีกระดาษ'], ['ink', 'สีตัวอักษร'], ['muted', 'สีรอง'], ['accent', 'สีเน้น']];
 const NAMED_TH = { ink: 'สีตัวอักษร', muted: 'สีรอง', accent: 'สีเน้น', paper: 'สีกระดาษ' };
 
@@ -141,7 +148,14 @@ function drawProps() {
   } else if (b.field === 'line' || b.field === 'box') {
     h += b.field === 'box' ? colorField('bg', 'สีกล่อง', b.bg) + `<div class="field">${n('radius', 'ความมนของมุม (มม.)', 0.5, 0, 100)}</div>` : colorField('color', 'สีเส้น', b.color);
   } else {
-    h += `<div class="num3"><div>${n('size', 'ขนาด (pt)', 0.5, 5, 96).replace('<div>', '').replace(/<\/div>$/, '')}</div>
+    h += `<div class="field"><label for="p-size">ขนาดตัวอักษร (pt)</label><div class="row">
+      <select data-ptpick="size" aria-label="เลือกขนาดมาตรฐาน" style="width:auto">${ptOptions(b.size)}</select>
+      <input id="p-size" type="number" step="0.5" min="4" max="96" data-p="size" value="${b.size}" style="width:90px"><span class="small muted">pt</span></div></div>
+      <div class="field"><label for="p-altSize">ขนาดบรรทัดภาษารอง (pt)</label><div class="row">
+      <select data-ptpick="altSize" style="width:auto"><option value="0"${b.altSize ? '' : ' selected'}>อัตโนมัติ (78%)</option>${ptOptions(b.altSize, true)}</select>
+      <input id="p-altSize" type="number" step="0.5" min="0" max="96" data-p="altSize" value="${b.altSize}" style="width:90px"><span class="small muted">pt (0 = อัตโนมัติ)</span></div></div>
+      <label class="check small"><input type="checkbox" data-p="shrink"${b.shrink ? ' checked' : ''}> ย่อขนาดอัตโนมัติเมื่อข้อความยาวเกินกล่อง (ไม่ติ๊ก = ใช้ขนาดตามที่ตั้งเสมอ)</label>
+      <div class="num3">
       <div><label class="small" for="p-weight">น้ำหนัก</label><select id="p-weight" data-p="weight">${[[300, 'บาง'], [400, 'ปกติ'], [500, 'กลาง'], [600, 'หนา'], [700, 'หนามาก']].map(([v, t]) => `<option value="${v}"${b.weight === v ? ' selected' : ''}>${t}</option>`).join('')}</select></div>
       <div>${n('lineHeight', 'ระยะบรรทัด', 0.05, 0.9, 3).replace('<div>', '').replace(/<\/div>$/, '')}</div></div>`;
     h += `<div class="grid-2">${sel('align', 'จัดแนว', [['left', 'ชิดซ้าย'], ['center', 'กึ่งกลาง'], ['right', 'ชิดขวา'], ['justify', 'เต็มบรรทัด']])}
@@ -274,13 +288,18 @@ $('props').addEventListener('change', (e) => {
   if (!b) return;
   const el = e.target;
   if (el.dataset.cmyk || el.dataset.pal) return; // handled by the panel-wide colour handler
+  if (el.dataset.ptpick) {
+    if (el.value === '') return;
+    update(() => { b[el.dataset.ptpick] = Number(el.value); }, { props: true });
+    return;
+  }
   if (el.dataset.named) {
     const k = el.dataset.named;
     update(() => { b[k] = el.value === 'custom' ? { ...S.layout.colors[NAMED_COLORS.includes(b[k]) ? b[k] : 'ink'] } : el.value; }, { props: true });
   } else if (el.dataset.p) {
     const k = el.dataset.p;
     const val = el.type === 'checkbox' ? el.checked : el.type === 'number' || k === 'weight' ? Number(el.value) : el.value;
-    update(() => { b[k] = val; });
+    update(() => { b[k] = val; }, { props: k === 'size' || k === 'altSize' });
   } else if (el.dataset.pt) {
     update(() => { b.text = { ...b.text, [el.dataset.pt]: el.value }; });
   }
@@ -297,6 +316,10 @@ function getColor(target) {
 }
 document.querySelector('.dz-panel').addEventListener('change', (e) => {
   const el = e.target;
+  if (el.dataset.size) {
+    update(() => { S.layout.sizes[el.dataset.size] = Number(el.value); });
+    return;
+  }
   if (el.dataset.cmyk) {
     const cur = cmykOf(getColor(el.dataset.cmyk), { c: 0, m: 0, y: 0, k: 0 });
     update(() => setColor(el.dataset.cmyk, cmykOf({ ...cur, [el.dataset.ch]: el.value }, cur)), { props: true });

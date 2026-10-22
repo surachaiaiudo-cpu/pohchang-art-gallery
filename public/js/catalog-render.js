@@ -146,6 +146,7 @@ function blockStyle(b) {
       `line-height:${b.lineHeight}`, `font-family:var(--f-${b.font})`);
     if (b.italic) s.push('font-style:italic');
     if (b.upper) s.push('text-transform:uppercase;letter-spacing:.06em');
+    if (b.altSize) s.push(`--alt:${b.altSize}pt`);
     s.push(`justify-content:${{ top: 'flex-start', middle: 'center', bottom: 'flex-end' }[b.vertical] || 'flex-start'}`);
   }
   return s.join(';');
@@ -157,7 +158,7 @@ export function blocksHtml(blocks, w, ctx, { designer = false } = {}) {
     if (content === null && !designer) return '';
     const kind = isImageField(b.field) ? 'img' : ['line', 'box'].includes(b.field) ? 'shape' : 'text';
     const inner = kind === 'text' && content ? `<div class="in">${content}</div>` : (content || '');
-    return `<div class="blk blk-${kind} f-${b.field}" data-id="${esc(b.id)}" style="${blockStyle(b)}">${inner}</div>`;
+    return `<div class="blk blk-${kind} f-${b.field}${kind === 'text' && b.shrink === false ? ' fixed' : ''}" data-id="${esc(b.id)}" style="${blockStyle(b)}">${inner}</div>`;
   }).join('');
 }
 
@@ -167,7 +168,7 @@ export function fitText(root) {
     const base = parseFloat(el.style.fontSize);
     if (!base) return;
     let scale = 1;
-    while (el.scrollHeight > el.clientHeight + 1 && scale > 0.56) {
+    while (!el.classList.contains('fixed') && el.scrollHeight > el.clientHeight + 1 && scale > 0.56) {
       scale -= 0.05;
       el.style.fontSize = `${(base * scale).toFixed(2)}pt`;
     }
@@ -179,7 +180,8 @@ export function fitText(root) {
 export function themeVars(layout) {
   const c = layout.colors;
   return `--c-paper:${cmykToHex(c.paper)};--c-ink:${cmykToHex(c.ink)};--c-muted:${cmykToHex(c.muted)};--c-accent:${cmykToHex(c.accent)};` +
-    `--f-head:'${layout.fonts.head}','IBM Plex Sans Thai',sans-serif;--f-body:'${layout.fonts.body}','IBM Plex Sans Thai',sans-serif;`;
+    `--f-head:'${layout.fonts.head}','IBM Plex Sans Thai',sans-serif;--f-body:'${layout.fonts.body}','IBM Plex Sans Thai',sans-serif;` +
+    Object.entries(layout.sizes || {}).map(([k, v]) => `--fs-${k}:${v}pt;`).join('');
 }
 
 export async function loadBookFonts(layout) {

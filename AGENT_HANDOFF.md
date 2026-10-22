@@ -227,6 +227,9 @@ the work order; there are main (built-in) templates and the preparer can make te
   `catalog`, folder `<slug>/catalog`, `PUT /api/manage/:slug/catalog-cover`, columns `catalog_cover_url/_file_id/_width/_height`,
   migration `0012_catalog_cover`); shown whole (contain) on page 1, recommended 2480 × 3508 px. Without one, a simple
   text cover is generated. The designer lists page parts with add (choose + "เพิ่ม") and delete (✕ per row / selected).
+- **Font sizes in points** (owner, 2026-10-23): each text block has `size` (pt, 4-96, standard list or typed), `altSize`
+  (pt of the 2nd/3rd language lines, 0 = 78 %), `shrink` (auto-shrink when too long; off = exact size); `layout.sizes`
+  sets pt for the statement / panel / list pages (`PAGE_SIZES`: heading, subheading, body, name, small, pageNo → CSS `--fs-*`).
 - Artist email/phone are never put in the catalogue (not in the public work query); fields switched off are not sent.
 - Open questions: none decided beyond the above; e.g. reviewer photos/affiliation would need new reviewer columns.
 
