@@ -206,7 +206,7 @@ details: the owner fills them in. Per-exhibition overrides: accent colour, headi
 `/api/submissions` and `/api/config`; images keep their old Cloudinary URLs (`image_file_id` empty so nothing is
 ever deleted from old accounts); emails kept private, phones not imported.
 
-### 6.10 Printed wall captions (ป้าย caption, owner's request 2026-10-26, branch `captions`)
+### 6.10 Printed wall captions (ป้าย caption, owner's request 2026-10-26; live on `main` since 12d9e20)
 `/manage/<slug>/captions` (link "พิมพ์ป้าย caption" on the manage page). Captions **9 × 5.5 cm, 10 per A4 portrait**
 (2 × 5, grid at 15 mm left / 11 mm top), thin solid cut line round each caption; printed with the browser
 (`window.print()`, `@page A4 margin 0` — tell users to print at 100 % / actual size).
