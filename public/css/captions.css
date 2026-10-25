@@ -34,6 +34,13 @@
 .cap-sizes { display: grid; gap: 6px; margin-top: 6px; }
 .cap-sizes label { display: grid; grid-template-columns: 1fr 140px; align-items: center; gap: 8px; margin: 0; }
 #save-state { margin-top: 10px; }
+.cap-bgimgs { display: grid; gap: 12px; margin-top: 8px; }
+.cap-bgimg-row { display: grid; grid-template-columns: 70px 1fr; gap: 10px; align-items: start; }
+.cap-bgthumb { width: 46px; height: 92px; border: 1px dashed var(--line); border-radius: 4px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fff; text-align: center; }
+.cap-bgthumb.wide { width: 70px; height: 61px; }
+.cap-bgthumb img { width: 100%; height: 100%; object-fit: cover; }
+.cap-inline { display: flex !important; align-items: center; gap: 8px; margin-top: 6px !important; }
+.cap-inline select { width: auto !important; }
 .cap-note { margin-top: 16px; padding: 10px 12px; background: #fffbe8; border: 1px solid #ecd98d; border-radius: 6px; line-height: 1.5; }
 .cap-status { margin-bottom: 10px; }
 .cap-status .warn { color: var(--bad); font-weight: 600; }
@@ -59,10 +66,13 @@
 }
 .cap.empty { display: block; outline-color: #d8d8d8; outline-style: dashed; }
 /* left 30 %: the exhibition logo, whole (never cropped); top / middle / bottom */
-.cap-logo { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3mm; min-width: 0; min-height: 0; }
+.cap-logo, .cap-body { isolation: isolate; }
+/* uploaded background picture: full cover, under the logo / text, strength = opacity */
+.cap-bgimg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -1; pointer-events: none; }
+.cap-logo { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3mm; min-width: 0; min-height: 0; }
 .cap-logo[data-align="top"] { justify-content: flex-start; }
 .cap-logo[data-align="bottom"] { justify-content: flex-end; }
-.cap-logo img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; display: block; min-height: 0; }
+.cap-logo .cap-logo-img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; display: block; min-height: 0; }
 .cap-logo-ph { font-size: 7pt; color: #999; border: 0.2mm dashed #bbb; padding: 2mm; background: rgba(255, 255, 255, 0.6); }
 /* right 70 %: details, after a thin vertical line in the text colour */
 .cap-body { position: relative; border-left: 0.2mm solid color-mix(in srgb, currentColor 40%, transparent); min-width: 0; }

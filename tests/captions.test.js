@@ -99,3 +99,26 @@ test('text stays readable on the darkest end of a gradient', () => {
   assert.equal(textOn({ c1: '#ffffff', c2: '#1a1a1a' }), '#ffffff');
   assert.equal(textOn({ c1: '#000000', c2: '#000000' }, 'dark'), '#111111');
 });
+
+import { withUnit } from '../public/js/caption-text.js';
+
+test('size unit is added only when the text has numbers and no unit, in the main language', () => {
+  assert.equal(withUnit('80 x 100', 'cm', 'th'), '80 x 100 ซม.');
+  assert.equal(withUnit('80×100', 'cm', 'en'), '80×100 cm');
+  assert.equal(withUnit('30*40*20', 'in', 'zh'), '30*40*20 英寸');
+  assert.equal(withUnit('80 x 100 cm', 'mm', 'th'), '80 x 100 cm');
+  assert.equal(withUnit('45 x 60 นิ้ว', 'cm', 'th'), '45 x 60 นิ้ว');
+  assert.equal(withUnit('24" x 36"', 'cm', 'th'), '24" x 36"');
+  assert.equal(withUnit('แปรผันตามพื้นที่', 'cm', 'th'), 'แปรผันตามพื้นที่');
+  assert.equal(withUnit('', 'cm', 'th'), '');
+  const c = captionContent(w, { langs: ['en', 'th'], techniques: techs, unit: 'cm' });
+  assert.equal(c.dims, '80 x 100 cm · 2026'); // already has a unit
+  assert.equal(captionContent({ ...w, dimensions: '60 x 80' }, { langs: ['th'], unit: 'cm' }).dims, '60 x 80 ซม. · 2026');
+});
+
+test('unit and picture strength settings are cleaned', () => {
+  const s = normalizeCaptionSettings({ unit: 'km', imgLogo: 55, imgBody: 40 });
+  assert.equal(s.unit, 'cm');
+  assert.equal(s.imgLogo, 100);
+  assert.equal(s.imgBody, 40);
+});

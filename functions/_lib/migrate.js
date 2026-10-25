@@ -155,6 +155,20 @@ const STEPS = [
       "SELECT 1 AS x FROM pragma_table_info('exhibitions') WHERE name = 'caption_settings'"
     ).first()),
     sql: ["ALTER TABLE exhibitions ADD COLUMN caption_settings TEXT NOT NULL DEFAULT ''"]
+  },
+  {
+    // Caption background pictures (owner, 2026-10-26): one for the logo part (30 %), one for the
+    // details part (70 %), shown full-cover over the colour/gradient with an adjustable strength.
+    name: '0016_caption_bg',
+    needed: async (db) => !(await db.prepare(
+      "SELECT 1 AS x FROM pragma_table_info('exhibitions') WHERE name = 'caption_bg_body_url'"
+    ).first()),
+    sql: [
+      "ALTER TABLE exhibitions ADD COLUMN caption_bg_logo_url TEXT NOT NULL DEFAULT ''",
+      "ALTER TABLE exhibitions ADD COLUMN caption_bg_logo_file_id TEXT NOT NULL DEFAULT ''",
+      "ALTER TABLE exhibitions ADD COLUMN caption_bg_body_url TEXT NOT NULL DEFAULT ''",
+      "ALTER TABLE exhibitions ADD COLUMN caption_bg_body_file_id TEXT NOT NULL DEFAULT ''"
+    ]
   }
 ];
 

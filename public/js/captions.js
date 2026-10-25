@@ -7,7 +7,7 @@ import { checkImageFile, uploadImage, fitForUpload } from './upload.js';
 import { flagUrl } from './countries.js';
 import {
   CAPTION_LANGS, LANG_TH, CAPTION_FIELDS, CAPTION_ORDERS, SIZE_FIELDS, PT_SIZES, EXTRA_LANG_SCALE,
-  LOGO_ALIGNS, BG_AREAS, BG_ANGLES, TEXT_COLORS,
+  LOGO_ALIGNS, BG_AREAS, BG_ANGLES, TEXT_COLORS, UNITS, IMG_OPACITIES,
   normLangs, captionContent, sortWorks, paginate, PER_SHEET,
   normalizeCaptionSettings, captionTemplates, resolveBackground, gradientCss, textOn
 } from './caption-text.js';
@@ -57,6 +57,10 @@ function renderDesign() {
     <input type="checkbox" value="${f.key}"${d.fields[f.key] ? ' checked' : ''}> ${esc(f.label)}</label>`).join('');
   $('o-sizes').innerHTML = SIZE_FIELDS.map((f) => `<label><span>${esc(f.label)}</span>
     <select data-size="${f.key}">${PT_SIZES.map((n) => `<option value="${n}"${n === d.sizes[f.key] ? ' selected' : ''}>${n} pt${n === f.def ? ' (ค่าเริ่มต้น)' : ''}</option>`).join('')}</select></label>`).join('');
+  $('o-unit').innerHTML = opts(UNITS, d.unit);
+  document.querySelectorAll('[data-opacity]').forEach((el) => {
+    el.innerHTML = IMG_OPACITIES.map((n) => `<option value="${n}"${n === d[el.dataset.opacity] ? ' selected' : ''}>${n}%</option>`).join('');
+  });
   $('o-align').innerHTML = LOGO_ALIGNS.map((a) => `<button type="button" role="radio" data-align="${a.key}" aria-checked="${a.key === d.logoAlign}">${esc(a.label)}</button>`).join('');
   renderTemplates();
 }
@@ -121,6 +125,9 @@ function renderList() {
 }
 
 // ------------------------------------------------------------------ captions
+const bgImg = (url, opacity, width) => (url
+  ? `<img class="cap-bgimg" src="${esc(img(url, width))}" alt="" style="opacity:${Number(opacity) / 100}">` : '');
+
 // Inline styles shared by every caption of this print run (colours are validated hex values).
 function captionStyles() {
   const bg = resolveBackground(S.d, S.ex);
@@ -130,21 +137,24 @@ function captionStyles() {
   return {
     cap: `${sizes};--fs-x:${EXTRA_LANG_SCALE};${bg.area === 'whole' ? `background:${fill};color:${ink}` : 'background:#fff;color:#111'}`,
     logo: bg.area === 'logo' ? `background:${fill}` : '',
-    body: bg.area === 'details' ? `background:${fill};color:${ink}` : ''
+    body: bg.area === 'details' ? `background:${fill};color:${ink}` : '',
+    // Background pictures are <img> (not CSS backgrounds) so they print even with "background graphics" off.
+    imgLogo: bgImg(S.ex.caption_bg_logo_url, S.d.imgLogo, 600),
+    imgBody: bgImg(S.ex.caption_bg_body_url, S.d.imgBody, 1200)
   };
 }
 
 function captionHtml(w, st) {
-  const c = captionContent(w, { langs: normLangs(S.d.main, S.d.extra), fields: S.d.fields, techniques: S.ex.techniques || [] });
+  const c = captionContent(w, { langs: normLangs(S.d.main, S.d.extra), fields: S.d.fields, techniques: S.ex.techniques || [], unit: S.d.unit });
   const [a0, ...ax] = c.artists;
   const [t0, ...tx] = c.titles;
   const flag = c.flag ? `<img src="${esc(flagUrl(c.flag))}" alt="">` : '';
   const logo = S.ex.caption_logo_url
-    ? `<img src="${esc(img(S.ex.caption_logo_url, 800))}" alt="">`
+    ? `<img class="cap-logo-img" src="${esc(img(S.ex.caption_logo_url, 800))}" alt="">`
     : '<span class="cap-logo-ph">โลโก้</span>';
   return `<div class="cap" data-id="${w.id}" style="${st.cap}">
-    <div class="cap-logo" data-align="${esc(S.d.logoAlign)}" style="${st.logo}">${logo}</div>
-    <div class="cap-body" style="${st.body}"><div class="cap-in">
+    <div class="cap-logo" data-align="${esc(S.d.logoAlign)}" style="${st.logo}">${st.imgLogo}${logo}</div>
+    <div class="cap-body" style="${st.body}">${st.imgBody}<div class="cap-in">
       ${a0 ? `<div class="cap-artist">${esc(a0)}</div>` : ''}
       ${ax.map((x) => `<div class="cap-artist-x">${esc(x)}</div>`).join('')}
       ${c.place || flag ? `<div class="cap-place">${flag}${esc(c.place)}</div>` : ''}
@@ -215,6 +225,36 @@ async function uploadLogo(file) {
   state.textContent = LOGO_HINT;
 }
 
+// ------------------------------------------------------------------ background pictures
+const BG_COL = { logo: 'caption_bg_logo_url', body: 'caption_bg_body_url' };
+let bgPart = null;
+function renderBgImages() {
+  document.querySelectorAll('.cap-bgimg-row').forEach((row) => {
+    const url = S.ex[BG_COL[row.dataset.part]];
+    const im = row.querySelector('.cap-bgthumb img');
+    im.hidden = !url;
+    row.querySelector('.cap-bgthumb span').hidden = !!url;
+    row.querySelector('[data-act="remove"]').hidden = !url;
+    if (url) im.src = img(url, 400);
+  });
+}
+async function uploadBg(part, file) {
+  const problem = checkImageFile(file);
+  if (problem) { toast(problem, 'error'); return; }
+  const state = document.querySelector(`.cap-bgimg-row[data-part="${part}"] [data-state]`);
+  try {
+    state.textContent = 'กำลังอัปโหลด…';
+    const { upload } = await api(`${M}/upload-auth`, { method: 'POST', body: { kind: 'logo' } });
+    const fitted = await fitForUpload(file, upload.maxBytes, upload.maxPixels);
+    const r = await uploadImage(fitted.file, upload, (p) => { state.textContent = `กำลังอัปโหลด ${p}%`; });
+    const d = await api(`${M}/caption-bg`, { method: 'PUT', body: { part, file: r } });
+    S.ex[BG_COL[part]] = d.url;
+    renderBgImages(); renderSheets();
+    toast('บันทึกรูปพื้นหลังแล้ว', 'ok');
+  } catch (err) { toast(err.message, 'error'); }
+  state.textContent = '';
+}
+
 // ------------------------------------------------------------------ wiring
 const refresh = () => { saveLocal(); renderList(); renderSheets(); };
 const designChanged = () => { renderList(); renderSheets(); saveDesign(); };
@@ -276,6 +316,24 @@ function bind() {
   $('sel-all').addEventListener('click', () => { S.excluded.clear(); renderList(); renderSheets(); });
   $('sel-none').addEventListener('click', () => { pool().forEach((w) => S.excluded.add(w.id)); renderList(); renderSheets(); });
   $('print').addEventListener('click', () => window.print());
+  $('o-unit').addEventListener('change', (e) => { S.d.unit = e.target.value; renderSheets(); saveDesign(); });
+  document.querySelectorAll('[data-opacity]').forEach((el) => el.addEventListener('change', () => {
+    S.d[el.dataset.opacity] = Number(el.value); renderSheets(); saveDesign();
+  }));
+  document.querySelectorAll('.cap-bgimg-row').forEach((row) => {
+    const part = row.dataset.part;
+    row.querySelector('[data-act="pick"]').addEventListener('click', () => { bgPart = part; $('bg-file').value = ''; $('bg-file').click(); });
+    row.querySelector('[data-act="remove"]').addEventListener('click', async () => {
+      if (!confirm('ลบรูปพื้นหลังส่วนนี้?')) return;
+      try {
+        await api(`${M}/caption-bg`, { method: 'PUT', body: { part, file: null } });
+        S.ex[BG_COL[part]] = '';
+        renderBgImages(); renderSheets();
+        toast('ลบรูปพื้นหลังแล้ว', 'ok');
+      } catch (err) { toast(err.message, 'error'); }
+    });
+  });
+  $('bg-file').addEventListener('change', (e) => { const f = e.target.files[0]; if (f && bgPart) uploadBg(bgPart, f); });
   $('logo-pick').addEventListener('click', () => { $('logo-file').value = ''; $('logo-file').click(); });
   $('logo-file').addEventListener('change', (e) => { const f = e.target.files[0]; if (f) uploadLogo(f); });
   $('logo-remove').addEventListener('click', async () => {
@@ -308,6 +366,7 @@ function bind() {
   renderDesign();
   renderPrintOptions();
   renderLogo();
+  renderBgImages();
   bind();
   // Wait for the Thai font so the fitting is measured with the real glyphs.
   try { await document.fonts.load('600 11pt "IBM Plex Sans Thai"'); } catch { /* ignore */ }

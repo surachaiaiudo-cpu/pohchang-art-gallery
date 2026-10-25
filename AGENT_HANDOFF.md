@@ -225,6 +225,13 @@ built from the exhibition's theme colours (`THEME_COLORS` mirrors themes.css; ac
 logo strip accent, logo strip deep→accent, soft whole, wall→white, rich whole, two theme colours — or **custom**
 (area whole / logo / details, two colours, direction, text colour auto/dark/white). A template id follows the theme if
 the theme changes later; custom stores its colours. Text colour "auto" is judged on the gradient's darkest end.
+**Size unit** (setting `unit`: cm / mm / m / in, default cm): `withUnit()` appends it, in the caption's main language
+(ซม. / cm / 厘米 …), only when the size text has numbers and no unit (x × * between numbers do not count as a unit).
+**Background pictures** (owner, 2026-10-26): one for the logo part, one for the details part, uploaded on the page
+(`PUT /api/manage/:slug/caption-bg { part: 'logo'|'body', file }`, columns `caption_bg_logo_url/_file_id`,
+`caption_bg_body_url/_file_id`, migration `0016_caption_bg`). Shown full-cover (`object-fit: cover`) over the
+colour/gradient with strength 10–100 % (settings `imgLogo`, `imgBody`). They are `<img>` elements, so they print even
+with "background graphics" off; text colour on a picture is the user's choice (auto only judges the gradient).
 Print-run choices (status filter, category, order, start slot, selection) stay in localStorage.
 Also: automatic text shrink down to 65 % with a red frame on captions that still overflow. Users must turn on
 "Background graphics" in the print dialog when a background is used. Text logic: `public/js/caption-text.js` (tested in `tests/captions.test.js`).

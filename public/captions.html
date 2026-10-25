@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex">
   <title>ป้าย caption สำหรับพิมพ์</title>
   <link rel="stylesheet" href="/css/app.css?v=3">
-  <link rel="stylesheet" href="/css/captions.css?v=4">
+  <link rel="stylesheet" href="/css/captions.css?v=5">
   <script type="module" src="/js/captions.js"></script>
 </head>
 <body>
@@ -53,6 +53,40 @@
         </fieldset>
 
         <fieldset>
+          <legend>รูปพื้นหลัง</legend>
+          <div class="small muted">รูปเต็มช่อง วางบนสีพื้น/สีไล่ · ปรับความเข้มของรูปได้ · เก็บไว้กับนิทรรศการ</div>
+          <div class="cap-bgimgs">
+            <div class="cap-bgimg-row" data-part="logo">
+              <div class="cap-bgthumb"><img alt="" hidden><span class="small muted">ไม่มีรูป</span></div>
+              <div>
+                <strong class="small">ส่วนโลโก้ (30%)</strong>
+                <div class="small muted">แนะนำอย่างน้อย 400 × 800 px</div>
+                <div class="row" style="margin-top:4px">
+                  <button class="btn btn-ghost btn-sm" type="button" data-act="pick">อัปโหลดรูป</button>
+                  <button class="btn btn-danger btn-sm" type="button" data-act="remove" hidden>ลบรูป</button>
+                </div>
+                <label class="cap-inline">ความเข้มของรูป <select data-opacity="imgLogo"></select></label>
+                <div class="small muted" data-state></div>
+              </div>
+            </div>
+            <div class="cap-bgimg-row" data-part="body">
+              <div class="cap-bgthumb wide"><img alt="" hidden><span class="small muted">ไม่มีรูป</span></div>
+              <div>
+                <strong class="small">ส่วนรายละเอียด (70%)</strong>
+                <div class="small muted">แนะนำอย่างน้อย 900 × 800 px · ถ้าอ่านยาก ให้ลดความเข้มของรูป หรือเลือกสีตัวอักษรเอง</div>
+                <div class="row" style="margin-top:4px">
+                  <button class="btn btn-ghost btn-sm" type="button" data-act="pick">อัปโหลดรูป</button>
+                  <button class="btn btn-danger btn-sm" type="button" data-act="remove" hidden>ลบรูป</button>
+                </div>
+                <label class="cap-inline">ความเข้มของรูป <select data-opacity="imgBody"></select></label>
+                <div class="small muted" data-state></div>
+              </div>
+            </div>
+          </div>
+          <input type="file" id="bg-file" accept="image/png,image/jpeg,image/webp" hidden>
+        </fieldset>
+
+        <fieldset>
           <legend>ภาษา</legend>
           <label for="o-main">ภาษาหลัก</label>
           <select id="o-main"></select>
@@ -64,6 +98,8 @@
           <legend>ข้อมูลบนป้าย</legend>
           <div class="small muted">เรียงบนป้ายตามลำดับนี้ · เทคนิค 1 บรรทัด, ขนาด · ปีที่สร้าง 1 บรรทัด</div>
           <div class="cap-checks" id="o-fields"></div>
+          <label for="o-unit" style="margin-top:8px">หน่วยของขนาด (เติมให้เฉพาะชิ้นที่ยังไม่มีหน่วย)</label>
+          <select id="o-unit"></select>
         </fieldset>
 
         <fieldset>

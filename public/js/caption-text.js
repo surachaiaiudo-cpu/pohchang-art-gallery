@@ -57,8 +57,26 @@ const joinDot = (parts) => parts.filter(Boolean).join(' · ');
 // Pairs [main, ...extra] -> keeps extra values only when they differ from the ones before.
 const distinct = (values) => values.filter((v, i) => v && !values.slice(0, i).includes(v));
 
+// Units for the size line (owner, 2026-10-26): added only when the text has numbers but no unit,
+// written in the caption's main language.
+export const UNITS = [
+  { key: 'cm', label: 'เซนติเมตร (ซม. / cm)', th: 'ซม.', en: 'cm', zh: '厘米' },
+  { key: 'mm', label: 'มิลลิเมตร (มม. / mm)', th: 'มม.', en: 'mm', zh: '毫米' },
+  { key: 'm', label: 'เมตร (ม. / m)', th: 'ม.', en: 'm', zh: '米' },
+  { key: 'in', label: 'นิ้ว (in)', th: 'นิ้ว', en: 'in', zh: '英寸' }
+];
+export function withUnit(text, unit = 'cm', lang = 'th') {
+  const t = clean(text);
+  if (!t || !/\d/.test(t)) return t;
+  // "80 x 100", "80×100", "80*100" carry no unit; any other letters (cm, ซม., นิ้ว, size …) or ″ ' count as one.
+  const rest = t.replace(/^(size|ขนาด)\s*:?\s*/i, '').replace(/(\d)\s*[xX×*]\s*(?=\d)/g, '$1 ');
+  if (/[A-Za-z\u0E00-\u0E7F\u3400-\u9FFF"″'′]/.test(rest)) return t;
+  const u = UNITS.find((x) => x.key === unit) || UNITS[0];
+  return `${t} ${u[lang] || u.en}`;
+}
+
 // One caption's content. `w` is a row from GET /api/manage/:slug/works.
-export function captionContent(w, { langs = ['th'], fields = DEFAULT_FIELDS, techniques = [] } = {}) {
+export function captionContent(w, { langs = ['th'], fields = DEFAULT_FIELDS, techniques = [], unit = 'cm' } = {}) {
   const [m, ...extra] = langs;
   const f = { ...DEFAULT_FIELDS, ...fields };
   const titles = f.title ? distinct([main(w, 'title', m), ...extra.map((l) => own(w, 'title', l))]) : [];
@@ -77,7 +95,7 @@ export function captionContent(w, { langs = ['th'], fields = DEFAULT_FIELDS, tec
   const tech = f.technique
     ? distinct([techniqueIn(techniques, w, m, { fallback: true }), ...extra.map((l) => techniqueIn(techniques, w, l))])
     : [];
-  const dims = joinDot([f.size ? clean(w.dimensions) : '', f.year ? clean(w.year_created) : '']);
+  const dims = joinDot([f.size ? withUnit(w.dimensions, unit, m) : '', f.year ? clean(w.year_created) : '']);
 
   return { artists, flag: f.flag && f.country && isCountryCode(code) ? code : '', place, titles, tech, dims };
 }
@@ -138,6 +156,8 @@ export const BG_ANGLES = [
   { key: 135, label: 'เฉียง ↘' },
   { key: 45, label: 'เฉียง ↗' }
 ];
+// Strength of an uploaded background picture over the colour/gradient (%).
+export const IMG_OPACITIES = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
 export const TEXT_COLORS = [{ key: 'auto', label: 'อัตโนมัติ (อ่านง่าย)' }, { key: 'dark', label: 'เข้ม' }, { key: 'light', label: 'ขาว' }];
 
 // Colours of the 7 exhibition themes (same values as public/css/themes.css).
@@ -193,7 +213,7 @@ export function defaultCaptionSettings() {
   return {
     main: 'th', extra: ['en'], fields: { ...DEFAULT_FIELDS },
     sizes: Object.fromEntries(SIZE_FIELDS.map((f) => [f.key, f.def])),
-    logoAlign: 'middle', template: 'plain',
+    logoAlign: 'middle', template: 'plain', unit: 'cm', imgLogo: 100, imgBody: 100,
     bg: { area: 'none', c1: '#ffffff', c2: '#ffffff', angle: 90 }, text: 'auto'
   };
 }
@@ -221,6 +241,9 @@ export function normalizeCaptionSettings(input) {
   return {
     main, extra, fields, sizes,
     logoAlign: pickKey(s.logoAlign, LOGO_ALIGNS, d.logoAlign),
+    unit: pickKey(s.unit, UNITS, d.unit),
+    imgLogo: num(s.imgLogo, IMG_OPACITIES, d.imgLogo),
+    imgBody: num(s.imgBody, IMG_OPACITIES, d.imgBody),
     template, bg,
     text: pickKey(s.text, TEXT_COLORS, d.text)
   };
