@@ -303,21 +303,25 @@ async function main() {
     document.title = name;
     hero(site, name, exhibitions);
     footer(site, name, exhibitions);
-    // Open calls first (closing soonest), then the rest on view; past exhibitions newest first.
-    const deadline = (e) => (e.submission && e.submission.open ? Date.parse(e.submission_closes_at || '') || 8.64e15 : 9e15);
-    const now = exhibitions.filter((e) => e.status === 'open').sort((a, b) => deadline(a) - deadline(b));
+    // Owner's order (2026-10-25): on view → open call → past. An exhibition may be in both of the
+    // first two. A call that has not opened yet or has ended is not listed under "open call".
+    const deadline = (e) => Date.parse(e.submission_closes_at || '') || 8.64e15;
+    const now = exhibitions.filter((e) => e.status === 'open' && e.on_view);
+    const calls = exhibitions.filter((e) => e.status === 'open' && e.submission && e.submission.open).sort((a, b) => deadline(a) - deadline(b));
     const past = exhibitions.filter((e) => e.status === 'archived');
     // Each card style brings its heading font; load only the ones on this page.
-    loadFonts([...now, ...past].map((e) => (CARD_STYLES.find((c) => c.key === cardStyle(e)) || {}).font));
+    loadFonts([...now, ...calls, ...past].map((e) => (CARD_STYLES.find((c) => c.key === cardStyle(e)) || {}).font));
     $('now-list').innerHTML = now.map(room).join('');
+    $('call-list').innerHTML = calls.map(room).join('');
     $('past-list').innerHTML = past.map(room).join('');
     $('now').hidden = !now.length;
+    $('call').hidden = !calls.length;
     $('past').hidden = !past.length;
     $('loading').hidden = true;
     markStatic();
     window.addEventListener('resize', markStatic);
     animateStrips();
-    if (!now.length && !past.length) { $('loading').hidden = false; $('loading').textContent = t('noNow'); }
+    if (!now.length && !calls.length && !past.length) { $('loading').hidden = false; $('loading').textContent = t('noNow'); }
   } catch (e) {
     $('loading').innerHTML = `<span class="error-text">${esc(localError(e.message))}</span>`;
   }

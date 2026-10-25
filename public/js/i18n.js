@@ -57,7 +57,7 @@ export function pickOther(obj, base) {
 const D = {
   th: {
     siteName: 'หอศิลป์ออนไลน์', skip: 'ข้ามไปเนื้อหา', skipWorks: 'ข้ามไปที่ผลงาน', loading: 'กำลังโหลด…', language: 'ภาษา',
-    navNow: 'กำลังจัดแสดง', navPast: 'นิทรรศการที่ผ่านมา', navStaff: 'สำหรับผู้จัด', mainMenu: 'เมนูหลัก',
+    navNow: 'กำลังจัดแสดง', navCall: 'เปิดรับผลงาน', navPast: 'นิทรรศการที่ผ่านมา', navStaff: 'สำหรับผู้จัด', mainMenu: 'เมนูหลัก',
     lobbyHeadline: 'หอศิลป์ที่เปิดทุกนิทรรศการไว้ในที่เดียว',
     lobbyLead: 'เลือกชมนิทรรศการที่กำลังจัดแสดง ส่งผลงานเข้าร่วมงานที่เปิดรับ หรือย้อนดูนิทรรศการที่ผ่านมา',
     nowTitle: 'กำลังจัดแสดงและเปิดรับผลงาน', pastTitle: 'นิทรรศการที่ผ่านมา',
@@ -156,7 +156,7 @@ const D = {
   },
   en: {
     siteName: 'Online Art Gallery', skip: 'Skip to content', skipWorks: 'Skip to the works', loading: 'Loading…', language: 'Language',
-    navNow: 'On view', navPast: 'Past exhibitions', navStaff: 'For organisers', mainMenu: 'Main menu',
+    navNow: 'On view', navCall: 'Open calls', navPast: 'Past exhibitions', navStaff: 'For organisers', mainMenu: 'Main menu',
     lobbyHeadline: 'Every exhibition, one gallery',
     lobbyLead: 'Visit the exhibitions on view, submit work to an open call, or look back at past shows.',
     nowTitle: 'On view and open for submissions', pastTitle: 'Past exhibitions',
@@ -253,7 +253,7 @@ const D = {
   },
   zh: {
     siteName: '线上美术馆', skip: '跳到正文', skipWorks: '跳到作品', loading: '加载中…', language: '语言',
-    navNow: '正在展出', navPast: '往期展览', navStaff: '主办方入口', mainMenu: '主菜单',
+    navNow: '正在展出', navCall: '作品征集', navPast: '往期展览', navStaff: '主办方入口', mainMenu: '主菜单',
     lobbyHeadline: '所有展览，汇聚一馆',
     lobbyLead: '浏览正在展出的展览，向征集中的展览投稿，或回顾往期展览。',
     nowTitle: '正在展出与作品征集', pastTitle: '往期展览',

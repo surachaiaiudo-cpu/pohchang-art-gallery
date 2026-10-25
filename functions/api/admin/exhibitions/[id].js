@@ -29,6 +29,9 @@ export const onRequestPut = handle(async (context) => {
     const status = v.oneOf(body.status, ['draft', 'open', 'closed', 'archived'], { field: 'สถานะ' });
     stmts.push(db.prepare("UPDATE exhibitions SET status = ?, updated_at = datetime('now') WHERE id = ?").bind(status, id));
   }
+  for (const k of ['on_view', 'accepting']) {
+    if (body[k] !== undefined) stmts.push(db.prepare(`UPDATE exhibitions SET ${k} = ?, updated_at = datetime('now') WHERE id = ?`).bind(body[k] ? 1 : 0, id));
+  }
   if (body.card_style !== undefined) {
     const card = v.oneOf(body.card_style, CARD_STYLES, { field: 'สไตล์การ์ดหน้าแรก' });
     stmts.push(db.prepare("UPDATE exhibitions SET card_style = ?, updated_at = datetime('now') WHERE id = ?").bind(card, id));

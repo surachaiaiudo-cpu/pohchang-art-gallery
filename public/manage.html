@@ -111,7 +111,9 @@
             <div class="field"><label for="s-subtitle_zh">คำโปรยภาษาจีน (ไม่บังคับ)</label><input id="s-subtitle_zh" type="text" lang="zh-Hans"></div>
             <div class="field"><label for="s-venue">สถานที่จัดแสดง</label><input id="s-venue" type="text"></div>
             <div class="field"><label for="s-status">สถานะ</label><select id="s-status"></select>
-              <span class="hint">การเปิดรับผลงานใช้วันที่อย่างเดียว: รับเมื่อสถานะเป็น "เปิด" และอยู่ในช่วงวันเปิด–ปิดรับด้านล่าง ต้องกำหนดวันปิดรับเสมอ ถ้าไม่ใส่วันเปิดรับ จะเริ่มรับทันที</span></div>
+              <span class="hint">เมื่อสถานะเป็น "เปิด" ใช้สวิตช์สองตัวนี้แยกกัน เปิดพร้อมกันได้</span>
+              <label class="check"><input type="checkbox" id="s-on_view"> <strong>จัดแสดง</strong> — ขึ้นในหน้าแรกหมวด "กำลังจัดแสดง"</label>
+              <label class="check"><input type="checkbox" id="s-accepting"> <strong>เปิดรับผลงาน</strong> — รับผลงานเฉพาะช่วงวันเปิด–ปิดรับด้านล่าง และขึ้นในหน้าแรกหมวด "เปิดรับผลงาน" เฉพาะช่วงที่รับอยู่จริง</label></div>
             <div class="field"><label for="s-starts_on">วันเริ่มจัดแสดง</label><input id="s-starts_on" type="date"></div>
             <div class="field"><label for="s-ends_on">วันสิ้นสุด</label><input id="s-ends_on" type="date"></div>
           </div>

@@ -32,10 +32,13 @@ function heroHtml(ex, works) {
   const subtitle = pick(ex, 'subtitle');
   const other = pickOther(ex, 'title');
   const artists = new Set(works.map((w) => w.artist_id)).size;
-  const section = ex.status === 'archived' ? `<a href="/#past">${esc(t('pastTitle'))}</a>` : `<a href="/#now">${esc(t('navNow'))}</a>`;
+  // Breadcrumb to the home page section this exhibition is listed in (on view first, then open call).
+  const section = ex.status === 'archived' ? `<a href="/#past">${esc(t('pastTitle'))}</a>`
+    : ex.on_view ? `<a href="/#now">${esc(t('navNow'))}</a>`
+    : sub.open ? `<a href="/#call">${esc(t('navCall'))}</a>` : '';
   return `
     <div class="hero-main">
-      <nav class="crumbs" aria-label="breadcrumb"><a href="/">${esc(t('siteName'))}</a><span aria-hidden="true">/</span>${section}</nav>
+      <nav class="crumbs" aria-label="breadcrumb"><a href="/">${esc(t('siteName'))}</a>${section ? `<span aria-hidden="true">/</span>${section}` : ''}</nav>
       ${other ? `<p class="eyebrow">${esc(other)}</p>` : ''}
       <h1>${esc(pick(ex, 'title'))}</h1>
       ${subtitle ? `<p class="subtitle">${esc(subtitle)}</p>` : ''}

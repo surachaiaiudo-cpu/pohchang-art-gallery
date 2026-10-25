@@ -128,8 +128,14 @@ Stored values are from the first schema (its CHECK cannot change in place); mean
 `draft` = **ร่าง** (preparing, imports, not public) · `open` = **เปิด** (on view, lobby "on view") ·
 `archived` = **ปิด** (lobby "past exhibitions") · `closed` = **ซ่อน** (hidden, was shown). Public = `open`/`archived`
 (`PUBLIC_STATUSES` in `functions/_lib/exhibitions.js`). Staff may set ร่าง/เปิด/ซ่อน; ปิด is admin-only.
-**Submissions are decided by dates alone** (no switch): `submissionWindow(ex)` needs status `open`, a
+**On view and open call are separate (owner, 2026-10-25)** — two switches on an `open` exhibition, set in
+`/manage/<slug>` settings and the admin drawer: `on_view` = **จัดแสดง** (lobby section "กำลังจัดแสดง" `#now`) and
+`accepting` = **เปิดรับผลงาน** (lobby section "เปิดรับผลงาน" `#call`, only while the call is actually open; upcoming
+or ended calls are not listed there). Both may be on; lobby order is on view → open call → past.
+Submissions: `submissionWindow(ex)` needs status `open`, `accepting = 1`, a
 `submission_closes_at` in the future (no closing date = no call), `submission_opens_at` past or empty, storage set.
+Migration `0013_view_and_call` (0011/0012 are taken by the `catalog` branch) added the columns: open exhibitions got
+`accepting = 1`, and `on_view = 1` when they had shown works. New exhibitions start with both off.
 It returns `phase` none|upcoming|open|ended; public pages show "ปิดรับผลงานแล้ว" / "เปิดรับผลงาน <date>".
 Migration `0009_status_model` (marker row in `site_settings`) turned old `closed` (on view, no submissions) into `open`.
 **Preview deployments share the production D1**: visiting a preview runs its migrations on the real data.

@@ -67,6 +67,8 @@ export const onRequestPut = handle(async (context) => {
     const allowed = user.role === 'admin' ? ['draft', 'open', 'closed', 'archived'] : ['draft', 'open', 'closed'];
     set.status = v.oneOf(b.status, allowed, { field: 'สถานะ' });
   }
+  if (b.on_view !== undefined) set.on_view = b.on_view ? 1 : 0;
+  if (b.accepting !== undefined) set.accepting = b.accepting ? 1 : 0;
   if (b.starts_on !== undefined) set.starts_on = v.dateOnly(b.starts_on, { field: 'วันเริ่มนิทรรศการ' });
   if (b.ends_on !== undefined) set.ends_on = v.dateOnly(b.ends_on, { field: 'วันสิ้นสุดนิทรรศการ' });
   if (b.submission_opens_at !== undefined) set.submission_opens_at = v.dateTime(b.submission_opens_at, { field: 'วันเปิดรับผลงาน' });

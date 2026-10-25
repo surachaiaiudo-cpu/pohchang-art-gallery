@@ -1,5 +1,5 @@
 import { api, esc, img, bytes, thDate, toast, toLocalInput, fromLocalInput, slugFromPath } from './core.js';
-import { requireLogin, tabs, copyText, STATUS_TH, STATUS_HINT, submissionText } from './backoffice.js';
+import { requireLogin, tabs, copyText, STATUS_TH, STATUS_HINT, submissionText, roleText } from './backoffice.js';
 import { PRESETS, cardOptions } from './presets.js';
 import { checkImageFile, uploadImage, fitForUpload } from './upload.js';
 import { countryOptions, isCountryCode, countryName, flagImg } from './countries.js';
@@ -77,7 +77,7 @@ async function loadOverview() {
   S.headingFonts = d.headingFonts;
   document.title = `จัดการ: ${S.ex.title_th}`;
   $('ex-title').textContent = S.ex.title_th;
-  $('ex-sub').textContent = `/e/${S.ex.slug} · ${STATUS_TH[S.ex.status]} · ${submissionText(S.ex).slice(2)}`;
+  $('ex-sub').textContent = [`/e/${S.ex.slug}`, STATUS_TH[S.ex.status], roleText(S.ex), submissionText(S.ex).slice(2)].filter(Boolean).join(' · ');
   $('view-public').href = `/e/${encodeURIComponent(S.ex.slug)}`;
   const quota = S.ex.storage_quota_bytes || 1;
   $('stats').innerHTML = `
@@ -339,6 +339,8 @@ function fillSettings() {
   const canArchive = S.me && S.me.role === 'admin';
   $('s-status').innerHTML = Object.keys(STATUS_TH).filter((k) => k !== 'archived' || canArchive || ex.status === 'archived')
     .map((k) => `<option value="${k}" ${k === ex.status ? 'selected' : ''}>${esc(`${STATUS_TH[k]} — ${STATUS_HINT[k]}`)}</option>`).join('');
+  $('s-on_view').checked = !!ex.on_view;
+  $('s-accepting').checked = !!ex.accepting;
   $('s-starts_on').value = ex.starts_on || '';
   $('s-ends_on').value = ex.ends_on || '';
   $('s-opens').value = toLocalInput(ex.submission_opens_at);
@@ -408,7 +410,7 @@ async function saveSettings(e) {
       body: {
         title_th: v('s-title_th'), title_en: v('s-title_en'), title_zh: v('s-title_zh'),
         subtitle_th: v('s-subtitle_th'), subtitle_en: v('s-subtitle_en'), subtitle_zh: v('s-subtitle_zh'),
-        venue: v('s-venue'), statement_th: v('s-statement_th'), statement_en: v('s-statement_en'), statement_zh: v('s-statement_zh'), status: v('s-status'),
+        venue: v('s-venue'), statement_th: v('s-statement_th'), statement_en: v('s-statement_en'), statement_zh: v('s-statement_zh'), status: v('s-status'), on_view: $('s-on_view').checked, accepting: $('s-accepting').checked,
         starts_on: v('s-starts_on'), ends_on: v('s-ends_on'),
         submission_opens_at: fromLocalInput(v('s-opens')), submission_closes_at: fromLocalInput(v('s-closes')),
         max_works_per_artist: Number(v('s-max') || 3),

@@ -1,5 +1,5 @@
 import { api, esc, bytes, thDate, toast } from './core.js';
-import { requireLogin, tabs, copyText, STATUS_TH, STATUS_HINT, submissionText } from './backoffice.js';
+import { requireLogin, tabs, copyText, STATUS_TH, STATUS_HINT, submissionText, roleText } from './backoffice.js';
 import { PRESETS, presetName, cardOptions } from './presets.js';
 
 const $ = (id) => document.getElementById(id);
@@ -32,8 +32,9 @@ function tempPasswordHtml(user, pw) {
 function submissionCell(e) {
   if (e.status !== 'open') return '';
   const s = e.submission || {};
+  const role = `<div class="small" style="margin-top:6px">${esc(roleText(e))}</div>`;
   const until = s.open && e.submission_closes_at ? ` ถึง ${new Date(e.submission_closes_at).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Bangkok' })}` : '';
-  return `<div class="small ${s.open ? '' : 'muted'}" style="margin-top:6px;${s.open ? 'color:var(--ok)' : ''}">${esc(submissionText(e) + until)}</div>`;
+  return `${role}<div class="small ${s.open ? '' : 'muted'}" style="margin-top:4px;${s.open ? 'color:var(--ok)' : ''}">${esc(submissionText(e) + until)}</div>`;
 }
 
 function renderExRows() {
@@ -61,7 +62,9 @@ function exEditor(e) {
       <div class="field"><label for="ee-status">สถานะ</label><select id="ee-status">
         ${Object.entries(STATUS_TH).map(([k, v]) => `<option value="${k}" ${k === e.status ? 'selected' : ''}>${esc(`${v} — ${STATUS_HINT[k]}`)}</option>`).join('')}
       </select>
-        <span class="hint">การเปิดรับผลงานกำหนดด้วยวันเปิด–ปิดรับในหน้าจัดการของนิทรรศการ</span></div>
+        <span class="hint">เมื่อสถานะเป็น "เปิด" เลือกได้ทั้งสองอย่าง</span>
+        <label class="check"><input type="checkbox" id="ee-on_view" ${e.on_view ? 'checked' : ''}> <strong>จัดแสดง</strong> — หน้าแรกหมวด "กำลังจัดแสดง"</label>
+        <label class="check"><input type="checkbox" id="ee-accepting" ${e.accepting ? 'checked' : ''}> <strong>เปิดรับผลงาน</strong> — รับเฉพาะช่วงวันเปิด–ปิดรับ (ตั้งในหน้าจัดการ)</label></div>
       <div class="field"><label for="ee-card">สไตล์การ์ดหน้าแรก</label><select id="ee-card">${cardOptions(e.card_style || '', e.theme_preset)}</select>
         <span class="hint">หน้าตาการ์ดของนิทรรศการนี้ในหน้าแรก ผู้ดูแลนิทรรศการเปลี่ยนเองได้ในหน้าจัดการ</span></div>
       <div class="field"><span class="label">ผู้ดูแลนิทรรศการนี้</span>
@@ -77,6 +80,7 @@ function exEditor(e) {
         body: {
           slug: $('ee-slug').value.trim(),
           status: $('ee-status').value,
+          on_view: $('ee-on_view').checked, accepting: $('ee-accepting').checked,
           card_style: $('ee-card').value,
           staff_user_ids: [...document.querySelectorAll('input[name="staff"]:checked')].map((x) => Number(x.value))
         }

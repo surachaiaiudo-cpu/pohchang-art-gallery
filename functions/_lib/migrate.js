@@ -117,6 +117,23 @@ const STEPS = [
       "SELECT 1 AS x FROM pragma_table_info('exhibitions') WHERE name = 'card_style'"
     ).first()),
     sql: ["ALTER TABLE exhibitions ADD COLUMN card_style TEXT NOT NULL DEFAULT ''"]
+  },
+  {
+    // Owner's request 2026-10-25: "on view" and "open call" are separate. Two switches on an open
+    // (เปิด) exhibition: on_view = จัดแสดง (listed under "on view"), accepting = เปิดรับ (the call
+    // for work, still only inside its dates). Open exhibitions keep accepting as before; they are on
+    // view when they already have shown works (owner's choice).
+    name: '0013_view_and_call',
+    needed: async (db) => !(await db.prepare(
+      "SELECT 1 AS x FROM pragma_table_info('exhibitions') WHERE name = 'accepting'"
+    ).first()),
+    sql: [
+      'ALTER TABLE exhibitions ADD COLUMN on_view INTEGER NOT NULL DEFAULT 0',
+      'ALTER TABLE exhibitions ADD COLUMN accepting INTEGER NOT NULL DEFAULT 0',
+      `UPDATE exhibitions SET accepting = 1 WHERE status = 'open'`,
+      `UPDATE exhibitions SET on_view = 1 WHERE status = 'open' AND EXISTS
+         (SELECT 1 FROM works w WHERE w.exhibition_id = exhibitions.id AND w.status = 'shown' AND w.deleted_at IS NULL)`
+    ]
   }
 ];
 

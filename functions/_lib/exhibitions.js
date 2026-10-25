@@ -20,10 +20,12 @@ export async function findBySlug(db, slug) {
 // Exhibition status (owner's model, 2026-10-21). The stored values are kept from the first schema
 // because its CHECK constraint cannot be changed in place; what each one means now:
 //   draft    = ร่าง  being prepared (imports go here); not public
-//   open     = เปิด  on view, listed under "on view"; accepts work only inside its submission dates
+//   open     = เปิด  public; two switches decide where it appears (2026-10-25):
+//                    on_view   = จัดแสดง → home page "on view" section
+//                    accepting = เปิดรับ → takes work inside its submission dates; listed under
+//                                "open call" only while the call is actually open
 //   archived = ปิด   finished, listed under past exhibitions; never accepts work
 //   closed   = ซ่อน  hidden from the public (was shown before); never accepts work
-// Accepting submissions is decided by the dates alone; there is no separate switch.
 export const PUBLIC_STATUSES = ['open', 'archived'];
 export const isPublic = (ex) => PUBLIC_STATUSES.includes(ex.status);
 
@@ -57,6 +59,7 @@ export function hasStorage(ex) {
 // phase: 'none' (no call for work), 'upcoming', 'open' or 'ended' - what the public pages show.
 export function submissionWindow(ex, at = Date.now()) {
   if (ex.status !== 'open') return { open: false, phase: 'none', reason: 'นิทรรศการนี้ไม่ได้เปิดรับผลงาน' };
+  if (!ex.accepting) return { open: false, phase: 'none', reason: 'ปิดสวิตช์เปิดรับผลงาน' };
   if (!ex.submission_closes_at) return { open: false, phase: 'none', reason: 'ยังไม่ได้กำหนดวันปิดรับผลงาน' };
   if (at > Date.parse(ex.submission_closes_at)) return { open: false, phase: 'ended', reason: 'ปิดรับผลงานแล้ว' };
   if (ex.submission_opens_at && at < Date.parse(ex.submission_opens_at)) {
@@ -90,6 +93,8 @@ export function publicExhibition(ex) {
     statement_zh: ex.statement_zh || '',
     venue: ex.venue,
     status: ex.status,
+    on_view: !!ex.on_view,
+    accepting: !!ex.accepting,
     starts_on: ex.starts_on,
     ends_on: ex.ends_on,
     submission_opens_at: ex.submission_opens_at,

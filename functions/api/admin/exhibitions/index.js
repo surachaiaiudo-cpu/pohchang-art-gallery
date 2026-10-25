@@ -13,7 +13,7 @@ export const onRequestGet = handle(async (context) => {
   const db = context.env.DB;
   const [ex, members] = await db.batch([
     db.prepare(
-      `SELECT e.id, e.slug, e.title_th, e.status, e.theme_preset, e.card_style, e.storage_bytes, e.created_at,
+      `SELECT e.id, e.slug, e.title_th, e.status, e.on_view, e.accepting, e.theme_preset, e.card_style, e.storage_bytes, e.created_at,
               e.submission_opens_at, e.submission_closes_at, e.cloudinary_cloud_name, e.cloudinary_upload_preset,
               (e.cloudinary_api_secret_enc != '') AS has_secret,
               (e.cloudinary_cloud_name != '' AND (e.cloudinary_upload_preset != '' OR e.cloudinary_api_secret_enc != '')) AS has_storage,

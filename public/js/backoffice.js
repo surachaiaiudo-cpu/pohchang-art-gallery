@@ -48,10 +48,16 @@ export async function copyText(text) {
 export const STATUS_TH = { draft: 'ร่าง', open: 'เปิด', archived: 'ปิด', closed: 'ซ่อน' };
 export const STATUS_HINT = {
   draft: 'กำลังเตรียม คนทั่วไปมองไม่เห็น',
-  open: 'แสดงในหน้าแรกหมวดกำลังจัดแสดง รับผลงานเฉพาะช่วงวันเปิด–ปิดรับ',
+  open: 'เผยแพร่ เลือกได้ว่าจัดแสดง และ/หรือ เปิดรับผลงาน',
   archived: 'จบแล้ว ย้ายไปหมวดนิทรรศการที่ผ่านมา ไม่รับผลงาน',
   closed: 'ซ่อนจากคนทั่วไป ผู้ดูแลยังแก้ไขได้ ไม่รับผลงาน'
 };
+// Where an open exhibition appears: จัดแสดง and/or เปิดรับ (two switches, 2026-10-25).
+export function roleText(e) {
+  if (e.status !== 'open') return '';
+  const parts = [e.on_view ? 'จัดแสดง' : '', e.accepting ? 'เปิดรับ' : ''].filter(Boolean);
+  return parts.length ? parts.join(' + ') : 'ยังไม่จัดแสดง/ไม่เปิดรับ';
+}
 // Short state of the call for work, for the back office.
 export function submissionText(e) {
   const s = e.submission || {};
