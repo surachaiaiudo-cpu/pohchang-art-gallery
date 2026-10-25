@@ -134,6 +134,18 @@ const STEPS = [
       `UPDATE exhibitions SET on_view = 1 WHERE status = 'open' AND EXISTS
          (SELECT 1 FROM works w WHERE w.exhibition_id = exhibitions.id AND w.status = 'shown' AND w.deleted_at IS NULL)`
     ]
+  },
+  {
+    // Printed wall captions (owner, 2026-10-26): the exhibition's logo, printed in the left 30 % of
+    // every caption. Uploaded once per exhibition in /manage/<slug>/captions.
+    name: '0014_caption_logo',
+    needed: async (db) => !(await db.prepare(
+      "SELECT 1 AS x FROM pragma_table_info('exhibitions') WHERE name = 'caption_logo_url'"
+    ).first()),
+    sql: [
+      "ALTER TABLE exhibitions ADD COLUMN caption_logo_url TEXT NOT NULL DEFAULT ''",
+      "ALTER TABLE exhibitions ADD COLUMN caption_logo_file_id TEXT NOT NULL DEFAULT ''"
+    ]
   }
 ];
 

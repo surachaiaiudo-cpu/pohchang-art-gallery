@@ -1,5 +1,6 @@
 // /manage/<slug>/captions - printed wall captions (9 x 5.5 cm, 10 per A4), browser print.
-import { api, esc, toast, slugFromPath } from './core.js';
+import { api, esc, img, toast, slugFromPath } from './core.js';
+import { checkImageFile, uploadImage, fitForUpload } from './upload.js';
 import { requireLogin } from './backoffice.js';
 import { flagUrl } from './countries.js';
 import {
@@ -57,23 +58,25 @@ function renderList() {
   $('o-count').textContent = `(${chosen().length} / ${items.length})`;
 }
 
-function captionHtml(w, number) {
-  const c = captionContent(w, { langs: normLangs(S.o.main, S.o.extra), fields: S.o.fields, techniques: S.ex.techniques || [], number });
-  const [t0, ...tx] = c.titles;
+function captionHtml(w) {
+  const c = captionContent(w, { langs: normLangs(S.o.main, S.o.extra), fields: S.o.fields, techniques: S.ex.techniques || [] });
   const [a0, ...ax] = c.artists;
+  const [t0, ...tx] = c.titles;
   const flag = c.flag ? `<img src="${esc(flagUrl(c.flag))}" alt="">` : '';
-  return `<div class="cap" data-id="${w.id}"><div class="cap-in">
-    ${c.number ? `<div class="cap-no">No. ${esc(c.number)}</div>` : ''}
-    <p class="cap-title">${esc(t0 || '')}</p>
-    ${tx.map((x) => `<div class="cap-title-x">${esc(x)}</div>`).join('')}
-    <div class="cap-rule"></div>
-    <div class="cap-artist">${esc(a0 || '')}</div>
-    ${ax.map((x) => `<div class="cap-artist-x">${esc(x)}</div>`).join('')}
-    <div class="cap-foot">
+  const logo = S.ex.caption_logo_url
+    ? `<img src="${esc(img(S.ex.caption_logo_url, 800))}" alt="">`
+    : '<span class="cap-logo-ph">โลโก้</span>';
+  return `<div class="cap" data-id="${w.id}">
+    <div class="cap-logo">${logo}</div>
+    <div class="cap-body"><div class="cap-in">
+      ${a0 ? `<div class="cap-artist">${esc(a0)}</div>` : ''}
+      ${ax.map((x) => `<div class="cap-artist-x">${esc(x)}</div>`).join('')}
       ${c.place || flag ? `<div class="cap-place">${flag}${esc(c.place)}</div>` : ''}
+      ${t0 ? `<div class="cap-title">${esc(t0)}</div>` : ''}
+      ${tx.map((x) => `<div class="cap-title-x">${esc(x)}</div>`).join('')}
       ${c.meta.map((x) => `<div class="cap-meta">${esc(x)}</div>`).join('')}
-    </div>
-  </div></div>`;
+    </div></div>
+  </div>`;
 }
 
 // Shrinks the text of a caption step by step until it fits (not below 65 %); marks the rest.
@@ -92,10 +95,9 @@ function fit(cap) {
 
 function renderSheets() {
   const works = chosen();
-  // "No." follows the position in the chosen order (1, 2, 3 ...).
-  const sheets = works.length ? paginate(works.map((w, i) => ({ w, n: i + 1 })), S.o.skip) : [];
+  const sheets = works.length ? paginate(works, S.o.skip) : [];
   $('sheets').innerHTML = sheets.map((cells, i) => `<div class="sheet">
-      <div class="grid">${cells.map((x) => (x ? captionHtml(x.w, x.n) : '<div class="cap empty"></div>')).join('')}</div>
+      <div class="grid">${cells.map((x) => (x ? captionHtml(x) : '<div class="cap empty"></div>')).join('')}</div>
       <div class="sheet-no">${esc(slug)} · แผ่น ${i + 1}/${sheets.length}</div>
     </div>`).join('');
   $('print').disabled = !works.length;
@@ -107,6 +109,31 @@ function renderSheets() {
         ? ` · <span class="warn">ข้อความยาวเกินป้าย ${over} ป้าย (กรอบแดง) — ลองปิดภาษาหรือข้อมูลบางอย่าง</span>` : ''}`
       : 'ยังไม่ได้เลือกผลงาน';
   });
+}
+
+const LOGO_HINT = 'PNG พื้นใส หรือ JPG · พื้นที่โลโก้บนป้ายประมาณ 2.1 × 4.9 ซม. · เก็บไว้กับนิทรรศการนี้';
+function renderLogo() {
+  const url = S.ex.caption_logo_url;
+  $('logo-img').hidden = !url;
+  $('logo-none').hidden = !!url;
+  $('logo-remove').hidden = !url;
+  if (url) $('logo-img').src = img(url, 400);
+}
+async function uploadLogo(file) {
+  const problem = checkImageFile(file);
+  if (problem) { toast(problem, 'error'); return; }
+  const state = $('logo-state');
+  try {
+    state.textContent = 'กำลังอัปโหลด…';
+    const { upload } = await api(`${M}/upload-auth`, { method: 'POST', body: { kind: 'logo' } });
+    const fitted = await fitForUpload(file, upload.maxBytes, upload.maxPixels);
+    const r = await uploadImage(fitted.file, upload, (p) => { state.textContent = `กำลังอัปโหลด ${p}%`; });
+    const d = await api(`${M}/caption-logo`, { method: 'PUT', body: { file: r } });
+    S.ex.caption_logo_url = d.caption_logo_url;
+    renderLogo(); renderSheets();
+    toast('บันทึกโลโก้แล้ว', 'ok');
+  } catch (err) { toast(err.message, 'error'); }
+  state.textContent = LOGO_HINT;
 }
 
 const refresh = () => { save(); renderList(); renderSheets(); };
@@ -147,6 +174,17 @@ function bind() {
   $('sel-all').addEventListener('click', () => { S.excluded.clear(); renderList(); renderSheets(); });
   $('sel-none').addEventListener('click', () => { pool().forEach((w) => S.excluded.add(w.id)); renderList(); renderSheets(); });
   $('print').addEventListener('click', () => window.print());
+  $('logo-pick').addEventListener('click', () => { $('logo-file').value = ''; $('logo-file').click(); });
+  $('logo-file').addEventListener('change', (e) => { const f = e.target.files[0]; if (f) uploadLogo(f); });
+  $('logo-remove').addEventListener('click', async () => {
+    if (!confirm('ลบโลโก้ของนิทรรศการนี้?')) return;
+    try {
+      await api(`${M}/caption-logo`, { method: 'PUT', body: { file: null } });
+      S.ex.caption_logo_url = '';
+      renderLogo(); renderSheets();
+      toast('ลบโลโก้แล้ว', 'ok');
+    } catch (err) { toast(err.message, 'error'); }
+  });
 }
 
 (async function init() {
@@ -165,6 +203,7 @@ function bind() {
   if (!CAPTION_ORDERS.some((x) => x.key === S.o.order)) S.o.order = 'display';
   S.o.skip = Math.max(0, Math.min(PER_SHEET - 1, Number(S.o.skip) || 0));
   renderOptions();
+  renderLogo();
   bind();
   // Wait for the Thai font so the fitting is measured with the real glyphs.
   try { await document.fonts.load('600 13pt "IBM Plex Sans Thai"'); } catch { /* ignore */ }

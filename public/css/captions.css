@@ -12,6 +12,8 @@
 .cap-list label { display: flex; gap: 8px; align-items: flex-start; padding: 6px 8px; margin: 0; font-size: 0.85rem; line-height: 1.35; cursor: pointer; }
 .cap-list label span { display: block; }
 .cap-list .muted { font-size: 0.78rem; }
+.cap-logo-box { display: flex; align-items: center; justify-content: center; height: 110px; border: 1px dashed var(--line); border-radius: 6px; background: #fff; }
+.cap-logo-box img { max-height: 96px; max-width: 90%; object-fit: contain; }
 .cap-note { margin-top: 16px; padding: 10px 12px; background: #fffbe8; border: 1px solid #ecd98d; border-radius: 6px; line-height: 1.5; }
 .cap-status { margin-bottom: 10px; }
 .cap-status .warn { color: var(--bad); font-weight: 600; }
@@ -31,20 +33,27 @@
 }
 .cap {
   --s: 1; position: relative; width: 90mm; height: 55mm; overflow: hidden;
+  display: grid; grid-template-columns: 27mm 63mm; /* 30 : 70, owner 2026-10-26 */
   outline: 0.2mm solid #9a9a9a; outline-offset: -0.1mm; /* cut line, centred on the edge */
   font-family: 'IBM Plex Sans Thai', system-ui, 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
 }
-.cap.empty { outline-color: #d8d8d8; outline-style: dashed; }
-.cap-in { position: absolute; inset: 5mm 6mm; display: flex; flex-direction: column; overflow: hidden; }
-.cap-no { margin-bottom: 0.8mm; line-height: 1.2; font-size: calc(var(--s) * 7.5pt); color: #666; letter-spacing: 0.04em; }
-.cap-title { font-size: calc(var(--s) * 13pt); font-weight: 600; line-height: 1.25; margin: 0; }
-.cap-title-x { font-size: calc(var(--s) * 9pt); line-height: 1.3; color: #333; margin-top: 0.4mm; }
-.cap-rule { width: 12mm; height: 0.35mm; background: #111; margin: calc(var(--s) * 2.4mm) 0; flex: none; }
-.cap-artist { font-size: calc(var(--s) * 10.5pt); font-weight: 500; line-height: 1.3; }
+.cap.empty { display: block; outline-color: #d8d8d8; outline-style: dashed; }
+/* left 30 %: the exhibition logo, whole (never cropped) */
+.cap-logo { display: flex; align-items: center; justify-content: center; padding: 3mm; min-width: 0; }
+.cap-logo img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; display: block; }
+.cap-logo-ph { font-size: 7pt; color: #bbb; border: 0.2mm dashed #ccc; padding: 2mm; }
+/* right 70 %: details, after a thin vertical line */
+.cap-body { position: relative; border-left: 0.2mm solid #9a9a9a; min-width: 0; }
+.cap-in { position: absolute; inset: 4mm 4.5mm; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
+.cap-artist { font-size: calc(var(--s) * 11pt); font-weight: 600; line-height: 1.28; }
 .cap-artist-x { font-size: calc(var(--s) * 8.5pt); line-height: 1.3; color: #333; }
-.cap-foot { margin-top: auto; padding-top: calc(var(--s) * 1.6mm); }
-.cap-place, .cap-meta { font-size: calc(var(--s) * 8pt); line-height: 1.35; color: #333; }
+.cap-place { font-size: calc(var(--s) * 8pt); line-height: 1.35; color: #444; margin-top: calc(var(--s) * 0.6mm); }
 .cap-place img { height: 0.95em; width: auto; vertical-align: -0.08em; margin-right: 1.2mm; border: 0.1mm solid #ccc; }
+.cap-title { font-size: calc(var(--s) * 11pt); font-weight: 600; line-height: 1.28; margin-top: calc(var(--s) * 3mm); }
+.cap-title-x { font-size: calc(var(--s) * 8.5pt); line-height: 1.3; color: #333; }
+.cap-meta { font-size: calc(var(--s) * 8pt); line-height: 1.35; color: #333; margin-top: calc(var(--s) * 1.4mm); }
+.cap-meta + .cap-meta { margin-top: 0; }
+.cap-in > :first-child { margin-top: 0; }
 .cap.overflow { box-shadow: inset 0 0 0 0.8mm #e0483e; }
 
 @media print {
@@ -56,4 +65,5 @@
   .sheet:last-child { break-after: auto; page-break-after: auto; }
   .cap.empty { outline: 0; }
   .cap.overflow { box-shadow: none; }
+  .cap-logo-ph { visibility: hidden; }
 }

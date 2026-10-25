@@ -209,13 +209,17 @@ ever deleted from old accounts); emails kept private, phones not imported.
 ### 6.10 Printed wall captions (ป้าย caption, owner's request 2026-10-26, branch `captions`)
 `/manage/<slug>/captions` (link "พิมพ์ป้าย caption" on the manage page). Captions **9 × 5.5 cm, 10 per A4 portrait**
 (2 × 5, grid at 15 mm left / 11 mm top), thin solid cut line round each caption; printed with the browser
-(`window.print()`, `@page A4 margin 0` — tell users to print at 100 % / actual size). Client only: uses
-`GET /api/manage/:slug` and `/works`; no schema or API change. Owner's choices: back-office menu; fields technique ·
-size · year and country / affiliation (on by default; also flag and No. as options); languages chosen each time
-(main + extras; an extra-language line is skipped when that text is empty). Also: shown-only or all statuses,
-category filter, 4 sort orders, per-work selection, "start at slot N" for a partly used sheet, automatic text
-shrink down to 65 % with a red frame on captions that still overflow. Settings remembered in localStorage per
-exhibition. Text logic: `public/js/caption-text.js` (tested in `tests/captions.test.js`).
+(`window.print()`, `@page A4 margin 0` — tell users to print at 100 % / actual size).
+**Layout (owner, 2026-10-26):** split left/right **30 : 70** (27 mm | 63 mm) with a thin vertical line; left = the
+exhibition's **logo** (shown whole), right = details in this order: artist, country, title, technique · size · year
+(one line). Every field can be switched off; affiliation and flag are options, off by default. Languages chosen each
+time (main + extras; an extra-language line is skipped when that text is empty).
+Logo: uploaded once per exhibition on the captions page (`PUT /api/manage/:slug/caption-logo`, upload kind `logo` →
+Cloudinary folder `<slug>/site`), stored in `exhibitions.caption_logo_url` / `caption_logo_file_id` (migration
+`0014_caption_logo`; 0011/0012 belong to `catalog`, 0013 is on main).
+Also: shown-only or all statuses, category filter, 4 sort orders, per-work selection, "start at slot N" for a partly
+used sheet, automatic text shrink down to 65 % with a red frame on captions that still overflow. Settings remembered
+in localStorage per exhibition. Text logic: `public/js/caption-text.js` (tested in `tests/captions.test.js`).
 
 ## 7. API (all JSON; writes require same-origin)
 

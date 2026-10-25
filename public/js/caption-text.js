@@ -6,18 +6,20 @@ export const CAPTION_LANGS = ['th', 'en', 'zh'];
 export const LANG_TH = { th: 'ไทย', en: 'อังกฤษ', zh: 'จีน' };
 const LOCALE = { th: 'th', en: 'en', zh: 'zh-Hans' };
 
-// Fields the preparer can switch on/off (title and artist name are always printed).
+// Fields the preparer can switch on/off, in the order they are printed (owner, 2026-10-26):
+// artist, country, title, then technique · size · year on one line. Affiliation and flag are kept
+// as options, off by default.
 export const CAPTION_FIELDS = [
-  { key: 'technique', label: 'เทคนิค' },
-  { key: 'size', label: 'ขนาด' },
-  { key: 'year', label: 'ปี' },
+  { key: 'artist', label: 'ชื่อศิลปิน' },
   { key: 'country', label: 'ประเทศ' },
   { key: 'flag', label: 'ธงชาติ (หน้าชื่อประเทศ)' },
   { key: 'affiliation', label: 'สังกัด' },
-  { key: 'number', label: 'ลำดับที่ (No.)' }
+  { key: 'title', label: 'ชื่อผลงาน' },
+  { key: 'technique', label: 'เทคนิค' },
+  { key: 'size', label: 'ขนาด' },
+  { key: 'year', label: 'ปีที่สร้าง' }
 ];
-// Owner's choice 2026-10-26: technique · size · year and country / affiliation.
-export const DEFAULT_FIELDS = { technique: true, size: true, year: true, country: true, flag: false, affiliation: true, number: false };
+export const DEFAULT_FIELDS = { artist: true, country: true, flag: false, affiliation: false, title: true, technique: true, size: true, year: true };
 
 const clean = (s) => String(s ?? '').replace(/\s+/g, ' ').trim();
 const cleanTechnique = (s) => clean(s).replace(/^technique\s*:\s*/i, '').trim();
@@ -56,21 +58,21 @@ const joinDot = (parts) => parts.filter(Boolean).join(' · ');
 const distinct = (values) => values.filter((v, i) => v && !values.slice(0, i).includes(v));
 
 // One caption's content. `w` is a row from GET /api/manage/:slug/works.
-export function captionContent(w, { langs = ['th'], fields = DEFAULT_FIELDS, techniques = [], number = '' } = {}) {
+export function captionContent(w, { langs = ['th'], fields = DEFAULT_FIELDS, techniques = [] } = {}) {
   const [m, ...extra] = langs;
   const f = { ...DEFAULT_FIELDS, ...fields };
-  const titles = distinct([main(w, 'title', m), ...extra.map((l) => own(w, 'title', l))]);
+  const titles = f.title ? distinct([main(w, 'title', m), ...extra.map((l) => own(w, 'title', l))]) : [];
   const artistRow = { name_th: w.artist_name_th, name_en: w.artist_name_en, name_zh: w.artist_name_zh };
-  const artists = distinct([main(artistRow, 'name', m), ...extra.map((l) => own(artistRow, 'name', l))]);
+  const artists = f.artist ? distinct([main(artistRow, 'name', m), ...extra.map((l) => own(artistRow, 'name', l))]) : [];
 
-  // Country / affiliation line: country names in every chosen language, joined with " / ".
+  // Country (in every chosen language, joined with " / ") · affiliation.
   const code = clean(w.nationality);
   const countries = f.country && code
     ? distinct(isCountryCode(code) ? langs.map((l) => countryName(code, LOCALE[l])) : [code])
     : [];
   const place = joinDot([countries.join(' / '), f.affiliation ? clean(w.affiliation) : '']);
 
-  // Technique · size · year: first line in the main language, more lines only for a technique
+  // Technique · size · year on one line in the main language; more lines only for a technique
   // that reads differently in the extra languages.
   const tech = f.technique
     ? distinct([techniqueIn(techniques, w, m, { fallback: true }), ...extra.map((l) => techniqueIn(techniques, w, l))])
@@ -78,14 +80,7 @@ export function captionContent(w, { langs = ['th'], fields = DEFAULT_FIELDS, tec
   const meta = [joinDot([tech[0] || '', f.size ? clean(w.dimensions) : '', f.year ? clean(w.year_created) : '']), ...tech.slice(1)]
     .filter(Boolean);
 
-  return {
-    number: f.number ? String(number || '') : '',
-    titles,
-    artists,
-    flag: f.flag && f.country && isCountryCode(code) ? code : '',
-    place,
-    meta
-  };
+  return { artists, flag: f.flag && f.country && isCountryCode(code) ? code : '', place, titles, meta };
 }
 
 // Sort orders for the print run.

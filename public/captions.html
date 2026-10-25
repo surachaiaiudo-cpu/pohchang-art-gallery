@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex">
   <title>ป้าย caption สำหรับพิมพ์</title>
   <link rel="stylesheet" href="/css/app.css?v=3">
-  <link rel="stylesheet" href="/css/captions.css?v=1">
+  <link rel="stylesheet" href="/css/captions.css?v=2">
   <script type="module" src="/js/captions.js"></script>
 </head>
 <body>
@@ -23,7 +23,18 @@
     <div class="cap-layout">
       <section class="card cap-opts" aria-label="ตั้งค่าป้าย">
         <h2>ตั้งค่า</h2>
-        <p class="small muted">ป้ายขนาด 9 × 5.5 ซม. · A4 แนวตั้ง 10 ชิ้นต่อแผ่น (2 × 5) · มีเส้นขอบบางสำหรับตัด</p>
+        <p class="small muted">ป้ายขนาด 9 × 5.5 ซม. · A4 แนวตั้ง 10 ชิ้นต่อแผ่น (2 × 5) · มีเส้นขอบบางสำหรับตัด · ซ้าย 30% โลโก้ / ขวา 70% รายละเอียด</p>
+
+        <fieldset>
+          <legend>โลโก้งาน</legend>
+          <div class="cap-logo-box"><img id="logo-img" alt="โลโก้งาน" hidden><span class="small muted" id="logo-none">ยังไม่มีโลโก้</span></div>
+          <div class="row" style="margin-top:8px">
+            <button class="btn btn-ghost btn-sm" id="logo-pick" type="button">อัปโหลดโลโก้</button>
+            <button class="btn btn-danger btn-sm" id="logo-remove" type="button" hidden>ลบโลโก้</button>
+          </div>
+          <div class="small muted" id="logo-state">PNG พื้นใส หรือ JPG · พื้นที่โลโก้บนป้ายประมาณ 2.1 × 4.9 ซม. · เก็บไว้กับนิทรรศการนี้</div>
+          <input type="file" id="logo-file" accept="image/png,image/jpeg,image/webp" hidden>
+        </fieldset>
 
         <fieldset>
           <legend>ภาษา</legend>
@@ -35,7 +46,7 @@
 
         <fieldset>
           <legend>ข้อมูลบนป้าย</legend>
-          <div class="small muted">ชื่อผลงานและชื่อศิลปินพิมพ์เสมอ</div>
+          <div class="small muted">เรียงบนป้ายตามลำดับนี้ · เทคนิค ขนาด ปี อยู่บรรทัดเดียวกัน</div>
           <div class="cap-checks" id="o-fields"></div>
         </fieldset>
 

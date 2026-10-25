@@ -20,10 +20,9 @@ test('Thai + English caption with technique, size, year, country and affiliation
   const c = captionContent(w, { langs: ['th', 'en'], techniques: techs });
   assert.deepEqual(c.titles, ['แสงเช้า', 'Morning Light']);
   assert.deepEqual(c.artists, ['สมชาย ใจดี', 'Somchai Jaidee']);
-  assert.match(c.place, /^ไทย \/ Thailand · มหาวิทยาลัย/);
+  assert.equal(c.place, 'ไทย / Thailand'); // affiliation is off by default
   assert.deepEqual(c.meta, ['สีน้ำมันบนผ้าใบ · 80 x 100 cm · 2026', 'Oil on canvas']);
   assert.equal(c.flag, '');
-  assert.equal(c.number, '');
 });
 
 test('empty extra-language values are skipped, main language falls back', () => {
@@ -34,11 +33,15 @@ test('empty extra-language values are skipped, main language falls back', () => 
 });
 
 test('fields can be switched off', () => {
-  const c = captionContent(w, { langs: ['th'], techniques: techs, fields: { technique: false, year: false, affiliation: false, flag: true, number: true }, number: 3 });
+  const c = captionContent(w, { langs: ['th'], techniques: techs, fields: { technique: false, year: false, flag: true, title: false } });
   assert.equal(c.place, 'ไทย');
   assert.deepEqual(c.meta, ['80 x 100 cm']);
   assert.equal(c.flag, 'TH');
-  assert.equal(c.number, '3');
+  assert.deepEqual(c.titles, []);
+  assert.deepEqual(c.artists, ['สมชาย ใจดี']);
+  const d = captionContent(w, { langs: ['th'], techniques: techs, fields: { artist: false, country: false, affiliation: true } });
+  assert.deepEqual(d.artists, []);
+  assert.equal(d.place, 'มหาวิทยาลัยเทคโนโลยีราชมงคลรัตนโกสินทร์');
 });
 
 test('technique without a group uses the free text', () => {
