@@ -64,3 +64,36 @@ test('sorting', () => {
   assert.deepEqual(sortWorks([b, a], 'id').map((x) => x.id), [1, 2]);
   assert.deepEqual(sortWorks([a, b], 'artist').map((x) => x.id), [2, 1]);
 });
+
+import { normalizeCaptionSettings, captionTemplates, resolveBackground, textOn, themePalette } from '../public/js/caption-text.js';
+
+test('caption settings are cleaned: bad values fall back to defaults', () => {
+  const s = normalizeCaptionSettings('{"main":"en","extra":["en","zh","xx"],"sizes":{"artist":12,"title":99},"logoAlign":"bottom","bg":{"area":"logo","c1":"#ABCDEF","c2":"red","angle":45},"template":"custom","text":"nope"}');
+  assert.equal(s.main, 'en');
+  assert.deepEqual(s.extra, ['zh']);
+  assert.equal(s.sizes.artist, 12);
+  assert.equal(s.sizes.title, 11);
+  assert.equal(s.logoAlign, 'bottom');
+  assert.deepEqual(s.bg, { area: 'logo', c1: '#abcdef', c2: '#ffffff', angle: 45 });
+  assert.equal(s.text, 'auto');
+  assert.deepEqual(normalizeCaptionSettings('not json'), normalizeCaptionSettings({}));
+  assert.equal(normalizeCaptionSettings({ template: '<script>' }).template, 'plain');
+});
+
+test('templates follow the exhibition theme and its accent override', () => {
+  const ex = { theme_preset: 'craft', theme_overrides: { accent: '#123456' } };
+  assert.equal(themePalette(ex).accent, '#123456');
+  const t = captionTemplates(ex).find((x) => x.id === 'logo-accent');
+  assert.equal(t.c1, '#123456');
+  assert.equal(t.area, 'logo');
+  const bg = resolveBackground({ template: 'logo-accent', bg: {} }, { theme_preset: 'pop' });
+  assert.deepEqual([bg.c1, bg.c2], ['#d1135a', '#2649e8']);
+  const custom = resolveBackground({ template: 'custom', bg: { area: 'whole', c1: '#000000', c2: '#333333', angle: 90 } }, ex);
+  assert.equal(custom.c1, '#000000');
+});
+
+test('text stays readable on the darkest end of a gradient', () => {
+  assert.equal(textOn({ c1: '#ffffff', c2: '#f0f0f0' }), '#111111');
+  assert.equal(textOn({ c1: '#ffffff', c2: '#1a1a1a' }), '#ffffff');
+  assert.equal(textOn({ c1: '#000000', c2: '#000000' }, 'dark'), '#111111');
+});

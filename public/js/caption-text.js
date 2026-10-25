@@ -110,3 +110,136 @@ export function paginate(items, skip = 0) {
   for (let i = 0; i < slots.length; i += PER_SHEET) sheets.push(slots.slice(i, i + PER_SHEET));
   return sheets;
 }
+
+// ------------------------------------------------------------------ design settings
+// Saved with the exhibition (exhibitions.caption_settings, JSON) so the whole team prints the same
+// captions (owner, 2026-10-26). normalizeCaptionSettings() is used by the page and by the server.
+
+// Font size per field, in pt (owner: one size per field; extra-language lines are 80 % of it).
+export const SIZE_FIELDS = [
+  { key: 'artist', label: 'ชื่อศิลปิน', def: 11 },
+  { key: 'place', label: 'ประเทศ / สังกัด', def: 8 },
+  { key: 'title', label: 'ชื่อผลงาน', def: 11 },
+  { key: 'meta', label: 'เทคนิค · ขนาด · ปี', def: 8 }
+];
+export const PT_SIZES = [6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12, 13, 14, 15, 16, 18];
+export const EXTRA_LANG_SCALE = 0.8;
+export const LOGO_ALIGNS = [{ key: 'top', label: 'บน' }, { key: 'middle', label: 'กลาง' }, { key: 'bottom', label: 'ล่าง' }];
+export const BG_AREAS = [
+  { key: 'none', label: 'ไม่มีสีพื้น (ขาว)' },
+  { key: 'whole', label: 'ทั้งใบ' },
+  { key: 'logo', label: 'เฉพาะส่วนโลโก้ (30%)' },
+  { key: 'details', label: 'เฉพาะส่วนรายละเอียด (70%)' }
+];
+export const BG_ANGLES = [
+  { key: 90, label: 'ซ้าย → ขวา' },
+  { key: 270, label: 'ขวา → ซ้าย' },
+  { key: 180, label: 'บน → ล่าง' },
+  { key: 0, label: 'ล่าง → บน' },
+  { key: 135, label: 'เฉียง ↘' },
+  { key: 45, label: 'เฉียง ↗' }
+];
+export const TEXT_COLORS = [{ key: 'auto', label: 'อัตโนมัติ (อ่านง่าย)' }, { key: 'dark', label: 'เข้ม' }, { key: 'light', label: 'ขาว' }];
+
+// Colours of the 7 exhibition themes (same values as public/css/themes.css).
+export const THEME_COLORS = {
+  'white-cube': { wall: '#f4f3f0', ink: '#141414', accent: '#b4321f' },
+  'thai-classic': { wall: '#f0e8d8', ink: '#2b1b12', accent: '#8e2a1e', accent2: '#b8892c' },
+  'thai-contemporary': { wall: '#eeeae4', ink: '#1f1b18', accent: '#27406b' },
+  monochrome: { wall: '#f2f2f2', ink: '#000000', accent: '#000000' },
+  pop: { wall: '#fff1d6', ink: '#1d1035', accent: '#d1135a', accent2: '#2649e8' },
+  craft: { wall: '#ece4d4', ink: '#34291f', accent: '#3f6e4a' },
+  heritage: { wall: '#22161a', ink: '#120a0b', accent: '#d4af37' }
+};
+
+const HEX = /^#[0-9a-f]{6}$/i;
+const hexToRgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+const rgbToHex = (c) => `#${c.map((x) => Math.round(Math.max(0, Math.min(255, x))).toString(16).padStart(2, '0')).join('')}`;
+// t = 0 -> a, t = 1 -> b
+export const mix = (a, b, t) => rgbToHex(hexToRgb(a).map((x, i) => x + (hexToRgb(b)[i] - x) * t));
+export function luminance(hex) {
+  const lin = (c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; };
+  const [r, g, b] = hexToRgb(hex);
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+}
+
+export function themePalette(ex = {}) {
+  const base = THEME_COLORS[ex.theme_preset] || THEME_COLORS['white-cube'];
+  const o = ex.theme_overrides || {};
+  const accent = HEX.test(o.accent || '') ? o.accent.toLowerCase() : base.accent;
+  // A second colour for two-colour gradients: the theme's own, else a lighter accent.
+  const accent2 = base.accent2 || mix(accent, '#ffffff', 0.45);
+  return { ...base, accent, accent2 };
+}
+
+// Gradient templates built from the exhibition's theme colours. id -> { label, area, c1, c2, angle }.
+export function captionTemplates(ex) {
+  const p = themePalette(ex);
+  const deep = mix(p.accent, '#000000', 0.45);
+  return [
+    { id: 'plain', label: 'ขาวเรียบ', area: 'none', c1: '#ffffff', c2: '#ffffff', angle: 90 },
+    { id: 'logo-accent', label: 'แถบโลโก้ไล่สีธีม', area: 'logo', c1: p.accent, c2: p.accent2, angle: 180 },
+    { id: 'logo-deep', label: 'แถบโลโก้เข้ม → สีธีม', area: 'logo', c1: deep, c2: p.accent, angle: 180 },
+    { id: 'soft', label: 'ไล่สีอ่อนทั้งใบ', area: 'whole', c1: mix(p.accent, '#ffffff', 0.82), c2: '#ffffff', angle: 90 },
+    { id: 'wall', label: 'สีผนังธีม → ขาว', area: 'whole', c1: luminance(p.wall) > 0.4 ? p.wall : mix(p.wall, '#ffffff', 0.85), c2: '#ffffff', angle: 135 },
+    { id: 'rich', label: 'ไล่สีเข้มทั้งใบ', area: 'whole', c1: deep, c2: p.accent, angle: 135 },
+    { id: 'duo', label: 'สองสีธีม ทั้งใบ', area: 'whole', c1: p.accent, c2: p.accent2, angle: 45 }
+  ];
+}
+
+const num = (v, list, def) => (list.includes(Number(v)) ? Number(v) : def);
+const pickKey = (v, list, def) => (list.some((x) => x.key === v) ? v : def);
+
+export function defaultCaptionSettings() {
+  return {
+    main: 'th', extra: ['en'], fields: { ...DEFAULT_FIELDS },
+    sizes: Object.fromEntries(SIZE_FIELDS.map((f) => [f.key, f.def])),
+    logoAlign: 'middle', template: 'plain',
+    bg: { area: 'none', c1: '#ffffff', c2: '#ffffff', angle: 90 }, text: 'auto'
+  };
+}
+
+// Anything unknown or malformed falls back to the default; never throws.
+export function normalizeCaptionSettings(input) {
+  let s = input;
+  if (typeof s === 'string') { try { s = JSON.parse(s || '{}'); } catch { s = {}; } }
+  if (!s || typeof s !== 'object' || Array.isArray(s)) s = {};
+  const d = defaultCaptionSettings();
+  const main = CAPTION_LANGS.includes(s.main) ? s.main : d.main;
+  const extra = Array.isArray(s.extra) ? CAPTION_LANGS.filter((l) => l !== main && s.extra.includes(l)) : d.extra.filter((l) => l !== main);
+  const fields = {};
+  for (const f of CAPTION_FIELDS) fields[f.key] = s.fields && typeof s.fields[f.key] === 'boolean' ? s.fields[f.key] : DEFAULT_FIELDS[f.key];
+  const sizes = {};
+  for (const f of SIZE_FIELDS) sizes[f.key] = num(s.sizes && s.sizes[f.key], PT_SIZES, f.def);
+  const b = s.bg && typeof s.bg === 'object' ? s.bg : {};
+  const bg = {
+    area: pickKey(b.area, BG_AREAS, d.bg.area),
+    c1: HEX.test(b.c1 || '') ? b.c1.toLowerCase() : d.bg.c1,
+    c2: HEX.test(b.c2 || '') ? b.c2.toLowerCase() : d.bg.c2,
+    angle: num(b.angle, BG_ANGLES.map((x) => x.key), d.bg.angle)
+  };
+  const template = typeof s.template === 'string' && /^[a-z-]{1,20}$/.test(s.template) ? s.template : d.template;
+  return {
+    main, extra, fields, sizes,
+    logoAlign: pickKey(s.logoAlign, LOGO_ALIGNS, d.logoAlign),
+    template, bg,
+    text: pickKey(s.text, TEXT_COLORS, d.text)
+  };
+}
+
+// The background actually printed: a template follows the exhibition's current theme colours;
+// 'custom' uses the saved colours.
+export function resolveBackground(settings, ex) {
+  if (settings.template !== 'custom') {
+    const t = captionTemplates(ex).find((x) => x.id === settings.template) || captionTemplates(ex)[0];
+    return { area: t.area, c1: t.c1, c2: t.c2, angle: t.angle };
+  }
+  return settings.bg;
+}
+export const gradientCss = (bg) => (bg.c1 === bg.c2 ? bg.c1 : `linear-gradient(${bg.angle}deg, ${bg.c1}, ${bg.c2})`);
+// Text colour on a gradient: judged on its darkest end so every part stays readable.
+export function textOn(bg, choice = 'auto') {
+  if (choice === 'dark') return '#111111';
+  if (choice === 'light') return '#ffffff';
+  return Math.min(luminance(bg.c1), luminance(bg.c2)) > 0.18 ? '#111111' : '#ffffff';
+}

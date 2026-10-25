@@ -146,6 +146,15 @@ const STEPS = [
       "ALTER TABLE exhibitions ADD COLUMN caption_logo_url TEXT NOT NULL DEFAULT ''",
       "ALTER TABLE exhibitions ADD COLUMN caption_logo_file_id TEXT NOT NULL DEFAULT ''"
     ]
+  },
+  {
+    // Caption design saved with the exhibition (owner, 2026-10-26): languages, fields, font sizes,
+    // logo position, gradient template. JSON, see normalizeCaptionSettings() in public/js/caption-text.js.
+    name: '0015_caption_settings',
+    needed: async (db) => !(await db.prepare(
+      "SELECT 1 AS x FROM pragma_table_info('exhibitions') WHERE name = 'caption_settings'"
+    ).first()),
+    sql: ["ALTER TABLE exhibitions ADD COLUMN caption_settings TEXT NOT NULL DEFAULT ''"]
   }
 ];
 

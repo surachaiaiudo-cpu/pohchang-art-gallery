@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex">
   <title>ป้าย caption สำหรับพิมพ์</title>
   <link rel="stylesheet" href="/css/app.css?v=3">
-  <link rel="stylesheet" href="/css/captions.css?v=2">
+  <link rel="stylesheet" href="/css/captions.css?v=3">
   <script type="module" src="/js/captions.js"></script>
 </head>
 <body>
@@ -34,6 +34,22 @@
           </div>
           <div class="small muted" id="logo-state">PNG พื้นใส หรือ JPG · พื้นที่โลโก้บนป้ายประมาณ 2.1 × 4.9 ซม. · เก็บไว้กับนิทรรศการนี้</div>
           <input type="file" id="logo-file" accept="image/png,image/jpeg,image/webp" hidden>
+          <div class="small" style="margin-top:8px">ตำแหน่งโลโก้</div>
+          <div class="cap-seg" role="radiogroup" aria-label="ตำแหน่งโลโก้" id="o-align"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Template สีพื้นหลัง <span class="small muted">(ไล่สีตามธีมของนิทรรศการ)</span></legend>
+          <div class="cap-tpls" id="o-tpls" role="radiogroup" aria-label="Template"></div>
+          <div class="cap-custom" id="o-custom">
+            <label for="o-area">ใส่สีที่</label><select id="o-area"></select>
+            <div class="cap-colors">
+              <label>สีที่ 1 <input type="color" id="o-c1"></label>
+              <label>สีที่ 2 <input type="color" id="o-c2"></label>
+            </div>
+            <label for="o-angle">ทิศทางการไล่สี</label><select id="o-angle"></select>
+            <label for="o-text" style="margin-top:8px">สีตัวอักษร</label><select id="o-text"></select>
+          </div>
         </fieldset>
 
         <fieldset>
@@ -49,6 +65,13 @@
           <div class="small muted">เรียงบนป้ายตามลำดับนี้ · เทคนิค ขนาด ปี อยู่บรรทัดเดียวกัน</div>
           <div class="cap-checks" id="o-fields"></div>
         </fieldset>
+
+        <fieldset>
+          <legend>ขนาดตัวอักษร (pt)</legend>
+          <div class="small muted">ภาษาเพิ่มเติมเล็กลงเหลือ 80% อัตโนมัติ · ถ้าข้อความยาวเกินป้ายจะย่อให้เอง</div>
+          <div class="cap-sizes" id="o-sizes"></div>
+        </fieldset>
+        <div class="small muted" id="save-state" role="status">ค่าข้างบนบันทึกไว้กับนิทรรศการ ทีมงานทุกคนเห็นค่าเดียวกัน</div>
 
         <fieldset>
           <legend>ผลงาน</legend>
@@ -79,6 +102,7 @@
         <div class="cap-note small">
           เวลาพิมพ์ ให้ตั้งขนาดกระดาษ <strong>A4</strong>, ขนาด <strong>100% / ขนาดจริง</strong> (ไม่ใช่ “พอดีหน้า”),
           ขอบกระดาษ <strong>ไม่มี / ค่าเริ่มต้น</strong> และปิด “หัวกระดาษและท้ายกระดาษ” — ป้ายจึงจะได้ 9 × 5.5 ซม. พอดี
+          ถ้าใช้สีพื้นหลัง ให้เปิด <strong>“กราฟิกพื้นหลัง / Background graphics”</strong> ด้วย
           ควรพิมพ์ทดลอง 1 แผ่นแล้ววัดด้วยไม้บรรทัดก่อน
         </div>
       </section>

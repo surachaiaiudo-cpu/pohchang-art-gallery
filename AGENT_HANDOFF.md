@@ -217,9 +217,17 @@ time (main + extras; an extra-language line is skipped when that text is empty).
 Logo: uploaded once per exhibition on the captions page (`PUT /api/manage/:slug/caption-logo`, upload kind `logo` →
 Cloudinary folder `<slug>/site`), stored in `exhibitions.caption_logo_url` / `caption_logo_file_id` (migration
 `0014_caption_logo`; 0011/0012 belong to `catalog`, 0013 is on main).
-Also: shown-only or all statuses, category filter, 4 sort orders, per-work selection, "start at slot N" for a partly
-used sheet, automatic text shrink down to 65 % with a red frame on captions that still overflow. Settings remembered
-in localStorage per exhibition. Text logic: `public/js/caption-text.js` (tested in `tests/captions.test.js`).
+**Design (owner, 2026-10-26, third round), saved with the exhibition** in `exhibitions.caption_settings` (JSON,
+migration `0015_caption_settings`, `PUT /api/manage/:slug/caption-settings`, cleaned by `normalizeCaptionSettings()`
+which the server and page share): languages, fields, **font size per field in pt** (artist / country / title /
+technique·size·year; extra-language lines 80 %), **logo position** top / middle / bottom, **gradient templates**
+built from the exhibition's theme colours (`THEME_COLORS` mirrors themes.css; accent override respected) — plain,
+logo strip accent, logo strip deep→accent, soft whole, wall→white, rich whole, two theme colours — or **custom**
+(area whole / logo / details, two colours, direction, text colour auto/dark/white). A template id follows the theme if
+the theme changes later; custom stores its colours. Text colour "auto" is judged on the gradient's darkest end.
+Print-run choices (status filter, category, order, start slot, selection) stay in localStorage.
+Also: automatic text shrink down to 65 % with a red frame on captions that still overflow. Users must turn on
+"Background graphics" in the print dialog when a background is used. Text logic: `public/js/caption-text.js` (tested in `tests/captions.test.js`).
 
 ## 7. API (all JSON; writes require same-origin)
 
