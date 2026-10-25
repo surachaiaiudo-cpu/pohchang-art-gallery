@@ -150,7 +150,8 @@ function captionHtml(w, st) {
       ${c.place || flag ? `<div class="cap-place">${flag}${esc(c.place)}</div>` : ''}
       ${t0 ? `<div class="cap-title">${esc(t0)}</div>` : ''}
       ${tx.map((x) => `<div class="cap-title-x">${esc(x)}</div>`).join('')}
-      ${c.meta.map((x, i) => `<div class="cap-meta${i ? ' cap-meta-x' : ''}">${esc(x)}</div>`).join('')}
+      ${c.tech.map((x, i) => `<div class="cap-meta cap-tech${i ? ' cap-meta-x' : ''}">${esc(x)}</div>`).join('')}
+      ${c.dims ? `<div class="cap-meta cap-dims">${esc(c.dims)}</div>` : ''}
     </div></div>
   </div>`;
 }

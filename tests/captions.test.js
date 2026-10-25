@@ -21,7 +21,8 @@ test('Thai + English caption with technique, size, year, country and affiliation
   assert.deepEqual(c.titles, ['แสงเช้า', 'Morning Light']);
   assert.deepEqual(c.artists, ['สมชาย ใจดี', 'Somchai Jaidee']);
   assert.equal(c.place, 'ไทย / Thailand'); // affiliation is off by default
-  assert.deepEqual(c.meta, ['สีน้ำมันบนผ้าใบ · 80 x 100 cm · 2026', 'Oil on canvas']);
+  assert.deepEqual(c.tech, ['สีน้ำมันบนผ้าใบ', 'Oil on canvas']);
+  assert.equal(c.dims, '80 x 100 cm · 2026');
   assert.equal(c.flag, '');
 });
 
@@ -29,13 +30,14 @@ test('empty extra-language values are skipped, main language falls back', () => 
   const c = captionContent({ ...w, title_th: '' }, { langs: ['th', 'zh'], techniques: techs });
   assert.deepEqual(c.titles, ['Morning Light']);
   assert.deepEqual(c.artists, ['สมชาย ใจดี']);
-  assert.equal(c.meta[1], '油画');
+  assert.equal(c.tech[1], '油画');
 });
 
 test('fields can be switched off', () => {
   const c = captionContent(w, { langs: ['th'], techniques: techs, fields: { technique: false, year: false, flag: true, title: false } });
   assert.equal(c.place, 'ไทย');
-  assert.deepEqual(c.meta, ['80 x 100 cm']);
+  assert.deepEqual(c.tech, []);
+  assert.equal(c.dims, '80 x 100 cm');
   assert.equal(c.flag, 'TH');
   assert.deepEqual(c.titles, []);
   assert.deepEqual(c.artists, ['สมชาย ใจดี']);

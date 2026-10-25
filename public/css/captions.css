@@ -75,7 +75,8 @@
 .cap-title { font-size: calc(var(--s) * var(--fs-title, 11pt)); font-weight: 600; line-height: 1.28; margin-top: calc(var(--s) * 3mm); }
 .cap-title-x { font-size: calc(var(--s) * var(--fs-title, 11pt) * var(--fs-x, 0.8)); line-height: 1.3; opacity: 0.82; }
 .cap-meta { font-size: calc(var(--s) * var(--fs-meta, 8pt)); line-height: 1.35; opacity: 0.9; margin-top: calc(var(--s) * 1.4mm); }
-.cap-meta-x { margin-top: 0; font-size: calc(var(--s) * var(--fs-meta, 8pt) * var(--fs-x, 0.8)); }
+.cap-meta + .cap-meta { margin-top: 0; }
+.cap-meta-x { font-size: calc(var(--s) * var(--fs-meta, 8pt) * var(--fs-x, 0.8)); }
 .cap-in > :first-child { margin-top: 0; }
 .cap.overflow { box-shadow: inset 0 0 0 0.8mm #e0483e; }
 

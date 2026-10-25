@@ -211,8 +211,8 @@ ever deleted from old accounts); emails kept private, phones not imported.
 (2 × 5, grid at 15 mm left / 11 mm top), thin solid cut line round each caption; printed with the browser
 (`window.print()`, `@page A4 margin 0` — tell users to print at 100 % / actual size).
 **Layout (owner, 2026-10-26):** split left/right **30 : 70** (27 mm | 63 mm) with a thin vertical line; left = the
-exhibition's **logo** (shown whole), right = details in this order: artist, country, title, technique · size · year
-(one line). Every field can be switched off; affiliation and flag are options, off by default. Languages chosen each
+exhibition's **logo** (shown whole), right = details in this order: artist, country, title, technique (own line),
+size · year (one line, owner 2026-10-26). Every field can be switched off; affiliation and flag are options, off by default. Languages chosen each
 time (main + extras; an extra-language line is skipped when that text is empty).
 Logo: uploaded once per exhibition on the captions page (`PUT /api/manage/:slug/caption-logo`, upload kind `logo` →
 Cloudinary folder `<slug>/site`), stored in `exhibitions.caption_logo_url` / `caption_logo_file_id` (migration

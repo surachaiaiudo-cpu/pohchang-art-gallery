@@ -7,7 +7,7 @@ export const LANG_TH = { th: 'ไทย', en: 'อังกฤษ', zh: 'จี�
 const LOCALE = { th: 'th', en: 'en', zh: 'zh-Hans' };
 
 // Fields the preparer can switch on/off, in the order they are printed (owner, 2026-10-26):
-// artist, country, title, then technique · size · year on one line. Affiliation and flag are kept
+// artist, country, title, technique, then size · year on one line. Affiliation and flag are kept
 // as options, off by default.
 export const CAPTION_FIELDS = [
   { key: 'artist', label: 'ชื่อศิลปิน' },
@@ -72,15 +72,14 @@ export function captionContent(w, { langs = ['th'], fields = DEFAULT_FIELDS, tec
     : [];
   const place = joinDot([countries.join(' / '), f.affiliation ? clean(w.affiliation) : '']);
 
-  // Technique · size · year on one line in the main language; more lines only for a technique
-  // that reads differently in the extra languages.
+  // Owner, 2026-10-26: technique on its own line (extra-language techniques right under it when
+  // they read differently), then size · year on one line.
   const tech = f.technique
     ? distinct([techniqueIn(techniques, w, m, { fallback: true }), ...extra.map((l) => techniqueIn(techniques, w, l))])
     : [];
-  const meta = [joinDot([tech[0] || '', f.size ? clean(w.dimensions) : '', f.year ? clean(w.year_created) : '']), ...tech.slice(1)]
-    .filter(Boolean);
+  const dims = joinDot([f.size ? clean(w.dimensions) : '', f.year ? clean(w.year_created) : '']);
 
-  return { artists, flag: f.flag && f.country && isCountryCode(code) ? code : '', place, titles, meta };
+  return { artists, flag: f.flag && f.country && isCountryCode(code) ? code : '', place, titles, tech, dims };
 }
 
 // Sort orders for the print run.
@@ -120,7 +119,7 @@ export const SIZE_FIELDS = [
   { key: 'artist', label: 'ชื่อศิลปิน', def: 11 },
   { key: 'place', label: 'ประเทศ / สังกัด', def: 8 },
   { key: 'title', label: 'ชื่อผลงาน', def: 11 },
-  { key: 'meta', label: 'เทคนิค · ขนาด · ปี', def: 8 }
+  { key: 'meta', label: 'เทคนิค / ขนาด · ปี', def: 8 }
 ];
 export const PT_SIZES = [6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12, 13, 14, 15, 16, 18];
 export const EXTRA_LANG_SCALE = 0.8;
