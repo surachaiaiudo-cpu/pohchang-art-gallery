@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>ป้าย caption สำหรับพิมพ์</title>
+  <link rel="stylesheet" href="/css/app.css?v=3">
+  <link rel="stylesheet" href="/css/captions.css?v=1">
+  <script type="module" src="/js/captions.js"></script>
+</head>
+<body>
+  <header class="topbar" id="topbar"></header>
+  <main class="page cap-page">
+    <div class="page-head">
+      <div><h1>ป้าย caption สำหรับพิมพ์</h1><div class="small muted" id="ex-sub">กำลังโหลด…</div></div>
+      <div class="row">
+        <a class="btn btn-ghost" id="back">กลับไปหน้าจัดการ</a>
+        <button class="btn" id="print" type="button" disabled>พิมพ์</button>
+      </div>
+    </div>
+
+    <div class="cap-layout">
+      <section class="card cap-opts" aria-label="ตั้งค่าป้าย">
+        <h2>ตั้งค่า</h2>
+        <p class="small muted">ป้ายขนาด 9 × 5.5 ซม. · A4 แนวตั้ง 10 ชิ้นต่อแผ่น (2 × 5) · มีเส้นขอบบางสำหรับตัด</p>
+
+        <fieldset>
+          <legend>ภาษา</legend>
+          <label for="o-main">ภาษาหลัก</label>
+          <select id="o-main"></select>
+          <div class="small muted" style="margin-top:6px">ภาษาเพิ่มเติม (พิมพ์เป็นบรรทัดรองเมื่อมีข้อมูล)</div>
+          <div class="cap-checks" id="o-extra"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend>ข้อมูลบนป้าย</legend>
+          <div class="small muted">ชื่อผลงานและชื่อศิลปินพิมพ์เสมอ</div>
+          <div class="cap-checks" id="o-fields"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend>ผลงาน</legend>
+          <label for="o-status">สถานะ</label>
+          <select id="o-status">
+            <option value="shown">จัดแสดง</option>
+            <option value="all">ทุกสถานะ (ยกเว้นที่ลบ)</option>
+          </select>
+          <label for="o-cat" style="margin-top:8px">กลุ่มงาน</label>
+          <select id="o-cat"><option value="">ทุกกลุ่มงาน</option></select>
+          <label for="o-order" style="margin-top:8px">เรียงลำดับ</label>
+          <select id="o-order"></select>
+          <label for="o-skip" style="margin-top:8px">เริ่มพิมพ์ที่ช่อง (สำหรับกระดาษที่ใช้ไปบางส่วน)</label>
+          <select id="o-skip"></select>
+        </fieldset>
+
+        <fieldset>
+          <legend>เลือกผลงานที่จะพิมพ์ <span class="small muted" id="o-count"></span></legend>
+          <div class="row" style="margin-bottom:8px">
+            <button class="btn btn-ghost btn-sm" id="sel-all" type="button">เลือกทั้งหมด</button>
+            <button class="btn btn-ghost btn-sm" id="sel-none" type="button">ไม่เลือกเลย</button>
+          </div>
+          <label class="sr-only" for="o-q">ค้นหา</label>
+          <input id="o-q" type="search" placeholder="ค้นหาชื่อผลงาน/ศิลปิน">
+          <ul class="cap-list" id="o-list"></ul>
+        </fieldset>
+
+        <div class="cap-note small">
+          เวลาพิมพ์ ให้ตั้งขนาดกระดาษ <strong>A4</strong>, ขนาด <strong>100% / ขนาดจริง</strong> (ไม่ใช่ “พอดีหน้า”),
+          ขอบกระดาษ <strong>ไม่มี / ค่าเริ่มต้น</strong> และปิด “หัวกระดาษและท้ายกระดาษ” — ป้ายจึงจะได้ 9 × 5.5 ซม. พอดี
+          ควรพิมพ์ทดลอง 1 แผ่นแล้ววัดด้วยไม้บรรทัดก่อน
+        </div>
+      </section>
+
+      <section class="cap-preview-wrap" aria-label="ตัวอย่างก่อนพิมพ์">
+        <div class="cap-status small" id="status" role="status"></div>
+        <div id="sheets"></div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
