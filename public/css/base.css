@@ -35,7 +35,7 @@ h1, h2, h3 {
 .brand-mark { width: 12px; height: 28px; background: var(--accent); flex: none; }
 .brand-name { display: flex; flex-direction: column; line-height: 1.15; }
 .brand-name b { font-family: var(--font-head); font-weight: var(--head-weight); font-size: 1.2rem; }
-.brand-name small { font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.brand-name small { font-size: .8125rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
 .back-link { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; text-decoration: none; font-weight: 600; }
 .nav { display: flex; gap: 2px; flex-wrap: wrap; align-items: center; }
 .nav a { text-decoration: none; padding: 10px 14px; min-height: 44px; display: inline-flex; align-items: center; border-radius: var(--radius); }
@@ -111,8 +111,9 @@ select.search { width: auto; }
 /* Works: grid / masonry / salon. Each work hangs on the wall with a museum label below. */
 .works { display: grid; gap: 52px 32px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); padding-bottom: 96px; }
 .works > .empty { grid-column: 1 / -1; column-span: all; }
-[data-layout="masonry"] .works { display: block; columns: 4 260px; column-gap: 32px; }
-[data-layout="masonry"] .work-card { break-inside: avoid; margin-bottom: 40px; }
+[data-layout="masonry"] .works { display: flex; align-items: flex-start; gap: 32px; }
+[data-layout="masonry"] .works > .mcol { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 40px; }
+[data-layout="masonry"] .works > .empty { flex: 1; }
 [data-layout="salon"] .works { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); grid-auto-flow: dense; gap: 28px 20px; }
 [data-layout="salon"] .work-card.wide { grid-column: span 2; }
 [data-layout="salon"] .work-card.tall { grid-row: span 2; }
@@ -125,13 +126,13 @@ select.search { width: auto; }
 [data-layout="salon"] .work-card .frame { padding: 16px; }
 .work-card:hover .frame img { transform: scale(1.02); }
 .label { border-left: 2px solid var(--accent); padding-left: 14px; display: flex; flex-direction: column; gap: 2px; }
-.label .no { font-family: var(--font-mono); font-size: .8rem; color: var(--muted); }
+.label .no { font-family: var(--font-mono); font-size: .8125rem; color: var(--muted); }
 .work-card .title { font-family: var(--font-head); font-weight: var(--head-weight); font-size: 1.15rem; line-height: 1.3; margin: 0; }
 .work-card .artist { font-size: .95rem; margin: 2px 0 0; }
 .work-card .meta { color: var(--muted); font-size: .88rem; margin: 0; }
 
 .badge-endorsed {
-  display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; font-weight: 600; line-height: 1.2;
+  display: inline-flex; align-items: center; gap: 6px; font-size: .8125rem; font-weight: 600; line-height: 1.2;
   padding: 5px 10px; border-radius: 999px; background: var(--accent); color: var(--accent-ink);
 }
 .work-card .badge-endorsed { position: absolute; left: 10px; top: 10px; z-index: 1; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25); }
@@ -202,8 +203,8 @@ select.search { width: auto; }
 .ex-card h3 { font-size: 1.45rem; margin: 0; line-height: 1.25; }
 .ex-card .count { font-family: var(--font-mono); font-size: .88rem; color: var(--muted); white-space: nowrap; }
 .ex-card .sub { color: var(--muted); font-size: .95rem; }
-.ex-card .theme-tag { font-size: .8rem; color: var(--muted); }
-.pill { display: inline-block; font-size: .78rem; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line-strong); color: var(--muted); }
+.ex-card .theme-tag { font-size: .8125rem; color: var(--muted); }
+.pill { display: inline-block; font-size: .8125rem; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line-strong); color: var(--muted); }
 .pill.live { border-color: var(--accent); color: var(--accent); }
 /* An exhibition card keeps the lobby's ground but shows the exhibition's own accent. */
 .ex-card[data-theme] { background: transparent; color: #141414; }
@@ -214,7 +215,21 @@ select.search { width: auto; }
 .form-layout { display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start; padding: 48px 0 96px; }
 .form-main { flex: 999 1 600px; min-width: 0; }
 .form-aside { flex: 1 1 300px; min-width: 0; display: grid; gap: 16px; position: sticky; top: 24px; }
-@media (max-width: 960px) { .form-aside { position: static; order: -1; } }
+/* Phones and tablets: the title comes first, then the deadline and the rules (folded), then the form.
+   The category list is left out there because the form's own category choices show it. */
+@media (max-width: 960px) {
+  .form-layout { flex-direction: column; align-items: stretch; gap: 0; }
+  .form-main { display: contents; }
+  .form-main > p.muted, .form-main > h1, .form-main > #intro { order: -3; }
+  .form-aside { position: static; order: -2; margin-bottom: 24px; }
+  .form-aside .aside-cats { display: none; }
+}
+.aside-rules summary { cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.aside-rules summary::-webkit-details-marker { display: none; }
+.aside-rules summary::after { content: '+'; font-size: 1.4rem; line-height: 1; color: var(--muted); }
+.aside-rules[open] summary::after { content: '\2212'; }
+.aside-rules summary h2 { margin: 0; }
+.aside-rules[open] summary { margin-bottom: 8px; }
 .form-page h1 { font-size: clamp(2rem, 4vw, 2.8rem); line-height: 1.1; margin: 0 0 24px; }
 fieldset { border: 0; border-radius: var(--radius); padding: 32px; margin: 0 0 24px; background: var(--surface); box-shadow: 0 0 0 1px var(--line); }
 @media (max-width: 640px) { fieldset { padding: 20px 16px; } }
@@ -323,6 +338,11 @@ img.flag, .work-card img.flag, [data-layout] .work-card img.flag, .work-card:hov
   .room-art { order: -1; height: clamp(200px, 36vh, 320px); }
 }
 .room-title { font-family: var(--font-head); font-weight: var(--head-weight); letter-spacing: var(--head-tracking); font-size: clamp(2rem, 5vw, 4rem); line-height: 1.05; max-width: 22ch; }
+/* Long names (over 26 characters) step down a size so they stay within two lines; a room with no
+   picture has the whole width for its name and no empty height to fill. */
+.room-title.long { font-size: clamp(1.7rem, 3.4vw, 3rem); max-width: 26ch; }
+.room.no-cover .room-title { max-width: 30ch; }
+.room.no-cover { min-height: 0; }
 .room-sub { font-size: 1.1rem; opacity: .9; }
 .room-meta { font-size: .95rem; opacity: .85; }
 .room .status-pill { background: var(--accent); color: var(--accent-ink); }
@@ -408,7 +428,7 @@ img.flag, .work-card img.flag, [data-layout] .work-card img.flag, .work-card:hov
 .room[data-card="monochrome"] .room-inner { align-items: stretch; }
 .room[data-card="monochrome"] .room-text { align-self: stretch; align-content: start; }
 .room[data-card="monochrome"] .room-no { display: block; font-family: var(--font-head); font-weight: 600; font-size: 3rem; line-height: 1; }
-.room[data-card="monochrome"] .room-no .mono { font-size: .8rem; letter-spacing: .08em; vertical-align: top; }
+.room[data-card="monochrome"] .room-no .mono { font-size: .8125rem; letter-spacing: .08em; vertical-align: top; }
 .room[data-card="monochrome"] .room-title { width: 100%; padding-bottom: 12px; border-bottom: 1px solid #000000; }
 .room[data-card="monochrome"] .room-meta { color: #000000; font-family: var(--font-mono); font-size: .82rem; letter-spacing: .04em; }
 .room[data-card="monochrome"] .status-pill { background: #000000; color: #ffffff; border-radius: 0; }
@@ -510,13 +530,13 @@ img.flag, .work-card img.flag, [data-layout] .work-card img.flag, .work-card:hov
 .hero-slide.on .hs-title { transition-delay: 800ms; }
 .hero-slide.on .hs-artist { transition-delay: 900ms; }
 .hero-slide.on .hs-from { transition-delay: 1000ms; }
-.hs-no { font-size: .74rem; letter-spacing: .18em; color: rgba(255, 255, 255, .62); }
+.hs-no { font-size: .8125rem; letter-spacing: .18em; color: rgba(255, 255, 255, .62); }
 .hs-rule { display: block; height: 1px; width: 40px; background: rgba(255, 255, 255, .55); transform-origin: left; }
 .hs-label > .hs-rule { transform: scaleX(0); }
 .hero-slide.on .hs-label > .hs-rule { transform: scaleX(1); transition: opacity 400ms ease 720ms, transform 900ms var(--hs-ease) 720ms; }
 .hs-title { font-family: var(--font-head); font-weight: var(--head-weight); font-size: 1.12rem; line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
 .hs-artist { font-size: .88rem; color: rgba(255, 255, 255, .72); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.hs-from { justify-self: start; max-width: 100%; font-size: .76rem; letter-spacing: .04em; color: rgba(255, 255, 255, .62); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+.hs-from { justify-self: start; max-width: 100%; font-size: .8125rem; letter-spacing: .04em; color: rgba(255, 255, 255, .62); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   padding-block: 6px 2px; text-decoration: none; background: linear-gradient(currentColor, currentColor) left bottom / 0 1px no-repeat; transition: color 250ms ease, background-size 350ms ease; }
 .hs-from:hover, .hs-from:focus-visible { color: #ffffff; background-size: 100% 1px; }
 .hs-from:focus-visible { outline: 2px solid #ffffff; outline-offset: 3px; }
@@ -570,7 +590,7 @@ img.flag, .work-card img.flag, [data-layout] .work-card img.flag, .work-card:hov
 .lobby-foot a { color: #ffffff; }
 .lobby-foot .brand-name small { color: #a8a59e; }
 .foot-grid { display: grid; gap: 36px 40px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); padding-top: 56px; padding-bottom: 40px; }
-.foot-col h2 { font-family: var(--font-body); font-size: .8rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: #a8a59e; margin: 0 0 14px; }
+.foot-col h2 { font-family: var(--font-body); font-size: .8125rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: #a8a59e; margin: 0 0 14px; }
 .foot-col ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .foot-col li a { text-decoration: none; display: inline-flex; min-height: 32px; align-items: center; }
 .foot-col li a:hover { text-decoration: underline; }

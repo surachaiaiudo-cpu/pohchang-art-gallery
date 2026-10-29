@@ -116,6 +116,8 @@ Required: name, nationality (ISO list), email, consent; per work: image, title, 
 exhibition's list; the technique text is then optional detail), category (+ sub-type,
 + video link for video art). Emails/phones never leave the back office.
 Rate limits per IP per hour: ticket 150, upload 240, submit 60; per exhibition uploads 1500/h.
+Layout (2026-10-29): on screens ≤960px the title comes first, then the deadline card and the rules (folded,
+`details.aside-rules`), then the form; the category card is hidden there (the form's chips show the list).
 
 ### 6.2 Screening and expert panel
 Curators (staff assigned to the exhibition, or admins) screen works in `/manage/<slug>` (shown / rejected).
@@ -199,6 +201,14 @@ below: a dark footer (organiser, address, contact, social links, exhibition list
 Hero text and footer details are **edited by admins at `/admin` → "ตั้งค่าหอศิลป์"** in th/en/zh (`site_settings` table,
 `GET /api/site`, `GET/PUT /api/admin/site`, `functions/_lib/site.js`); empty fields are hidden. Never invent these
 details: the owner fills them in. Per-exhibition overrides: accent colour, heading font, ornament level, layout.
+
+**Design review fixes (2026-10-29, taste-skill review, PR "Design review fixes (group A)"):** masonry keeps reading
+order across rows (exhibition.js `masonry()`: each work goes into the shortest column, estimated from
+image_width/height; re-laid out when the column count changes; never CSS `columns`, which put No. 001 beside
+No. 049); lobby room names over 26 characters get `.room-title.long` (one size smaller, two lines max) and a room
+with no picture has no minimum height; the work page hint on touch screens is `figHintTouch` (Previous / Next, not
+arrow keys); no public text under 13px. Review notes and the owner's open "group B" questions (mono catalogue
+numbers, ornaments, eyebrows, number of typefaces) are in the claude.ai project doc `claude/taste-review-2026-10-29.md`.
 
 ### 6.8 Importing old events
 `/admin` → "นำเข้างานจากระบบเดิม": preview (`step: preview`), then create a DRAFT exhibition and import in chunks of

@@ -92,7 +92,7 @@ function renderWorks() {
   }
   const label = pick(state.ex, 'badge_label');
   const cats = state.ex.categories;
-  el.innerHTML = list.map((w, i) => {
+  const cards = list.map((w, i) => {
     const title = pick(w, 'title'), name = pick(w, 'artist_name');
     const meta = [catLabel(cats, w), techniqueLabel(state.ex.techniques, w), w.dimensions].filter(Boolean).join(' · ');
     return `<a class="work-card ${cardClass(w, i)}" href="/e/${encodeURIComponent(slug)}/work/${w.id}">
@@ -109,8 +109,31 @@ function renderWorks() {
         ${meta ? `<p class="meta">${esc(meta)}</p>` : ''}
       </div>
     </a>`;
-  }).join('');
+  });
+  el.innerHTML = state.ex.layout === 'masonry' ? masonry(list, cards) : cards.join('');
 }
+
+// Masonry keeps reading order across the rows: each work goes into the column that is shortest so
+// far (heights estimated from the stored image size), so No. 001, 002, 003 … run left to right
+// instead of down the first column (CSS columns did that: No. 001 sat beside No. 049).
+function masonryCols() {
+  const w = $('works').clientWidth || innerWidth;
+  return Math.max(1, Math.min(4, Math.floor((w + 32) / (260 + 32))));
+}
+function masonry(list, cards) {
+  const n = masonryCols();
+  const cols = Array.from({ length: n }, () => ({ h: 0, html: [] }));
+  list.forEach((w, i) => {
+    const c = cols.reduce((a, b) => (b.h < a.h - 1 ? b : a));
+    c.html.push(cards[i]);
+    c.h += (w.image_width && w.image_height ? w.image_height / w.image_width : 1) + 0.45; // + the label
+  });
+  state.masonryCols = n;
+  return cols.map((c) => `<div class="mcol">${c.html.join('')}</div>`).join('');
+}
+addEventListener('resize', () => {
+  if (state.ex && state.ex.layout === 'masonry' && state.masonryCols && masonryCols() !== state.masonryCols) renderWorks();
+});
 
 // Technique filter: groups that have works, in the exhibition's order. Works whose technique a
 // curator has not confirmed yet only show under "all".
