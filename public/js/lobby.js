@@ -63,7 +63,7 @@ function room(e, i) {
       <span class="room-text">
         <span class="room-no" aria-hidden="true"><span class="mono">No.</span> ${String(i + 1).padStart(2, '0')}</span>
         ${live ? `<span class="status-pill">${esc(t('openCall'))}</span>` : callNote(e)}
-        <span class="room-title">${esc(pick(e, 'title'))}</span>
+        <span class="room-title${[...pick(e, 'title')].length > 26 ? ' long' : ''}">${esc(pick(e, 'title'))}</span>
         <span class="room-rule" aria-hidden="true"></span>
         ${other ? `<span class="room-sub">${esc(other)}</span>` : ''}
         ${meta ? `<span class="room-meta">${esc(meta)}</span>` : ''}

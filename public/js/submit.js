@@ -293,16 +293,16 @@ async function main() {
           <span class="big">${esc(fmtDate(ex.submission_closes_at))}</span>
           <span class="soft">${esc(t('atTime', { time: fmtTime(ex.submission_closes_at) }))}</span>` : ''}
       </div>
-      <div class="aside-card">
-        <h2>${esc(t('rulesTitle'))}</h2>
+      <details class="aside-card aside-rules"${matchMedia('(min-width: 961px)').matches ? ' open' : ''}>
+        <summary><h2>${esc(t('rulesTitle'))}</h2></summary>
         <ul>
           <li>${esc(t('ruleMax', { n: Number(ex.max_works_per_artist) }))}</li>
           <li>${esc(t('fileNote'))}</li>
           <li>${esc(t('ruleScreen'))}</li>
           ${ex.review_panel_size ? `<li>${esc(t('ruleBadge', { k: ex.review_threshold, n: ex.review_panel_size, badge: pick(ex, 'badge_label') }))}</li>` : ''}
         </ul>
-      </div>
-      ${cats.length ? `<div class="aside-card"><h2>${esc(t('category'))}</h2><span>${esc(catList)}</span></div>` : ''}`;
+      </details>
+      ${cats.length ? `<div class="aside-card aside-cats"><h2>${esc(t('category'))}</h2><span>${esc(catList)}</span></div>` : ''}`;
     $('aside').hidden = false;
     // Flags inside the list where the system draws flag emoji; otherwise a flag image beside it.
     const emoji = canShowFlagEmoji();

@@ -33,7 +33,7 @@ async function main() {
     el.innerHTML = `
       <figure class="work-figure">
         <div class="wall"><img id="main-img" src="${esc(img(w.image_url, 1600))}" alt="${esc(t('by', { title, artist: name }))}"></div>
-        <figcaption>${esc(t('figHint'))}</figcaption>
+        <figcaption>${esc(t(matchMedia('(hover: none)').matches ? 'figHintTouch' : 'figHint'))}</figcaption>
       </figure>
       <article class="work-info" aria-labelledby="w-title">
         ${w.endorsed ? `<p style="margin:0">${badgeHtml(pick(ex, 'badge_label'))}</p>` : ''}
