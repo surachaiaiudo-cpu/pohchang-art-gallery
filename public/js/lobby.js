@@ -148,23 +148,38 @@ function roomMeta(e) {
   const dates = e.starts_on ? `${fmtDate(e.starts_on)}${e.ends_on ? ` – ${fmtDate(e.ends_on)}` : ''}` : '';
   return [e.venue, dates, e.work_count ? t('nWorks', { n: e.work_count }) : ''].filter(Boolean).join(' · ');
 }
+// With a poster (the exhibition's cover image set in its settings) the poster is the room's main
+// picture, hung large on the wall, and a few works sit beside the name (owner's request
+// 2026-10-29). Without one, the wall holds up to four works and the first is the largest.
 function room(e) {
-  const picks = shuffle(e.samples || []).slice(0, 4).map((w) => w.url);
-  const cover = e.hero_url || e.cover_url;
-  const pics = picks.length ? picks : (cover ? [cover] : []);
+  const poster = e.hero_url;
+  const title = pick(e, 'title');
   const other = pickOther(e, 'title');
+  const works = shuffle(e.samples || []).slice(0, poster ? 3 : 4).map((w) => w.url);
+  const text = `
+        <span class="room-b-name">${esc(title)}</span>
+        ${other ? `<span class="room-b-other">${esc(other)}</span>` : ''}
+        <span class="room-b-meta">${esc(roomMeta(e))}</span>
+        <span class="room-b-go">${esc(t('enterRoom'))} →</span>`;
+  if (poster) {
+    return `<a class="room-b has-poster" href="/e/${encodeURIComponent(e.slug)}" ${look(e)}>
+    <span class="wrap room-b-in">
+      <span class="room-b-poster"><img src="${esc(img(poster, 1200))}" alt="${esc(t('posterOf', { name: title }))}" loading="lazy"></span>
+      <span class="room-b-side">
+        <span class="room-b-text">${text}</span>
+        ${works.length ? `<span class="room-b-works">${works.map((u) => `<img src="${esc(img(u, 500))}" alt="" loading="lazy">`).join('')}</span>` : ''}
+      </span>
+    </span>
+  </a>`;
+  }
+  const pics = works.length ? works : (e.cover_url ? [e.cover_url] : []);
   const wall = pics.length
     ? pics.map((u, k) => `<img${k ? '' : ' class="lead"'} src="${esc(img(u, k ? 500 : 900))}" alt="" loading="lazy">`).join('')
     : `<p class="empty-wall">${esc(t('wallEmpty'))}</p>`;
   return `<a class="room-b" href="/e/${encodeURIComponent(e.slug)}" ${look(e)}>
     <span class="wrap room-b-in">
       <span class="room-b-wall">${wall}</span>
-      <span class="room-b-text">
-        <span class="room-b-name">${esc(pick(e, 'title'))}</span>
-        ${other ? `<span class="room-b-other">${esc(other)}</span>` : ''}
-        <span class="room-b-meta">${esc(roomMeta(e))}</span>
-        <span class="room-b-go">${esc(t('enterRoom'))} →</span>
-      </span>
+      <span class="room-b-text">${text}</span>
     </span>
   </a>`;
 }

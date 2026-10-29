@@ -616,7 +616,9 @@ img.flag, .work-card img.flag, [data-layout] .work-card img.flag, .work-card:hov
 .ex-call { color: var(--muted); margin: 0 0 24px; }
 .ex-call strong { color: var(--accent); }
 .ex-wall .hero-image { background: transparent; padding: 0; margin: 0; }
-.ex-wall .hero-image img { width: auto; max-width: 100%; max-height: 420px; aspect-ratio: auto; object-fit: contain; display: block; margin-left: auto; }
+.ex-wall .hero-side { flex: 0 1 auto; }
+.ex-wall .hero-image img { width: auto; max-width: 100%; max-height: clamp(360px, 40vw, 600px); aspect-ratio: auto; object-fit: contain; display: block; margin-left: auto; box-shadow: var(--art-shadow); border: var(--art-frame); }
+@media (max-width: 700px) { .ex-wall .hero-image img { margin: 0 auto; max-height: 460px; } }
 .toolbar-band { border-top: 0; border-bottom: 0; }
 .toolbar select.search, .toolbar input.search { border-color: transparent; background: var(--wall); }
 .seg { border: 0; background: var(--wall); }

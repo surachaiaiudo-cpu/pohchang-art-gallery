@@ -209,7 +209,9 @@ the lobby is one system, not the 7 card styles: a wall (#efeeea) with ONE work h
 open calls on one accent field with whole days left. Styles in `public/css/lobby.css`. Each room and each open call is a band
 in its exhibition's own look (owner, 2026-10-29: exhibitions must look different): `data-theme` = `cardStyle(e)` (the
 lobby card style set in /admin, else the theme) plus its accent/heading-font overrides; band = `--bg`, wall = `--wall`,
-name in `--font-head`, 6px `--accent` bar on top. The old card layouts (`.room[data-card]` in base.css) are unused. Exhibition page: title on the theme's `--wall` with one summary line
+name in `--font-head`, 6px `--accent` bar on top. A room whose exhibition has a poster (`hero_url`)
+shows the poster large as its main picture, with up to 3 works beside the name (owner, 2026-10-29); the exhibition page
+shows the poster whole and large beside the title. The old card layouts (`.room[data-card]` in base.css) are unused. Exhibition page: title on the theme's `--wall` with one summary line
 (`nArtists` key), hero image whole, filled filters, label number in the text face (base.css "Design B" block).
 
 **Design review fixes (2026-10-29, taste-skill review, PR "Design review fixes (group A)"):** masonry keeps reading

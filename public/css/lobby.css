@@ -74,6 +74,15 @@
 .room-b-meta { font-size: 1.06rem; }
 .room-b-go { color: var(--accent); font-weight: 600; margin-top: 8px; }
 .room-b:hover .room-b-go { text-decoration: underline; }
+/* A room with a poster: the poster hangs large on the wall; name, details and a few works beside it. */
+.room-b.has-poster .room-b-in { align-items: stretch; }
+.room-b-poster { flex: 0 1 auto; background: var(--wall); padding: 40px; display: flex; align-items: center; justify-content: center; }
+.room-b-poster img { display: block; width: auto; height: auto; max-width: 100%; max-height: clamp(360px, 38vw, 560px); border: var(--art-frame); box-shadow: var(--art-shadow); transition: transform 300ms ease; }
+.room-b:hover .room-b-poster img { transform: translateY(-4px); }
+.room-b-side { flex: 1 1 340px; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 32px; }
+.room-b-side .room-b-text { padding-bottom: 0; }
+.room-b-works { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; background: var(--wall); padding: 28px; }
+.room-b-works img { display: block; width: auto; height: auto; max-width: 100%; max-height: 150px; border: var(--art-frame); }
 @media (max-width: 700px) {
   .rooms-b { padding-top: 56px; }
   .room-b { padding: 40px 0; }
@@ -83,6 +92,13 @@
   .room-b-wall img { max-height: 104px; max-width: 46%; }
   .room-b-wall img.lead { max-height: 180px; max-width: 100%; }
   .room-b-wall img:nth-child(n + 4) { display: none; }
+  .room-b.has-poster .room-b-in { flex-direction: column; }
+  .room-b-poster, .room-b-side { flex: none; }
+  .room-b-side { gap: 20px; }
+  .room-b-poster { padding: 24px 16px; }
+  .room-b-poster img { max-height: 420px; }
+  .room-b-works { padding: 16px; gap: 10px; }
+  .room-b-works img { max-height: 96px; max-width: 30%; }
 }
 
 /* ---------- Open calls: a heading on the gallery's accent, then each call in its own colours ---------- */
