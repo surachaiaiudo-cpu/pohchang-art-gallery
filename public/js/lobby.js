@@ -157,8 +157,9 @@ function callCard(e) {
   const close = Date.parse(e.submission_closes_at || '');
   let left = '';
   if (close) {
-    const days = Math.ceil((close - Date.now()) / DAY);
-    left = days <= 1 ? t('closesToday') : t('daysLeft', { n: days });
+    // Whole days left (2 days 11 hours shows as 2); under a day reads "closes today".
+    const days = Math.floor((close - Date.now()) / DAY);
+    left = days < 1 ? t('closesToday') : t('daysLeft', { n: days });
   }
   const when = close ? t('closesOn', { d: `${fmtDate(e.submission_closes_at)} · ${fmtTime(e.submission_closes_at)}` }) : '';
   const base = `/e/${encodeURIComponent(e.slug)}`;
