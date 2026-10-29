@@ -6,62 +6,69 @@
   <title>หอศิลป์ออนไลน์</title>
   <meta name="description" content="นิทรรศการศิลปะออนไลน์ ที่กำลังจัดแสดงและนิทรรศการที่ผ่านมา">
   <link rel="stylesheet" href="/css/themes.css?v=7">
-  <link rel="stylesheet" href="/css/base.css?v=10">
-  <script type="module" src="/js/lobby.js?v=5"></script>
+  <link rel="stylesheet" href="/css/base.css?v=12">
+  <link rel="stylesheet" href="/css/lobby.css?v=4">
+  <script type="module" src="/js/lobby.js?v=9"></script>
 </head>
-<body>
+<body class="lobby-b">
   <a class="sr-only" href="#main" data-i18n="skip">ข้ามไปเนื้อหา</a>
-  <header class="site-head">
-    <div class="wrap">
-      <a class="brand" href="/">
-        <span class="brand-mark" aria-hidden="true"></span>
-        <span class="brand-name"><b id="site-name">หอศิลป์ออนไลน์</b><small>Online Art Gallery</small></span>
-      </a>
-      <div class="head-right">
-        <nav class="nav" aria-label="เมนูหลัก" data-i18n-aria="mainMenu">
-          <a href="/login" class="quiet" data-i18n="navStaff">สำหรับผู้จัด</a>
-        </nav>
-        <span id="lang"></span>
-      </div>
-    </div>
-  </header>
 
-  <section class="hero-band" id="hero" aria-labelledby="hero-title">
-    <div class="hero-slides" id="hero-slides"></div>
-    <div class="wrap hs-ui" id="hero-ui" hidden>
-      <span class="hs-segs" id="hero-segs"></span>
-      <span class="hs-nav">
-        <button type="button" class="hs-btn" id="hero-prev" data-i18n-aria="heroPrev" aria-label="ผลงานก่อนหน้า"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
-        <button type="button" class="hs-btn" id="hero-next" data-i18n-aria="heroNext" aria-label="ผลงานถัดไป"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
-      </span>
+  <!-- Design B (2026-10-29): one work hangs whole on the wall, its museum label beside it, and the
+       gallery's name set across the whole width underneath. -->
+  <section class="wall-hero" id="hero" aria-labelledby="site-name">
+    <div class="wrap wall-top">
+      <nav class="wall-nav" aria-label="เมนูหลัก" data-i18n-aria="mainMenu">
+        <a href="#now" id="nav-now" data-i18n="navNow">กำลังจัดแสดง</a>
+        <a href="#call" id="nav-call" data-i18n="navCall" hidden>เปิดรับผลงาน</a>
+        <a href="#past" id="nav-past" data-i18n="navPast" hidden>นิทรรศการที่ผ่านมา</a>
+        <a href="/login" data-i18n="navStaff">สำหรับผู้จัด</a>
+      </nav>
+      <span id="lang"></span>
     </div>
-    <div class="wrap hero-band-text">
-      <p class="eyebrow">Online Art Gallery</p>
-      <h1 id="hero-title"></h1>
-      <p class="hero-lead" id="hero-lead"></p>
-      <a class="btn btn-lg hero-cta" href="#main" data-i18n="heroCta">ชมนิทรรศการ</a>
+
+    <div class="wrap wall-row">
+      <div class="wall-side">
+        <p class="wall-lead" id="hero-lead"></p>
+        <p class="wall-actions">
+          <a class="btn btn-lg" href="#now" data-i18n="heroCta">ชมนิทรรศการ</a>
+          <a class="btn btn-lg btn-accent" href="#call" id="hero-submit" data-i18n="heroSubmit" hidden>ส่งผลงาน</a>
+        </p>
+        <div class="wall-label" id="hero-label" aria-live="polite"></div>
+        <div class="wall-ctrl" id="hero-ctrl" hidden>
+          <button type="button" class="wall-btn" id="hero-prev" data-i18n-aria="heroPrev" aria-label="ผลงานก่อนหน้า"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+          <button type="button" class="wall-btn" id="hero-next" data-i18n-aria="heroNext" aria-label="ผลงานถัดไป"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+          <span class="wall-pos" id="hero-pos"></span>
+        </div>
+      </div>
+      <figure class="wall-art" id="hero-art"></figure>
     </div>
+
+    <h1 class="wall-name" id="site-name">หอศิลป์ออนไลน์</h1>
   </section>
 
-  <main id="main" class="lobby">
+  <main id="main" class="lobby-main">
     <p class="wrap muted" id="loading" data-i18n="loading" style="padding-top:48px">กำลังโหลด…</p>
-    <section id="now" class="rooms" aria-labelledby="now-title" hidden>
-      <h2 class="wrap rooms-title" id="now-title" data-i18n="navNow">กำลังจัดแสดง</h2>
+    <section id="now" class="rooms-b" aria-labelledby="now-title" hidden>
+      <h2 class="wrap rooms-b-title" id="now-title" data-i18n="navNow">กำลังจัดแสดง</h2>
       <div id="now-list"></div>
     </section>
-    <section id="call" class="rooms" aria-labelledby="call-title" hidden>
-      <h2 class="wrap rooms-title" id="call-title" data-i18n="navCall">เปิดรับผลงาน</h2>
+    <section id="call" class="calls-b" aria-labelledby="call-title" hidden>
+      <div class="calls-b-head"><div class="wrap">
+        <h2 class="rooms-b-title" id="call-title">เปิดรับผลงาน</h2>
+        <p class="calls-lead" data-i18n="callsLead">ส่งได้โดยไม่ต้องสมัครสมาชิก ผลงานขึ้นแสดงหลังภัณฑารักษ์คัดกรอง</p>
+      </div></div>
       <div id="call-list"></div>
     </section>
-    <section id="past" class="rooms" aria-labelledby="past-title" hidden>
-      <h2 class="wrap rooms-title" id="past-title" data-i18n="pastTitle">นิทรรศการที่ผ่านมา</h2>
+    <section id="past" class="rooms-b" aria-labelledby="past-title" hidden>
+      <h2 class="wrap rooms-b-title" id="past-title" data-i18n="pastTitle">นิทรรศการที่ผ่านมา</h2>
       <div id="past-list"></div>
     </section>
   </main>
+
   <footer class="lobby-foot">
     <div class="wrap foot-grid">
       <div class="foot-col foot-org">
-        <a class="brand" href="/"><span class="brand-mark" aria-hidden="true"></span><span class="brand-name"><b id="foot-name">หอศิลป์ออนไลน์</b><small>Online Art Gallery</small></span></a>
+        <a class="brand" href="/"><span class="brand-mark" aria-hidden="true"></span><span class="brand-name"><b id="foot-name">หอศิลป์ออนไลน์</b></span></a>
         <p id="foot-org" hidden></p>
         <p id="foot-address" class="foot-address" hidden></p>
       </div>

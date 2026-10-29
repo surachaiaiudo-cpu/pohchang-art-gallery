@@ -602,3 +602,27 @@ img.flag, .work-card img.flag, [data-layout] .work-card img.flag, .work-card:hov
 .lobby-foot .lang-switch a { color: #bdbab3; }
 .lobby-foot .lang-switch a[aria-current="true"] { background: #ffffff; color: #141414; }
 .room-strip.static .room-tile[aria-hidden="true"] { display: none; }
+
+/* ---------- Design B on the exhibition page (owner's choice 2026-10-29) ----------
+   The exhibition's name sits large on its own wall colour with one plain summary line; the
+   filters are filled controls without rules; each work hangs at the bottom of its stretch of
+   wall, whole, with a museum label (number in the text face) under it. Colours and the heading
+   font still come from the exhibition's theme. */
+.ex-wall { background: var(--wall); }
+.ex-wall .hero { padding: 72px 0 56px; }
+.ex-wall .hero h1 { font-size: clamp(2.6rem, 6.6vw, 6.2rem); line-height: 1.1; margin: 0 0 16px; }
+.ex-other { font-size: 1.15rem; color: var(--muted); margin: 0 0 12px; }
+.ex-summary { font-size: 1.25rem; margin: 0 0 10px; }
+.ex-call { color: var(--muted); margin: 0 0 24px; }
+.ex-call strong { color: var(--accent); }
+.ex-wall .hero-image { background: transparent; padding: 0; margin: 0; }
+.ex-wall .hero-side { flex: 0 1 auto; }
+.ex-wall .hero-image img { width: auto; max-width: 100%; max-height: clamp(360px, 40vw, 600px); aspect-ratio: auto; object-fit: contain; display: block; margin-left: auto; box-shadow: var(--art-shadow); border: var(--art-frame); }
+@media (max-width: 700px) { .ex-wall .hero-image img { margin: 0 auto; max-height: 460px; } }
+.toolbar-band { border-top: 0; border-bottom: 0; }
+.toolbar select.search, .toolbar input.search { border-color: transparent; background: var(--wall); }
+.seg { border: 0; background: var(--wall); }
+.seg button + button { border-left: 0; }
+.work-card .frame { align-items: flex-end; }
+.label { border-left: 0; padding-left: 0; gap: 2px; }
+.label .no { font-family: var(--font-body); font-size: .9rem; font-variant-numeric: tabular-nums; }

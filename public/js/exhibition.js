@@ -36,29 +36,24 @@ function heroHtml(ex, works) {
   const section = ex.status === 'archived' ? `<a href="/#past">${esc(t('pastTitle'))}</a>`
     : ex.on_view ? `<a href="/#now">${esc(t('navNow'))}</a>`
     : sub.open ? `<a href="/#call">${esc(t('navCall'))}</a>` : '';
+  // Design B (2026-10-29): the name large on the exhibition's wall, then one plain line that says
+  // what is here (works, artists, place, dates); no small labels over big numbers.
+  const summary = [t('nWorks', { n: works.length }), t('nArtists', { n: artists }), ex.venue, dates].filter(Boolean).join(' · ');
+  const call = sub.open && ex.submission_closes_at
+    ? t('closesOn', { d: `${fmtDate(ex.submission_closes_at)} · ${fmtTime(ex.submission_closes_at)}` })
+    : sub.phase === 'ended' ? t('callEnded')
+    : sub.phase === 'upcoming' && ex.submission_opens_at ? t('callUpcoming', { d: `${fmtDate(ex.submission_opens_at)} · ${fmtTime(ex.submission_opens_at)}` }) : '';
   return `
     <div class="hero-main">
       <nav class="crumbs" aria-label="breadcrumb"><a href="/">${esc(t('siteName'))}</a>${section ? `<span aria-hidden="true">/</span>${section}` : ''}</nav>
-      ${other ? `<p class="eyebrow">${esc(other)}</p>` : ''}
       <h1>${esc(pick(ex, 'title'))}</h1>
+      ${other ? `<p class="ex-other">${esc(other)}</p>` : ''}
       ${subtitle ? `<p class="subtitle">${esc(subtitle)}</p>` : ''}
-      <div class="hero-meta">
-        ${sub.open ? `<span class="status-pill">${esc(t('openCall'))}</span>` : ''}
-        ${sub.phase === 'ended' ? `<span class="status-pill quiet">${esc(t('callEnded'))}</span>` : ''}
-        ${sub.phase === 'upcoming' && ex.submission_opens_at ? `<span class="status-pill quiet">${esc(t('callUpcoming', { d: `${fmtDate(ex.submission_opens_at)} · ${fmtTime(ex.submission_opens_at)}` }))}</span>` : ''}
-        ${sub.open && ex.submission_closes_at ? `<span>${esc(t('closesOn', { d: `${fmtDate(ex.submission_closes_at)} · ${fmtTime(ex.submission_closes_at)}` }))}</span>` : ''}
-        ${dates ? `<span>${esc(dates)}</span>` : ''}
-        ${ex.venue ? `<span>${esc(ex.venue)}</span>` : ''}
-      </div>
+      <p class="ex-summary">${esc(summary)}</p>
+      ${call ? `<p class="ex-call">${sub.open ? `<strong>${esc(t('openCall'))}</strong> · ` : ''}${esc(call)}</p>` : ''}
       ${sub.open ? `<a class="btn btn-lg" href="/e/${encodeURIComponent(ex.slug)}/submit">${esc(t('submitCta'))} ${icons.arrowRight}</a>` : ''}
     </div>
-    <div class="hero-side">
-      ${ex.hero_url ? `<figure class="hero-image" style="margin:0"><img src="${esc(img(ex.hero_url, 1200))}" alt=""></figure>` : ''}
-      <dl class="stats">
-        <div><dt>${esc(t('worksLabel'))}</dt><dd>${works.length}</dd></div>
-        <div><dt>${esc(t('artist'))}</dt><dd>${artists}</dd></div>
-      </dl>
-    </div>`;
+    ${ex.hero_url ? `<div class="hero-side"><figure class="hero-image"><img src="${esc(img(ex.hero_url, 1200))}" alt=""></figure></div>` : ''}`;
 }
 
 function cardClass(w, i) {

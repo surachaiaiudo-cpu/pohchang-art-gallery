@@ -202,6 +202,18 @@ Hero text and footer details are **edited by admins at `/admin` → "ตั้�
 `GET /api/site`, `GET/PUT /api/admin/site`, `functions/_lib/site.js`); empty fields are hidden. Never invent these
 details: the owner fills them in. Per-exhibition overrides: accent colour, heading font, ornament level, layout.
 
+**Design B (owner's choice 2026-10-29, from the design canvas https://claude.ai/artifact/3nS9AKUFchQGMEs8ofpoCh):**
+the lobby is one system, not the 7 card styles: a wall (#efeeea) with ONE work hung whole + its label + prev/next
+("ผลงานที่ n จาก 8"; fair pick of 8, 4 s, paused on hover/focus/hidden tab, still with reduced motion), the site name
+(or hero_title) edge to edge underneath (`fitName()` in lobby.js), rooms as stretches of wall with up to 4 whole works,
+open calls on one accent field with whole days left. Styles in `public/css/lobby.css`. Each room and each open call is a band
+in its exhibition's own look (owner, 2026-10-29: exhibitions must look different): `data-theme` = `cardStyle(e)` (the
+lobby card style set in /admin, else the theme) plus its accent/heading-font overrides; band = `--bg`, wall = `--wall`,
+name in `--font-head`, 6px `--accent` bar on top. A room whose exhibition has a poster (`hero_url`)
+shows the poster large as its main picture, with up to 3 works beside the name (owner, 2026-10-29); the exhibition page
+shows the poster whole and large beside the title. The old card layouts (`.room[data-card]` in base.css) are unused. Exhibition page: title on the theme's `--wall` with one summary line
+(`nArtists` key), hero image whole, filled filters, label number in the text face (base.css "Design B" block).
+
 **Design review fixes (2026-10-29, taste-skill review, PR "Design review fixes (group A)"):** masonry keeps reading
 order across rows (exhibition.js `masonry()`: each work goes into the shortest column, estimated from
 image_width/height; re-laid out when the column count changes; never CSS `columns`, which put No. 001 beside
