@@ -1,0 +1,117 @@
+/* Lobby, design B (owner's choice 2026-10-29, from the taste-skill review).
+   One wall colour, one accent, two typefaces (Anuphan for names, IBM Plex Sans Thai for text).
+   Works are never cropped: every picture is shown whole at its own proportions. */
+
+.lobby-b { --wall-b: #efeeea; --ink-b: #141414; --muted-b: #5e5d59; --accent-b: #b4321f; background: #ffffff; }
+.lobby-b .wrap { max-width: 1400px; }
+
+/* ---------- The wall: one work, its label, and the gallery's name underneath ---------- */
+.wall-hero { background: var(--wall-b); color: var(--ink-b); overflow: hidden; }
+.wall-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px 32px; padding-top: 20px; }
+.wall-nav { display: flex; flex-wrap: wrap; gap: 4px 28px; }
+.wall-nav a { color: var(--ink-b); text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
+.wall-nav a:hover { color: var(--accent-b); }
+.wall-hero .lang-switch { border: 0; background: transparent; }
+.wall-hero .lang-switch a { color: var(--muted-b); }
+.wall-hero .lang-switch a[aria-current="true"] { background: var(--ink-b); color: #ffffff; }
+
+.wall-row { display: flex; flex-wrap: wrap-reverse; align-items: flex-end; gap: 40px 72px; padding-top: 40px; }
+.wall-side { flex: 1 1 380px; min-width: 0; display: flex; flex-direction: column; gap: 28px; padding-bottom: 8px; }
+.wall-lead { margin: 0; font-size: 1.35rem; line-height: 1.55; max-width: 24em; }
+.wall-actions { margin: 0; display: flex; flex-wrap: wrap; gap: 12px; }
+.lobby-b .btn { background: var(--ink-b); color: #ffffff; border-color: var(--ink-b); }
+.lobby-b .btn-accent { background: var(--accent-b); border-color: var(--accent-b); }
+
+.wall-label { display: flex; flex-direction: column; gap: 2px; padding-top: 24px; max-width: 30em; min-height: 6.4em; }
+.wall-label .wl-title { font-weight: 600; font-size: 1.12rem; line-height: 1.4; }
+.wall-label .wl-artist { font-size: 1rem; }
+.wall-label .wl-from { color: var(--muted-b); font-size: .94rem; margin-top: 4px; }
+.wall-label .wl-from:hover { color: var(--accent-b); }
+.wall-ctrl { display: flex; align-items: center; gap: 12px; }
+.wall-btn { width: 48px; height: 48px; border-radius: 50%; border: 0; background: var(--ink-b); color: #ffffff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: background-color 160ms ease, transform 160ms ease; }
+.wall-btn:hover { background: var(--accent-b); }
+.wall-btn:active { transform: scale(.94); }
+.wall-btn:focus-visible { outline: 3px solid var(--accent-b); outline-offset: 3px; }
+.wall-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; }
+.wall-pos { color: var(--muted-b); font-size: .94rem; font-variant-numeric: tabular-nums; }
+
+.wall-art { flex: 0 1 auto; margin: 0 auto; min-height: clamp(320px, 42vw, 600px); display: flex; align-items: flex-end; justify-content: center; position: relative; max-width: 100%; }
+.wall-art img { display: block; width: auto; height: auto; max-width: min(100%, 760px); max-height: clamp(320px, 42vw, 600px); }
+.wall-art img.leaving { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); }
+@media (prefers-reduced-motion: no-preference) {
+  .wall-art img.arriving { animation: wall-in 700ms cubic-bezier(.2, .7, .2, 1) both; }
+  .wall-art img.leaving { animation: wall-out 420ms ease both; }
+  .wall-label > * { animation: label-in 520ms ease both; }
+  .wall-label > :nth-child(2) { animation-delay: 70ms; }
+  .wall-label > :nth-child(3) { animation-delay: 140ms; }
+}
+@keyframes wall-in { from { opacity: 0; transform: translateY(18px) scale(.985); } to { opacity: 1; transform: none; } }
+@keyframes wall-out { to { opacity: 0; } }
+@keyframes label-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+/* The gallery's name across the whole width; lobby.js sets the size so it fits on one line. */
+.wall-name { margin: 0 auto; max-width: 1400px; padding: 28px 40px 0; box-sizing: border-box; font-family: 'Anuphan', 'IBM Plex Sans Thai', sans-serif; font-weight: 700; font-size: clamp(48px, 11vw, 176px); line-height: 1.2; letter-spacing: -0.02em; white-space: nowrap; }
+
+/* ---------- Rooms: each exhibition is a stretch of wall with a few of its works ---------- */
+.lobby-main { padding-bottom: 0; }
+.rooms-b { padding-top: 96px; }
+.rooms-b-title { font-family: 'Anuphan', 'IBM Plex Sans Thai', sans-serif; font-weight: 600; font-size: clamp(1.9rem, 3.4vw, 3rem); line-height: 1.2; margin: 0 0 48px; }
+.room-b { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 32px 64px; margin-bottom: 88px; color: var(--ink-b); text-decoration: none; }
+.room-b:nth-child(even) { flex-direction: row-reverse; }
+.room-b-wall { flex: 3 1 620px; min-width: 0; background: var(--wall-b); padding: 56px 48px 48px; display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-end; justify-content: center; }
+.room-b-wall img { display: block; width: auto; height: auto; max-width: 100%; max-height: 190px; transition: transform 300ms ease; }
+.room-b-wall img.lead { max-height: clamp(220px, 24vw, 340px); }
+.room-b:hover .room-b-wall img { transform: translateY(-4px); }
+.room-b-wall .empty-wall { margin: 0; color: var(--muted-b); max-width: 26em; text-align: center; padding: 40px 0; }
+.room-b-text { flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 8px; padding-bottom: 8px; }
+.room-b-name { font-family: 'Anuphan', 'IBM Plex Sans Thai', sans-serif; font-weight: 600; font-size: clamp(1.7rem, 2.7vw, 2.4rem); line-height: 1.2; }
+.room-b-other { color: var(--muted-b); }
+.room-b-meta { font-size: 1.06rem; }
+.room-b-go { color: var(--accent-b); font-weight: 600; margin-top: 8px; }
+.room-b:hover .room-b-go { text-decoration: underline; }
+@media (max-width: 700px) {
+  .rooms-b { padding-top: 56px; }
+  .room-b, .room-b:nth-child(even) { flex-direction: column; align-items: stretch; gap: 18px; margin-bottom: 56px; }
+  .room-b-wall, .room-b-text { flex: none; }
+  .room-b-wall { padding: 28px 16px 22px; gap: 12px; }
+  .room-b-wall img { max-height: 104px; max-width: 46%; }
+  .room-b-wall img.lead { max-height: 180px; max-width: 100%; }
+  .room-b-wall img:nth-child(n + 4) { display: none; }
+}
+
+/* ---------- Open calls: one field of the accent colour ---------- */
+.calls-b { background: var(--accent-b); color: #ffffff; padding: 88px 0; margin-top: 8px; }
+.calls-b .rooms-b-title { margin-bottom: 12px; }
+.calls-lead { margin: 0 0 48px; font-size: 1.12rem; max-width: 36em; }
+.calls-list { display: flex; flex-wrap: wrap; gap: 56px 72px; }
+.call-b { flex: 1 1 440px; min-width: 0; display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-end; }
+.call-b img { display: block; width: auto; height: auto; max-width: 100%; max-height: 260px; }
+.call-b-text { flex: 1 1 240px; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.call-b-name { font-family: 'Anuphan', 'IBM Plex Sans Thai', sans-serif; font-weight: 600; font-size: 1.8rem; line-height: 1.25; color: #ffffff; text-decoration: none; }
+.call-b-name:hover { text-decoration: underline; }
+.call-b-left { font-family: 'Anuphan', 'IBM Plex Sans Thai', sans-serif; font-weight: 700; font-size: clamp(2.2rem, 3.6vw, 3.25rem); line-height: 1.1; margin-top: 8px; white-space: nowrap; }
+.call-b .btn { align-self: flex-start; margin-top: 16px; background: #ffffff; color: var(--ink-b); border-color: #ffffff; }
+.call-b .btn:hover { opacity: 1; background: var(--ink-b); color: #ffffff; border-color: var(--ink-b); }
+@media (max-width: 700px) {
+  .calls-b { padding: 56px 0; }
+  .call-b img { max-height: 200px; }
+  .call-b-name { font-size: 1.45rem; }
+  .call-b .btn { align-self: stretch; text-align: center; justify-content: center; }
+}
+
+/* ---------- Phones ---------- */
+@media (max-width: 700px) {
+  .lobby-b .wrap { padding-left: 16px; padding-right: 16px; }
+  .wall-row { padding-top: 16px; gap: 20px; }
+  .wall-side { gap: 20px; }
+  .wall-lead { font-size: 1.1rem; }
+  .wall-actions .btn { flex: 1 1 auto; justify-content: center; padding: 0 16px; white-space: nowrap; }
+  /* On a phone the label and its controls sit right under the work, then the words and buttons. */
+  .wall-label { padding-top: 0; min-height: 0; order: -2; }
+  .wall-ctrl { order: -1; }
+  .wall-art { min-height: 0; }
+  .wall-art img { max-height: 400px; }
+  .wall-name { padding: 20px 16px 0; }
+  .lobby-b .lobby-foot { margin-top: 0; }
+}
+.lobby-b .lobby-foot { margin-top: 0; }
