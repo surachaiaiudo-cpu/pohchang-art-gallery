@@ -7,8 +7,8 @@
   <meta name="description" content="นิทรรศการศิลปะออนไลน์ ที่กำลังจัดแสดงและนิทรรศการที่ผ่านมา">
   <link rel="stylesheet" href="/css/themes.css?v=7">
   <link rel="stylesheet" href="/css/base.css?v=11">
-  <link rel="stylesheet" href="/css/lobby.css?v=1">
-  <script type="module" src="/js/lobby.js?v=7"></script>
+  <link rel="stylesheet" href="/css/lobby.css?v=2">
+  <script type="module" src="/js/lobby.js?v=8"></script>
 </head>
 <body class="lobby-b">
   <a class="sr-only" href="#main" data-i18n="skip">ข้ามไปเนื้อหา</a>
@@ -48,19 +48,19 @@
 
   <main id="main" class="lobby-main">
     <p class="wrap muted" id="loading" data-i18n="loading" style="padding-top:48px">กำลังโหลด…</p>
-    <section id="now" class="wrap rooms-b" aria-labelledby="now-title" hidden>
-      <h2 class="rooms-b-title" id="now-title" data-i18n="navNow">กำลังจัดแสดง</h2>
+    <section id="now" class="rooms-b" aria-labelledby="now-title" hidden>
+      <h2 class="wrap rooms-b-title" id="now-title" data-i18n="navNow">กำลังจัดแสดง</h2>
       <div id="now-list"></div>
     </section>
     <section id="call" class="calls-b" aria-labelledby="call-title" hidden>
-      <div class="wrap">
+      <div class="calls-b-head"><div class="wrap">
         <h2 class="rooms-b-title" id="call-title">เปิดรับผลงาน</h2>
         <p class="calls-lead" data-i18n="callsLead">ส่งได้โดยไม่ต้องสมัครสมาชิก ผลงานขึ้นแสดงหลังภัณฑารักษ์คัดกรอง</p>
-        <div class="calls-list" id="call-list"></div>
-      </div>
+      </div></div>
+      <div id="call-list"></div>
     </section>
-    <section id="past" class="wrap rooms-b" aria-labelledby="past-title" hidden>
-      <h2 class="rooms-b-title" id="past-title" data-i18n="pastTitle">นิทรรศการที่ผ่านมา</h2>
+    <section id="past" class="rooms-b" aria-labelledby="past-title" hidden>
+      <h2 class="wrap rooms-b-title" id="past-title" data-i18n="pastTitle">นิทรรศการที่ผ่านมา</h2>
       <div id="past-list"></div>
     </section>
   </main>

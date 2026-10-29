@@ -1,4 +1,5 @@
-import { api, esc, img, loadFonts } from './core.js';
+import { api, esc, img, loadFonts, readableOn } from './core.js';
+import { CARD_STYLES, cardStyle } from './presets.js';
 import { t, pick, pickOther, fmtDate, fmtTime, applyStatic, mountSwitcher, localError, lang } from './i18n.js';
 
 // Lobby, design B (owner's choice 2026-10-29): one work hangs on the wall with its label, the
@@ -127,6 +128,21 @@ function fitName() {
   if (w > 0 && room > 0) h.style.fontSize = `${Math.min(220, Math.floor((room / w) * 100 * 0.99))}px`;
 }
 
+// ---------- Each exhibition in its own colours ----------
+// The look chosen for the home page in /admin (card style, else the theme) plus the exhibition's
+// own accent colour and heading font, so its room reads as that exhibition at a glance.
+function look(e) {
+  const key = cardStyle(e);
+  const o = e.theme_overrides || {};
+  const vars = [];
+  if (/^#[0-9a-f]{6}$/i.test(o.accent || '')) vars.push(`--accent:${o.accent}`, `--accent-ink:${readableOn(o.accent)}`);
+  if (o.headingFont && /^[\w ]+$/.test(o.headingFont)) vars.push(`--font-head:'${o.headingFont}', 'IBM Plex Sans Thai', sans-serif`);
+  return `data-theme="${esc(key)}"${vars.length ? ` style="${esc(vars.join(';'))}"` : ''}`;
+}
+function lookFonts(list) {
+  return list.flatMap((e) => [(CARD_STYLES.find((c) => c.key === cardStyle(e)) || {}).font, (e.theme_overrides || {}).headingFont]);
+}
+
 // ---------- Rooms ----------
 function roomMeta(e) {
   const dates = e.starts_on ? `${fmtDate(e.starts_on)}${e.ends_on ? ` – ${fmtDate(e.ends_on)}` : ''}` : '';
@@ -140,13 +156,15 @@ function room(e) {
   const wall = pics.length
     ? pics.map((u, k) => `<img${k ? '' : ' class="lead"'} src="${esc(img(u, k ? 500 : 900))}" alt="" loading="lazy">`).join('')
     : `<p class="empty-wall">${esc(t('wallEmpty'))}</p>`;
-  return `<a class="room-b" href="/e/${encodeURIComponent(e.slug)}">
-    <span class="room-b-wall">${wall}</span>
-    <span class="room-b-text">
-      <span class="room-b-name">${esc(pick(e, 'title'))}</span>
-      ${other ? `<span class="room-b-other">${esc(other)}</span>` : ''}
-      <span class="room-b-meta">${esc(roomMeta(e))}</span>
-      <span class="room-b-go">${esc(t('enterRoom'))} →</span>
+  return `<a class="room-b" href="/e/${encodeURIComponent(e.slug)}" ${look(e)}>
+    <span class="wrap room-b-in">
+      <span class="room-b-wall">${wall}</span>
+      <span class="room-b-text">
+        <span class="room-b-name">${esc(pick(e, 'title'))}</span>
+        ${other ? `<span class="room-b-other">${esc(other)}</span>` : ''}
+        <span class="room-b-meta">${esc(roomMeta(e))}</span>
+        <span class="room-b-go">${esc(t('enterRoom'))} →</span>
+      </span>
     </span>
   </a>`;
 }
@@ -163,15 +181,15 @@ function callCard(e) {
   }
   const when = close ? t('closesOn', { d: `${fmtDate(e.submission_closes_at)} · ${fmtTime(e.submission_closes_at)}` }) : '';
   const base = `/e/${encodeURIComponent(e.slug)}`;
-  return `<div class="call-b">
+  return `<div class="call-b" ${look(e)}><div class="wrap call-b-in">
     ${cover ? `<a href="${base}" tabindex="-1" aria-hidden="true"><img src="${esc(img(cover, 700))}" alt="" loading="lazy"></a>` : ''}
     <div class="call-b-text">
       <a class="call-b-name" href="${base}">${esc(pick(e, 'title'))}</a>
       ${left ? `<span class="call-b-left">${esc(left)}</span>` : ''}
-      <span>${esc([when, e.venue, e.work_count ? t('sentSoFar', { n: e.work_count }) : ''].filter(Boolean).join(' · '))}</span>
+      <span class="call-b-when">${esc([when, e.venue, e.work_count ? t('sentSoFar', { n: e.work_count }) : ''].filter(Boolean).join(' · '))}</span>
       <a class="btn btn-lg" href="${base}/submit">${esc(t('callSubmit'))}</a>
     </div>
-  </div>`;
+  </div></div>`;
 }
 
 const EXTERNAL = [['website', 'footWebsite'], ['facebook', 'Facebook'], ['instagram', 'Instagram'], ['youtube', 'YouTube'], ['tiktok', 'TikTok'], ['line', 'LINE']];
@@ -215,6 +233,7 @@ async function main() {
     const now = exhibitions.filter((e) => e.status === 'open' && e.on_view);
     const calls = exhibitions.filter((e) => e.status === 'open' && e.submission && e.submission.open).sort((a, b) => deadline(a) - deadline(b));
     const past = exhibitions.filter((e) => e.status === 'archived');
+    loadFonts(lookFonts([...now, ...calls, ...past]));
     $('now-list').innerHTML = now.map(room).join('');
     $('call-list').innerHTML = calls.map(callCard).join('');
     $('past-list').innerHTML = past.map(room).join('');

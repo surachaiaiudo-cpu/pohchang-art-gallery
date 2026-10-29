@@ -52,26 +52,32 @@
 /* The gallery's name across the whole width; lobby.js sets the size so it fits on one line. */
 .wall-name { margin: 0 auto; max-width: 1400px; padding: 28px 40px 0; box-sizing: border-box; font-family: 'Anuphan', 'IBM Plex Sans Thai', sans-serif; font-weight: 700; font-size: clamp(48px, 11vw, 176px); line-height: 1.2; letter-spacing: -0.02em; white-space: nowrap; }
 
-/* ---------- Rooms: each exhibition is a stretch of wall with a few of its works ---------- */
+/* ---------- Rooms: each exhibition is a band in its own colours ----------
+   Owner's request (2026-10-29): exhibitions must look different from each other. Each room takes
+   its exhibition's look (data-theme = the lobby card style chosen in /admin, else the theme, plus
+   its own accent colour and heading font): band colour, wall colour, name in its heading face,
+   accent bar and link. The layout stays the same, so the page still reads as one gallery. */
 .lobby-main { padding-bottom: 0; }
 .rooms-b { padding-top: 96px; }
-.rooms-b-title { font-family: 'Anuphan', 'IBM Plex Sans Thai', sans-serif; font-weight: 600; font-size: clamp(1.9rem, 3.4vw, 3rem); line-height: 1.2; margin: 0 0 48px; }
-.room-b { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 32px 64px; margin-bottom: 88px; color: var(--ink-b); text-decoration: none; }
-.room-b:nth-child(even) { flex-direction: row-reverse; }
-.room-b-wall { flex: 3 1 620px; min-width: 0; background: var(--wall-b); padding: 56px 48px 48px; display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-end; justify-content: center; }
-.room-b-wall img { display: block; width: auto; height: auto; max-width: 100%; max-height: 190px; transition: transform 300ms ease; }
+.rooms-b-title { font-family: 'Anuphan', 'IBM Plex Sans Thai', sans-serif; font-weight: 600; font-size: clamp(1.9rem, 3.4vw, 3rem); line-height: 1.2; margin: 0 0 40px; }
+.room-b { display: block; background: var(--bg); color: var(--ink); text-decoration: none; border-top: 6px solid var(--accent); padding: 72px 0; }
+.room-b-in { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 32px 64px; }
+.room-b:nth-child(even) .room-b-in { flex-direction: row-reverse; }
+.room-b-wall { flex: 3 1 620px; min-width: 0; background: var(--wall); padding: 56px 48px 48px; display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-end; justify-content: center; }
+.room-b-wall img { display: block; width: auto; height: auto; max-width: 100%; max-height: 190px; border: var(--art-frame); transition: transform 300ms ease; }
 .room-b-wall img.lead { max-height: clamp(220px, 24vw, 340px); }
 .room-b:hover .room-b-wall img { transform: translateY(-4px); }
-.room-b-wall .empty-wall { margin: 0; color: var(--muted-b); max-width: 26em; text-align: center; padding: 40px 0; }
+.room-b-wall .empty-wall { margin: 0; color: var(--muted); max-width: 26em; text-align: center; padding: 40px 0; }
 .room-b-text { flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 8px; padding-bottom: 8px; }
-.room-b-name { font-family: 'Anuphan', 'IBM Plex Sans Thai', sans-serif; font-weight: 600; font-size: clamp(1.7rem, 2.7vw, 2.4rem); line-height: 1.2; }
-.room-b-other { color: var(--muted-b); }
+.room-b-name { font-family: var(--font-head); font-weight: var(--head-weight); letter-spacing: var(--head-tracking); font-size: clamp(1.8rem, 2.9vw, 2.6rem); line-height: 1.2; }
+.room-b-other { color: var(--muted); }
 .room-b-meta { font-size: 1.06rem; }
-.room-b-go { color: var(--accent-b); font-weight: 600; margin-top: 8px; }
+.room-b-go { color: var(--accent); font-weight: 600; margin-top: 8px; }
 .room-b:hover .room-b-go { text-decoration: underline; }
 @media (max-width: 700px) {
   .rooms-b { padding-top: 56px; }
-  .room-b, .room-b:nth-child(even) { flex-direction: column; align-items: stretch; gap: 18px; margin-bottom: 56px; }
+  .room-b { padding: 40px 0; }
+  .room-b-in, .room-b:nth-child(even) .room-b-in { flex-direction: column; align-items: stretch; gap: 18px; }
   .room-b-wall, .room-b-text { flex: none; }
   .room-b-wall { padding: 28px 16px 22px; gap: 12px; }
   .room-b-wall img { max-height: 104px; max-width: 46%; }
@@ -79,24 +85,26 @@
   .room-b-wall img:nth-child(n + 4) { display: none; }
 }
 
-/* ---------- Open calls: one field of the accent colour ---------- */
-.calls-b { background: var(--accent-b); color: #ffffff; padding: 88px 0; margin-top: 8px; }
-.calls-b .rooms-b-title { margin-bottom: 12px; }
-.calls-lead { margin: 0 0 48px; font-size: 1.12rem; max-width: 36em; }
-.calls-list { display: flex; flex-wrap: wrap; gap: 56px 72px; }
-.call-b { flex: 1 1 440px; min-width: 0; display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-end; }
-.call-b img { display: block; width: auto; height: auto; max-width: 100%; max-height: 260px; }
-.call-b-text { flex: 1 1 240px; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-.call-b-name { font-family: 'Anuphan', 'IBM Plex Sans Thai', sans-serif; font-weight: 600; font-size: 1.8rem; line-height: 1.25; color: #ffffff; text-decoration: none; }
+/* ---------- Open calls: a heading on the gallery's accent, then each call in its own colours ---------- */
+.calls-b { margin-top: 0; }
+.calls-b-head { background: var(--accent-b); color: #ffffff; padding: 80px 0 48px; }
+.calls-b-head .rooms-b-title { margin-bottom: 12px; }
+.calls-lead { margin: 0; font-size: 1.12rem; max-width: 36em; }
+.call-b { background: var(--bg); color: var(--ink); border-top: 6px solid var(--accent); padding: 56px 0; }
+.call-b-in { display: flex; flex-wrap: wrap; gap: 28px 56px; align-items: flex-end; }
+.call-b img { display: block; width: auto; height: auto; max-width: 100%; max-height: 260px; border: var(--art-frame); }
+.call-b-text { flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.call-b-name { font-family: var(--font-head); font-weight: var(--head-weight); letter-spacing: var(--head-tracking); font-size: 1.9rem; line-height: 1.25; color: var(--ink); text-decoration: none; }
 .call-b-name:hover { text-decoration: underline; }
-.call-b-left { font-family: 'Anuphan', 'IBM Plex Sans Thai', sans-serif; font-weight: 700; font-size: clamp(2.2rem, 3.6vw, 3.25rem); line-height: 1.1; margin-top: 8px; white-space: nowrap; }
-.call-b .btn { align-self: flex-start; margin-top: 16px; background: #ffffff; color: var(--ink-b); border-color: #ffffff; }
-.call-b .btn:hover { opacity: 1; background: var(--ink-b); color: #ffffff; border-color: var(--ink-b); }
+.call-b-left { font-family: var(--font-head); font-weight: var(--head-weight); font-size: clamp(2.2rem, 3.6vw, 3.25rem); line-height: 1.1; margin-top: 8px; white-space: nowrap; color: var(--accent); }
+.call-b-when { color: var(--muted); }
+.lobby-b .call-b .btn { align-self: flex-start; margin-top: 16px; background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 @media (max-width: 700px) {
-  .calls-b { padding: 56px 0; }
+  .calls-b-head { padding: 48px 0 32px; }
+  .call-b { padding: 40px 0; }
   .call-b img { max-height: 200px; }
   .call-b-name { font-size: 1.45rem; }
-  .call-b .btn { align-self: stretch; text-align: center; justify-content: center; }
+  .lobby-b .call-b .btn { align-self: stretch; text-align: center; justify-content: center; }
 }
 
 /* ---------- Phones ---------- */

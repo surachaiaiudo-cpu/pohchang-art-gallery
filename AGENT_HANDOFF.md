@@ -206,8 +206,10 @@ details: the owner fills them in. Per-exhibition overrides: accent colour, headi
 the lobby is one system, not the 7 card styles: a wall (#efeeea) with ONE work hung whole + its label + prev/next
 ("ผลงานที่ n จาก 8"; fair pick of 8, 4 s, paused on hover/focus/hidden tab, still with reduced motion), the site name
 (or hero_title) edge to edge underneath (`fitName()` in lobby.js), rooms as stretches of wall with up to 4 whole works,
-open calls on one accent field with whole days left. Styles in `public/css/lobby.css`. `card_style` is kept in the
-data but the lobby no longer uses it. Exhibition page: title on the theme's `--wall` with one summary line
+open calls on one accent field with whole days left. Styles in `public/css/lobby.css`. Each room and each open call is a band
+in its exhibition's own look (owner, 2026-10-29: exhibitions must look different): `data-theme` = `cardStyle(e)` (the
+lobby card style set in /admin, else the theme) plus its accent/heading-font overrides; band = `--bg`, wall = `--wall`,
+name in `--font-head`, 6px `--accent` bar on top. The old card layouts (`.room[data-card]` in base.css) are unused. Exhibition page: title on the theme's `--wall` with one summary line
 (`nArtists` key), hero image whole, filled filters, label number in the text face (base.css "Design B" block).
 
 **Design review fixes (2026-10-29, taste-skill review, PR "Design review fixes (group A)"):** masonry keeps reading
