@@ -6,6 +6,69 @@
       "sourceType": "github",
       "skillPath": "skills/taste-skill/SKILL.md",
       "computedHash": "69021ac7e671c0c0d85d65b570003cef360b1c296323fa28c042884e146478ca"
+    },
+    "ui-ux-pro-max": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "npm",
+      "package": "ui-ux-pro-max-cli",
+      "version": "2.15.0",
+      "repoCommit": "28b3b8d",
+      "skillPath": ".claude/skills/ui-ux-pro-max/SKILL.md",
+      "installedWith": "npx ui-ux-pro-max-cli@2.15.0 init --ai claude"
+    },
+    "banner-design": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "npm",
+      "package": "ui-ux-pro-max-cli",
+      "version": "2.15.0",
+      "repoCommit": "28b3b8d",
+      "skillPath": ".claude/skills/banner-design/SKILL.md",
+      "installedWith": "npx ui-ux-pro-max-cli@2.15.0 init --ai claude"
+    },
+    "brand": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "npm",
+      "package": "ui-ux-pro-max-cli",
+      "version": "2.15.0",
+      "repoCommit": "28b3b8d",
+      "skillPath": ".claude/skills/brand/SKILL.md",
+      "installedWith": "npx ui-ux-pro-max-cli@2.15.0 init --ai claude"
+    },
+    "design": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "npm",
+      "package": "ui-ux-pro-max-cli",
+      "version": "2.15.0",
+      "repoCommit": "28b3b8d",
+      "skillPath": ".claude/skills/design/SKILL.md",
+      "installedWith": "npx ui-ux-pro-max-cli@2.15.0 init --ai claude"
+    },
+    "design-system": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "npm",
+      "package": "ui-ux-pro-max-cli",
+      "version": "2.15.0",
+      "repoCommit": "28b3b8d",
+      "skillPath": ".claude/skills/design-system/SKILL.md",
+      "installedWith": "npx ui-ux-pro-max-cli@2.15.0 init --ai claude"
+    },
+    "slides": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "npm",
+      "package": "ui-ux-pro-max-cli",
+      "version": "2.15.0",
+      "repoCommit": "28b3b8d",
+      "skillPath": ".claude/skills/slides/SKILL.md",
+      "installedWith": "npx ui-ux-pro-max-cli@2.15.0 init --ai claude"
+    },
+    "ui-styling": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "npm",
+      "package": "ui-ux-pro-max-cli",
+      "version": "2.15.0",
+      "repoCommit": "28b3b8d",
+      "skillPath": ".claude/skills/ui-styling/SKILL.md",
+      "installedWith": "npx ui-ux-pro-max-cli@2.15.0 init --ai claude"
     }
   }
 }

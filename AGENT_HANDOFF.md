@@ -202,6 +202,18 @@ says otherwise), and preview on a branch before `main`. Its working files go to 
 Its scripts need Node 22+ and Chrome/Chromium; `assets.mjs` fetches from public image archives. Update with
 `npx skills update`. Not deployed (output dir is `public/`).
 
+**Second design skill set (owner's request, 2026-10-30):** UI/UX Pro Max v2.15.0
+(github.com/nextlevelbuilder/ui-ux-pro-max-skill, npm `ui-ux-pro-max-cli`, pinned in `skills-lock.json`), all 7 skills:
+`ui-ux-pro-max` (main), `banner-design`, `brand`, `design`, `design-system`, `slides`, `ui-styling`. Same layout as
+taste-skill: files in `.agents/skills/<name>` (Codex, Gemini), symlinks in `.claude/skills/` (Claude Code). Search
+script: `python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<query>" --domain <domain>` (Python 3, standard
+library only). The `design` skill's logo/icon generators need a Gemini API key; do not use them without the owner.
+`--persist` writes `design-system/<slug>/` at the repo root: ask the owner first. Update by re-running the installer in
+an empty folder and copying the 7 folders over. Not deployed.
+**When the skills disagree, the owner's chosen design wins** (owner, 2026-10-30): design B, museum labels, mono
+catalogue numbers, the 7 themes and card styles, works never cropped. taste-skill and UI/UX Pro Max are advice only;
+never change the owner's design to satisfy either one without asking (see `claude/taste-review-2026-10-29.md`, group B).
+
 ### 6.8 Importing old events
 `/admin` → "นำเข้างานจากระบบเดิม": preview (`step: preview`), then create a DRAFT exhibition and import in chunks of
 40 (`step: create`, `step: chunk` with a double-send guard). Reads only the old site's public
