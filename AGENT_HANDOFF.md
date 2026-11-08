@@ -232,7 +232,7 @@ Chonburi + Sarabun; gold teeth under the header). Same `index.html` and `lobby.j
 (mourning: `data-mood="mourning"`, vermilion → dark brown). Design B must stay pixel-identical when not chosen
 (checked 2026-11-08). `public/js/design-early.js` re-applies the last look before first paint (localStorage
 `home-look`). `?design=pohchang[&mood=mourning]` previews a look without saving. Only the home page changes;
-exhibition pages keep their own 7 themes. The pause button and quieter screen-reader label exist only in the
+exhibition pages keep their own 7 themes. Seal: `logo_url` if set, else `public/img/pohchang-seal-gold.png` (owner's file 2026-11-08, recoloured gold #c8a04a on transparent, 256 px), in the header and as the footer mark (`--pc-logo`). The pause button and quieter screen-reader label exist only in the
 Poh-Chang design (design B unchanged until the owner decides; see `claude/uiux-review-2026-10-30.md`).
 
 ### 6.8 Importing old events
