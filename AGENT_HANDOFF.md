@@ -222,6 +222,19 @@ with no picture has no minimum height; the work page hint on touch screens is `f
 arrow keys); no public text under 13px. Review notes and the owner's open "group B" questions (mono catalogue
 numbers, ornaments, eyebrows, number of typefaces) are in the claude.ai project doc `claude/taste-review-2026-10-29.md`.
 
+**Home page look: design B or the Poh-Chang design (owner's request, 2026-11-08).** `/admin` →
+ตั้งค่าหอศิลป์ → "หน้าตาหน้าแรก" stores `home_design` (`b` default | `pohchang`), `home_mood` (`` | `mourning`)
+and `logo_url` in the site settings (`functions/_lib/site.js`, validated, tested). The Poh-Chang design is the
+"จ × เพาะช่าง" row of the design canvas (https://claude.ai/artifact/3nS9AKUFchQGMEs8ofpoCh): poster layout in the
+colours and type of pohchang.rmutr.ac.th (lacquer #15110e, gold #c8a04a, vermilion #a51c1c, khoi #f5eddd;
+Chonburi + Sarabun; gold teeth under the header). Same `index.html` and `lobby.js` as design B: extra parts are
+`.pc-only` and `public/css/lobby-pohchang.css` restyles everything under `<html data-design="pohchang">`
+(mourning: `data-mood="mourning"`, vermilion → dark brown). Design B must stay pixel-identical when not chosen
+(checked 2026-11-08). `public/js/design-early.js` re-applies the last look before first paint (localStorage
+`home-look`). `?design=pohchang[&mood=mourning]` previews a look without saving. Only the home page changes;
+exhibition pages keep their own 7 themes. The pause button and quieter screen-reader label exist only in the
+Poh-Chang design (design B unchanged until the owner decides; see `claude/uiux-review-2026-10-30.md`).
+
 ### 6.8 Importing old events
 `/admin` → "นำเข้างานจากระบบเดิม": preview (`step: preview`), then create a DRAFT exhibition and import in chunks of
 40 (`step: create`, `step: chunk` with a double-send guard). Reads only the old site's public

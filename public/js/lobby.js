@@ -11,6 +11,36 @@ mountSwitcher(document.getElementById('lang'));
 mountSwitcher(document.getElementById('foot-lang'));
 const $ = (id) => document.getElementById(id);
 const DAY = 86400000;
+const root = document.documentElement;
+const isPohchang = () => root.dataset.design === 'pohchang';
+
+// ---------- The look chosen in /admin ----------
+// 'b' = design B; 'pohchang' = the poster design in Poh-Chang Academy colours (owner's request
+// 2026-11-08), optionally in the mourning tone. Remembered so design-early.js can apply it before
+// the first paint next time.
+// ?design=pohchang|b (and &mood=mourning) previews a look without changing the setting or the
+// remembered choice, e.g. to show the owner before switching in /admin.
+function applyLook(site, name) {
+  const q = new URLSearchParams(location.search);
+  const preview = ['b', 'pohchang'].includes(q.get('design'));
+  const design = preview ? q.get('design') : site.home_design === 'pohchang' ? 'pohchang' : 'b';
+  const wantMood = preview ? q.get('mood') : site.home_mood;
+  const mood = design === 'pohchang' && wantMood === 'mourning' ? 'mourning' : '';
+  if (design === 'pohchang') root.dataset.design = design; else delete root.dataset.design;
+  if (mood) root.dataset.mood = mood; else delete root.dataset.mood;
+  if (!preview) try { localStorage.setItem('home-look', JSON.stringify({ design, mood })); } catch { /* ignore */ }
+  if (design !== 'pohchang') return;
+  loadFonts(['Chonburi', 'Sarabun']);
+  const org = pick(site, 'org_name');
+  $('pc-org').textContent = org || name;
+  if (site.website) { $('pc-site').href = site.website; $('pc-site').hidden = false; }
+  $('pc-brand-name').textContent = name;
+  $('pc-brand-org').textContent = org;
+  $('pc-kicker').textContent = org || name;
+  $('pc-seal').innerHTML = site.logo_url
+    ? `<img src="${esc(site.logo_url)}" alt="">`
+    : `<span>${esc(Array.from(name)[0] || '')}</span>`;
+}
 
 function shuffle(list) {
   const seen = new Set();
@@ -78,7 +108,23 @@ function hero(site, name, exhibitions) {
   if (total < 2) return;
 
   $('hero-ctrl').hidden = false;
-  const go = (k) => { i = (k + total) % total; show(i); restart(); };
+  // Pause / play (Poh-Chang design): a phone has no hover, so the visitor can stop the slideshow.
+  // While it runs by itself the label is not announced every few seconds; it is when the visitor
+  // moves through the works.
+  let paused = false;
+  const pauseBtn = $('hero-pause');
+  const setLive = (on) => { if (isPohchang()) label.setAttribute('aria-live', on ? 'polite' : 'off'); };
+  function setPaused(p) {
+    paused = p;
+    pauseBtn.classList.toggle('is-paused', p);
+    pauseBtn.setAttribute('aria-label', t(p ? 'heroPlay' : 'heroPause'));
+    setLive(p);
+    restart();
+  }
+  pauseBtn.setAttribute('aria-label', t('heroPause'));
+  pauseBtn.addEventListener('click', () => setPaused(!paused));
+  setLive(false);
+  const go = (k) => { i = (k + total) % total; setLive(true); show(i); restart(); };
   $('hero-prev').addEventListener('click', () => go(i - 1));
   $('hero-next').addEventListener('click', () => go(i + 1));
   $('hero-ctrl').addEventListener('keydown', (e) => {
@@ -96,6 +142,7 @@ function hero(site, name, exhibitions) {
 
   // Reduced motion: the work changes only when the visitor asks.
   const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (still) { pauseBtn.hidden = true; setLive(true); }
   const held = { hover: false, focus: false };
   const band = $('hero');
   band.addEventListener('mouseenter', () => { held.hover = true; });
@@ -105,7 +152,7 @@ function hero(site, name, exhibitions) {
   let timer = 0;
   function restart() {
     clearInterval(timer);
-    if (still) return;
+    if (still || paused) return;
     timer = setInterval(() => {
       if (document.hidden || held.hover || held.focus) return;
       i = (i + 1) % total; show(i);
@@ -117,6 +164,7 @@ function hero(site, name, exhibitions) {
 // The name runs edge to edge: measure it once at a known size, then scale to the column.
 function fitName() {
   const h = $('site-name');
+  if (isPohchang()) { h.style.fontSize = ''; return; } // the poster design sets its own size and wraps
   const cs = getComputedStyle(h);
   const room = h.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
   const probe = document.createElement('span');
@@ -208,6 +256,15 @@ function callCard(e) {
 }
 
 const EXTERNAL = [['website', 'footWebsite'], ['facebook', 'Facebook'], ['instagram', 'Instagram'], ['youtube', 'YouTube'], ['tiktok', 'TikTok'], ['line', 'LINE']];
+// Poh-Chang design: three big numbers under the buttons, and the exhibitions' names on a gold band.
+function pohchangExtras(now, calls, past) {
+  const works = now.reduce((n, e) => n + (e.work_count || 0), 0);
+  const stats = [[works, 'pcStatWorks'], [now.length, 'pcStatRooms'], [calls.length, 'pcStatCalls']].filter(([n]) => n > 0);
+  $('pc-stats').innerHTML = stats.map(([n, key]) => `<span class="pc-stat"><b>${esc(n.toLocaleString())}</b><span>${esc(t(key))}</span></span>`).join('');
+  const names = [...new Set([...now, ...calls, ...past].map((e) => pick(e, 'title')).filter(Boolean))];
+  $('pc-marquee').textContent = names.length ? Array(3).fill(names.join(' ◆ ')).join(' ◆ ') : '';
+}
+
 function footer(site, name, exhibitions) {
   $('foot-name').textContent = name;
   const org = pick(site, 'org_name'), address = pick(site, 'address');
@@ -235,6 +292,7 @@ async function main() {
     const site = siteRes.site || {};
     // A custom SITE_NAME is shown as set; the built-in default follows the page language.
     const name = cfg.siteName === 'หอศิลป์ออนไลน์' ? t('siteName') : cfg.siteName;
+    applyLook(site, name);
     $('site-name').textContent = pick(site, 'hero_title') || name;
     document.title = name;
     fitName();
@@ -252,6 +310,7 @@ async function main() {
     $('now-list').innerHTML = now.map(room).join('');
     $('call-list').innerHTML = calls.map(callCard).join('');
     $('past-list').innerHTML = past.map(room).join('');
+    pohchangExtras(now, calls, past);
     $('call-title').textContent = calls.length > 1 ? t('callsTitle', { n: calls.length }) : t('navCall');
     $('now').hidden = !now.length;
     $('call').hidden = !calls.length;
