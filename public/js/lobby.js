@@ -37,9 +37,10 @@ function applyLook(site, name) {
   $('pc-brand-name').textContent = name;
   $('pc-brand-org').textContent = org;
   $('pc-kicker').textContent = org || name;
-  $('pc-seal').innerHTML = site.logo_url
-    ? `<img src="${esc(site.logo_url)}" alt="">`
-    : `<span>${esc(Array.from(name)[0] || '')}</span>`;
+  // The seal: the link set in /admin, else the Poh-Chang Academy seal in gold (owner's file, 2026-11-08).
+  const seal = site.logo_url || '/img/pohchang-seal-gold.png';
+  $('pc-seal').innerHTML = `<img src="${esc(seal)}" alt="">`;
+  root.style.setProperty('--pc-logo', `url("${seal.replace(/["\\\n]/g, '')}")`);
 }
 
 function shuffle(list) {

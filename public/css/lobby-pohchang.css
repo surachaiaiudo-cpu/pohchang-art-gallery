@@ -152,3 +152,8 @@ html:not([data-design="pohchang"]) .pc-only { display: none !important; }
 /* Small works beside a poster sit centred in their framed strip; the footer mark turns gold. */
 [data-design="pohchang"] .room-b-works { justify-content: center; align-items: flex-end; }
 [data-design="pohchang"] .lobby-foot .brand-mark { background: var(--pc-gold); }
+
+/* The seal image (default: Poh-Chang Academy seal in gold) replaces the plain gold ring, here and in the footer. */
+.pc-seal:has(img) { border: 0; width: 64px; height: 64px; }
+[data-design="pohchang"] .lobby-foot .brand-mark { width: 72px; height: 72px; background: var(--pc-logo, var(--pc-gold)) center / contain no-repeat; }
+@media (max-width: 860px) { .pc-seal:has(img) { width: 48px; height: 48px; } }
