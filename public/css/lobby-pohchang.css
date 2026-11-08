@@ -1,0 +1,154 @@
+/* Lobby, Poh-Chang design (owner's request 2026-11-08), chosen in /admin → ตั้งค่าหอศิลป์.
+   Design E ("โปสเตอร์เพาะช่าง") in the colours and type of pohchang.rmutr.ac.th: lacquer black,
+   gold, vermilion and khoi paper; Chonburi for display, Sarabun for text; gold teeth under the
+   header. Big poster type, solid blocks, hard offset shadows. Same markup as design B: the extra
+   parts are .pc-only and stay hidden unless <html data-design="pohchang">. Works are never cropped. */
+
+html:not([data-design="pohchang"]) .pc-only { display: none !important; }
+
+[data-design="pohchang"] {
+  --pc-lacquer: #15110e; --pc-gold: #c8a04a; --pc-red: #a51c1c; --pc-khoi: #f5eddd;
+  --pc-ink: #2a211b; --pc-cream: #fffaf0; --pc-soft: #e9dfcc; --pc-dim: #d9cdb6; --pc-line: #4a3d30;
+  --pc-head: 'Chonburi', 'Noto Serif Thai', serif;
+  --pc-teeth: conic-gradient(from -45deg at 50% 100%, var(--pc-gold) 90deg, transparent 0) 0 0 / 24px 100% repeat-x;
+}
+/* Mourning tone: the vermilion becomes dark brown; gold stays. */
+[data-design="pohchang"][data-mood="mourning"] { --pc-red: #3a2c22; }
+
+[data-design="pohchang"] body.lobby-b { background: var(--pc-khoi); color: var(--pc-ink); font-family: 'Sarabun', 'IBM Plex Sans Thai', system-ui, sans-serif; font-size: 1.0625rem; }
+[data-design="pohchang"] .lobby-b .wrap { max-width: 1440px; }
+[data-design="pohchang"] .lobby-b :focus-visible { outline: 3px solid var(--pc-gold); outline-offset: 3px; }
+
+/* ---------- Organiser bar and header ---------- */
+.pc-top { background: var(--pc-red); color: var(--pc-khoi); font-size: .875rem; }
+.pc-top-in { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 24px; padding-top: 6px; padding-bottom: 6px; }
+.pc-top a { color: var(--pc-khoi); min-height: 32px; display: inline-flex; align-items: center; }
+
+[data-design="pohchang"] .wall-head { background: var(--pc-lacquer); color: var(--pc-khoi); position: relative; padding-bottom: 12px; }
+[data-design="pohchang"] .wall-head::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 12px; background: var(--pc-teeth); transform: scaleY(-1); }
+[data-design="pohchang"] .wall-top { padding-top: 14px; padding-bottom: 14px; }
+.pc-brand { display: flex; align-items: center; gap: 14px; color: var(--pc-khoi); text-decoration: none; margin-right: auto; }
+.pc-seal { flex: none; width: 52px; height: 52px; border-radius: 50%; border: 2px solid var(--pc-gold); box-sizing: border-box; display: flex; align-items: center; justify-content: center; overflow: hidden; color: var(--pc-gold); font-family: var(--pc-head); font-size: 1.5rem; }
+.pc-seal img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.pc-brand-text { display: flex; flex-direction: column; min-width: 0; }
+.pc-brand-text b { font-family: var(--pc-head); font-weight: 400; font-size: 1.45rem; line-height: 1.35; color: var(--pc-gold); }
+.pc-brand-text small { font-size: .8125rem; color: var(--pc-soft); }
+[data-design="pohchang"] .wall-nav a { color: var(--pc-khoi); font-weight: 500; }
+[data-design="pohchang"] .wall-nav a:hover { color: var(--pc-gold); }
+[data-design="pohchang"] .wall-hero .lang-switch { border: 2px solid var(--pc-gold); border-radius: 0; }
+[data-design="pohchang"] .wall-hero .lang-switch a { color: var(--pc-khoi); min-height: 44px; }
+[data-design="pohchang"] .wall-hero .lang-switch a[aria-current="true"] { background: var(--pc-gold); color: var(--pc-lacquer); }
+
+/* ---------- Hero: words on lacquer at left, the work on vermilion at right ----------
+   The B markup is laid on a two-column grid: .wall-row and .wall-side step aside (display:
+   contents) so their children take grid cells; each cell carries its column's colour. */
+[data-design="pohchang"] .wall-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); background: var(--pc-lacquer); color: var(--pc-khoi); overflow: visible; }
+[data-design="pohchang"] .wall-head { grid-column: 1 / -1; }
+[data-design="pohchang"] .wall-row, [data-design="pohchang"] .wall-side { display: contents; }
+[data-design="pohchang"] .wall-side > :not(.wall-label):not(.wall-ctrl), [data-design="pohchang"] .wall-name { box-sizing: border-box; padding-left: max(40px, calc((100vw - 1440px) / 2 + 56px)); padding-right: 48px; }
+.pc-kicker { grid-column: 1; grid-row: 2; margin: 0; padding-top: 72px; display: flex; align-items: center; gap: 16px; color: var(--pc-gold); font-weight: 600; }
+.pc-kicker::before { content: ""; width: 48px; height: 2px; background: var(--pc-gold); flex: none; }
+[data-design="pohchang"] .wall-name { grid-column: 1; grid-row: 3; max-width: none; margin: 0; padding-top: 20px; font-family: var(--pc-head); font-weight: 400; font-size: clamp(3.6rem, 8.4vw, 8.6rem); line-height: 1.2; letter-spacing: -0.01em; white-space: normal; overflow-wrap: anywhere; color: var(--pc-khoi); }
+[data-design="pohchang"] .wall-lead { grid-column: 1; grid-row: 4; padding-top: 28px; font-size: 1.3rem; line-height: 1.6; max-width: none; color: var(--pc-soft); }
+[data-design="pohchang"] .wall-lead { max-width: calc(23em + 104px); }
+[data-design="pohchang"] .wall-actions { grid-column: 1; grid-row: 5; padding-top: 28px; gap: 16px; }
+[data-design="pohchang"] .lobby-b .wall-actions .btn { border-radius: 0; font-weight: 700; font-size: 1.15rem; background: var(--pc-gold); border: 2px solid var(--pc-gold); color: var(--pc-lacquer); box-shadow: 6px 6px 0 var(--pc-red); }
+[data-design="pohchang"] .lobby-b .wall-actions .btn-accent { background: transparent; color: var(--pc-gold); box-shadow: none; }
+.pc-stats { grid-column: 1; grid-row: 6; display: flex; flex-wrap: wrap; gap: 16px 40px; align-content: flex-start; padding-top: 28px; padding-bottom: 56px; }
+.pc-stats:empty { padding-bottom: 56px; }
+.pc-stat { display: flex; flex-direction: column; padding-top: 20px; border-top: 1px solid var(--pc-line); min-width: 120px; }
+.pc-stat b { font-family: var(--pc-head); font-weight: 400; font-size: 2.6rem; line-height: 1.25; color: var(--pc-gold); }
+.pc-stat span { font-size: .94rem; color: var(--pc-soft); }
+
+[data-design="pohchang"] .wall-art { grid-column: 2; grid-row: 2 / 6; background: var(--pc-red); margin: 0; padding: 48px 40px 24px; min-height: 0; max-width: none; align-items: center; }
+[data-design="pohchang"] .wall-art img { background: var(--pc-lacquer); padding: 10px; border: 0; outline: 2px solid var(--pc-gold); outline-offset: -6px; box-shadow: 14px 14px 0 var(--pc-gold); max-height: clamp(320px, 40vw, 580px); max-width: min(100%, 680px); box-sizing: border-box; }
+[data-design="pohchang"] .wall-label { grid-column: 2; grid-row: 6; background: var(--pc-red); padding: 16px 40px 8px; min-height: 0; max-width: none; gap: 0; }
+[data-design="pohchang"] .wall-label > * { background: var(--pc-lacquer); color: var(--pc-khoi); padding: 0 18px; align-self: flex-start; max-width: 100%; box-sizing: border-box; }
+[data-design="pohchang"] .wall-label > :first-child { padding-top: 12px; }
+[data-design="pohchang"] .wall-label > :last-child { padding-bottom: 12px; }
+[data-design="pohchang"] .wall-label .wl-title { font-family: var(--pc-head); font-weight: 400; color: var(--pc-gold); line-height: 1.5; }
+[data-design="pohchang"] .wall-label .wl-from { color: var(--pc-dim); margin-top: 0; }
+[data-design="pohchang"] .wall-label .wl-from:hover { color: var(--pc-gold); }
+[data-design="pohchang"] .wall-ctrl { grid-column: 2; grid-row: 7; background: var(--pc-red); padding: 8px 40px 40px; gap: 8px; }
+[data-design="pohchang"] .wall-ctrl[hidden] { display: block !important; visibility: hidden; }
+[data-design="pohchang"] .wall-btn { border-radius: 0; background: var(--pc-lacquer); color: var(--pc-gold); }
+[data-design="pohchang"] .wall-btn:hover { background: var(--pc-gold); color: var(--pc-lacquer); }
+[data-design="pohchang"] .wall-btn:focus-visible { outline-color: var(--pc-gold); }
+#hero-pause .i-play, #hero-pause.is-paused .i-pause { display: none; }
+#hero-pause.is-paused .i-play { display: block; fill: currentColor; stroke: none; }
+#hero-pause .i-pause { stroke-width: 3; }
+[data-design="pohchang"] .wall-pos { color: var(--pc-khoi); font-weight: 700; padding-left: 8px; }
+
+/* ---------- Gold band with the exhibitions' names ---------- */
+.pc-marquee { background: var(--pc-gold); color: var(--pc-lacquer); border-top: 4px solid var(--pc-lacquer); border-bottom: 4px solid var(--pc-lacquer); overflow: hidden; white-space: nowrap; padding: 14px 0; font-family: var(--pc-head); font-size: 1.6rem; line-height: 1.45; }
+.pc-marquee span { display: inline-block; padding-left: 40px; }
+.pc-marquee:has(span:empty) { display: none !important; }
+
+/* ---------- Rooms and open calls: each exhibition keeps its own colours, hung poster-style ---------- */
+[data-design="pohchang"] .rooms-b-title { font-family: var(--pc-head); font-weight: 400; font-size: clamp(2.6rem, 5.4vw, 5rem); line-height: 1.25; color: var(--pc-lacquer); }
+[data-design="pohchang"] .calls-b-head .rooms-b-title { color: var(--pc-khoi); }
+[data-design="pohchang"] .room-b { border-top: 0; border-bottom: 4px solid var(--pc-lacquer); }
+[data-design="pohchang"] .room-b:first-child { border-top: 4px solid var(--pc-lacquer); }
+[data-design="pohchang"] .room-b-wall, [data-design="pohchang"] .room-b-poster, [data-design="pohchang"] .room-b-works { border: 3px solid var(--pc-lacquer); box-shadow: 10px 10px 0 var(--pc-gold); }
+[data-design="pohchang"] .room-b-go { display: inline-flex; align-self: flex-start; align-items: center; min-height: 44px; padding: 0 18px; margin-top: 12px; background: var(--pc-lacquer); color: var(--pc-gold); font-weight: 700; }
+[data-design="pohchang"] .calls-b-head { background: var(--pc-red); color: var(--pc-khoi); border-top: 4px solid var(--pc-lacquer); }
+[data-design="pohchang"] .call-b { border-top: 0; border-bottom: 4px solid var(--pc-lacquer); }
+[data-design="pohchang"] .call-b img { box-shadow: 10px 10px 0 var(--pc-gold); border: 3px solid var(--pc-lacquer); }
+[data-design="pohchang"] .call-b-left { align-self: flex-start; background: var(--pc-lacquer); color: var(--pc-gold); font-family: var(--pc-head); font-weight: 400; padding: 6px 20px; line-height: 1.35; margin-top: 12px; }
+[data-design="pohchang"] .lobby-b .call-b .btn { border-radius: 0; font-weight: 700; box-shadow: 6px 6px 0 var(--pc-lacquer); }
+
+/* ---------- How a work reaches the wall ---------- */
+.pc-how { background: var(--pc-lacquer); color: var(--pc-khoi); margin-top: 96px; position: relative; padding: 100px 0 88px; }
+.pc-how::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 12px; background: var(--pc-teeth); }
+.pc-how-title { font-family: var(--pc-head); font-weight: 400; font-size: clamp(2.2rem, 4.2vw, 3.8rem); line-height: 1.35; margin: 0 0 44px; max-width: 14em; }
+.pc-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; }
+.pc-steps li { display: flex; flex-direction: column; gap: 8px; padding: 28px; border: 2px solid var(--pc-gold); }
+.pc-steps li:nth-child(2) { background: var(--pc-red); border-color: var(--pc-red); }
+.pc-steps li:nth-child(4) { background: var(--pc-gold); border-color: var(--pc-gold); color: var(--pc-lacquer); }
+.pc-steps b { font-size: 1.35rem; }
+.pc-steps li > span:last-child { color: var(--pc-dim); }
+.pc-steps li:nth-child(2) > span:last-child { color: var(--pc-khoi); }
+.pc-steps li:nth-child(4) > span:last-child { color: var(--pc-lacquer); }
+.pc-step-no { font-family: var(--pc-head); font-size: 3.2rem; line-height: 1.25; color: var(--pc-gold); }
+.pc-steps li:nth-child(2) .pc-step-no { color: var(--pc-khoi); }
+.pc-steps li:nth-child(4) .pc-step-no { color: var(--pc-lacquer); }
+
+/* ---------- Footer ---------- */
+[data-design="pohchang"] .lobby-b .lobby-foot { background: var(--pc-lacquer); color: var(--pc-soft); border-top: 1px solid var(--pc-line); }
+[data-design="pohchang"] .lobby-foot a { color: var(--pc-khoi); }
+[data-design="pohchang"] .lobby-foot .brand-name b { font-family: var(--pc-head); font-weight: 400; color: var(--pc-gold); }
+[data-design="pohchang"] .foot-col h2 { color: var(--pc-gold); }
+[data-design="pohchang"] .foot-address { color: var(--pc-soft); }
+[data-design="pohchang"] .foot-bottom { border-top-color: var(--pc-line); color: var(--pc-dim); }
+[data-design="pohchang"] .lobby-foot .lang-switch { border: 2px solid var(--pc-gold); border-radius: 0; }
+[data-design="pohchang"] .lobby-foot .lang-switch a[aria-current="true"] { background: var(--pc-gold); color: var(--pc-lacquer); }
+
+/* ---------- Phones: one column, words first, then the work ---------- */
+@media (max-width: 860px) {
+  [data-design="pohchang"] .wall-hero { grid-template-columns: minmax(0, 1fr); }
+  [data-design="pohchang"] .wall-side > :not(.wall-label):not(.wall-ctrl), [data-design="pohchang"] .wall-name { padding-left: 16px; padding-right: 16px; }
+  .pc-kicker { grid-row: 2; padding-top: 32px; font-size: .9rem; }
+  [data-design="pohchang"] .wall-name { grid-row: 3; font-size: clamp(2.8rem, 14vw, 4.2rem); padding-top: 12px; }
+  [data-design="pohchang"] .wall-lead { grid-row: 4; padding-top: 16px; font-size: 1.08rem; }
+  [data-design="pohchang"] .wall-actions { grid-row: 5; padding-top: 20px; }
+  .pc-stats { grid-row: 6; padding-bottom: 32px; gap: 12px 24px; }
+  .pc-stat { min-width: 0; flex: 1 1 0; }
+  .pc-stat b { font-size: 1.9rem; }
+  .pc-stat span { font-size: .8125rem; line-height: 1.4; }
+  [data-design="pohchang"] .wall-art { grid-column: 1; grid-row: 7; padding: 32px 16px 8px; }
+  [data-design="pohchang"] .wall-art img { max-height: 400px; box-shadow: 10px 10px 0 var(--pc-gold); }
+  [data-design="pohchang"] .wall-label { grid-column: 1; grid-row: 8; order: 0; padding: 20px 16px 8px; }
+  [data-design="pohchang"] .wall-label > * { align-self: stretch; }
+  [data-design="pohchang"] .wall-ctrl { grid-column: 1; grid-row: 9; order: 0; padding: 8px 16px 28px; }
+  .pc-brand-text b { font-size: 1.15rem; }
+  .pc-brand-text small { display: none; }
+  .pc-seal { width: 42px; height: 42px; font-size: 1.2rem; }
+  .pc-marquee { font-size: 1.15rem; padding: 10px 0; }
+  .pc-how { margin-top: 56px; padding: 64px 0 48px; }
+  .pc-steps li { padding: 18px; }
+  .pc-step-no { font-size: 2.2rem; }
+}
+
+/* Small works beside a poster sit centred in their framed strip; the footer mark turns gold. */
+[data-design="pohchang"] .room-b-works { justify-content: center; align-items: flex-end; }
+[data-design="pohchang"] .lobby-foot .brand-mark { background: var(--pc-gold); }

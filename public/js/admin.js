@@ -170,7 +170,7 @@ async function main() {
 
 // ---------------------------------------------------------------- gallery settings (home hero + footer)
 const SITE_FIELDS = ['hero_title', 'hero_lead', 'org_name', 'address'].flatMap((k) => ['th', 'en', 'zh'].map((l) => `${k}_${l}`))
-  .concat(['email', 'phone', 'website', 'facebook', 'instagram', 'youtube', 'tiktok', 'line']);
+  .concat(['email', 'phone', 'website', 'facebook', 'instagram', 'youtube', 'tiktok', 'line', 'home_design', 'home_mood', 'logo_url']);
 async function loadSite() {
   const { site } = await api('/api/admin/site');
   for (const k of SITE_FIELDS) $(`st-${k}`).value = site[k] || '';

@@ -54,6 +54,21 @@
       <section id="p-site" role="tabpanel" aria-labelledby="t-site" hidden>
         <form id="site-form" novalidate>
           <div class="card">
+            <h2>หน้าตาหน้าแรก</h2>
+            <p class="small muted">เลือกแบบของหน้าแรกหอศิลป์ หน้านิทรรศการแต่ละงานยังใช้ธีมของงานนั้นเหมือนเดิม</p>
+            <div class="grid-3">
+              <div class="field"><label for="st-home_design">แบบหน้าแรก</label><select id="st-home_design">
+                <option value="b">แบบ B: ผนังแกลเลอรี (ขาว เรียบ)</option>
+                <option value="pohchang">แบบเพาะช่าง: โปสเตอร์ ดำครั่ง ทอง ชาด</option>
+              </select></div>
+              <div class="field"><label for="st-home_mood">โทนสี (แบบเพาะช่าง)</label><select id="st-home_mood">
+                <option value="">ปกติ: ดำครั่ง ทอง ชาด</option>
+                <option value="mourning">ไว้ทุกข์: เปลี่ยนสีชาดเป็นน้ำตาลเข้ม</option>
+              </select></div>
+              <div class="field"><label for="st-logo_url">ลิงก์ภาพตราสัญลักษณ์ (แบบเพาะช่าง)</label><input id="st-logo_url" type="url" placeholder="https://"><span class="hint">ภาพสี่เหลี่ยมจัตุรัส พื้นโปร่งใสหรือพื้นเข้ม เว้นว่าง = แสดงอักษรตัวแรกของชื่อหอศิลป์</span></div>
+            </div>
+          </div>
+          <div class="card">
             <h2>ส่วนบนหน้าแรก (hero)</h2>
             <p class="small muted">ภาพพื้นหลังเป็นผลงานจากทุกนิทรรศการ สลับวนอัตโนมัติ เว้นว่างไว้ = ใช้ชื่อหอศิลป์และคำแนะนำมาตรฐาน · ภาษาที่เว้นว่างจะแสดงภาษาอังกฤษ แล้วจึงเป็นภาษาไทยแทน</p>
             <div class="field"><span class="label">หัวเรื่อง</span><div class="grid-3"><div class="field" style="margin:0"><label for="st-hero_title_th" class="small muted">ไทย</label><input id="st-hero_title_th" type="text" lang="th"></div><div class="field" style="margin:0"><label for="st-hero_title_en" class="small muted">English</label><input id="st-hero_title_en" type="text" lang="en"></div><div class="field" style="margin:0"><label for="st-hero_title_zh" class="small muted">中文</label><input id="st-hero_title_zh" type="text" lang="zh-Hans"></div></div></div>
