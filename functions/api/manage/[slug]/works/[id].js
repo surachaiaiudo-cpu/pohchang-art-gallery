@@ -37,7 +37,8 @@ const ARTIST_TEXT = {
 };
 
 // PUT /api/manage/:slug/works/:id
-// { status?, badge_override?: 'endorsed'|'not_endorsed'|null, display_order?, <work fields>, file?, artist: {...}? }
+// { status?, badge_override?: 'endorsed'|'not_endorsed'|null, display_order?, <work fields>, file?, artist: {...}?,
+//   artist_mode?: 'all'|'new'|'move', artist_id? (for 'move') }
 export const onRequestPut = handle(async (context) => {
   const { user, ex } = await requireManager(context);
   const { env } = context;
@@ -77,19 +78,48 @@ export const onRequestPut = handle(async (context) => {
     stmts.push(db.prepare('UPDATE exhibitions SET storage_bytes = MAX(0, storage_bytes + ? - ?) WHERE id = ?')
       .bind(set.image_bytes, work.image_bytes, ex.id));
   }
-  if (b.artist && typeof b.artist === 'object') {
+  // Artist of this work (owner, 2026-11-12): artist_mode 'all' (default) edits the artist, so every work of that
+  // artist changes; 'new' makes a new artist from the form for this work only (a work sent on someone's behalf);
+  // 'move' gives this work to another artist already in this exhibition.
+  const mode = b.artist_mode === undefined ? 'all' : v.oneOf(b.artist_mode, ['all', 'new', 'move'], { field: 'การแก้ไขศิลปิน' });
+  let artistId = work.artist_id;
+  const readArtist = () => {
     const a = {};
+    if (!b.artist || typeof b.artist !== 'object') return a;
     for (const [k, opts] of Object.entries(ARTIST_TEXT)) if (b.artist[k] !== undefined) a[k] = v.text(b.artist[k], opts);
     if (b.artist.email !== undefined) a.email = v.email(b.artist.email);
     if (b.artist.nationality) a.nationality = v.country(b.artist.nationality);
     if (b.artist.bio_th !== undefined) a.bio_th = v.longText(b.artist.bio_th, { field: 'ประวัติศิลปิน' });
     if (b.artist.bio_en !== undefined) a.bio_en = v.longText(b.artist.bio_en, { field: 'ประวัติศิลปินภาษาอังกฤษ' });
     if (b.artist.bio_zh !== undefined) a.bio_zh = v.longText(b.artist.bio_zh, { field: 'ประวัติศิลปินภาษาจีน' });
+    return a;
+  };
+  if (mode === 'move') {
+    artistId = v.int(b.artist_id, { field: 'ศิลปิน', min: 1 });
+    const target = await db.prepare('SELECT id FROM artists WHERE id = ? AND exhibition_id = ?').bind(artistId, ex.id).first();
+    if (!target) throw notFound('ไม่พบศิลปินที่เลือกในนิทรรศการนี้');
+  } else if (mode === 'new') {
+    const a = readArtist();
+    if (!a.name_th) a.name_th = v.text('', ARTIST_TEXT.name_th); // throws: name required
+    const old = await db.prepare('SELECT nationality FROM artists WHERE id = ?').bind(work.artist_id).first();
+    const cols = { nationality: (old && old.nationality) || '', ...a };
+    const ck = Object.keys(cols);
+    const row = await db.prepare(`INSERT INTO artists (exhibition_id, ${ck.join(', ')}) VALUES (?, ${ck.map(() => '?').join(', ')}) RETURNING id`)
+      .bind(ex.id, ...ck.map((k) => cols[k])).first();
+    artistId = row.id;
+  } else {
+    const a = readArtist();
     const ak = Object.keys(a);
     if (ak.length) {
       stmts.push(db.prepare(`UPDATE artists SET ${ak.map((k) => `${k} = ?`).join(', ')}, updated_at = datetime('now') WHERE id = ? AND exhibition_id = ?`)
         .bind(...ak.map((k) => a[k]), work.artist_id, ex.id));
     }
+  }
+  if (artistId !== work.artist_id) {
+    stmts.push(db.prepare("UPDATE works SET artist_id = ?, updated_at = datetime('now') WHERE id = ? AND exhibition_id = ?").bind(artistId, id, ex.id));
+    // The previous artist is removed when no work (not even a deleted one) refers to it any more.
+    stmts.push(db.prepare('DELETE FROM artists WHERE id = ? AND exhibition_id = ? AND NOT EXISTS (SELECT 1 FROM works WHERE artist_id = ?)')
+      .bind(work.artist_id, ex.id, work.artist_id));
   }
   if (stmts.length) await db.batch(stmts);
 
@@ -98,7 +128,7 @@ export const onRequestPut = handle(async (context) => {
     else await db.prepare("UPDATE works SET endorsed = 0, review_result = 'pending' WHERE id = ? AND exhibition_id = ?").bind(id, ex.id).run();
   }
   if (oldFile && oldFile !== set.image_file_id) await deleteFile(ex, env, oldFile);
-  await audit(db, ex.id, actorOf(user), 'work.update', { id, fields: keys });
+  await audit(db, ex.id, actorOf(user), 'work.update', { id, fields: keys, ...(artistId !== work.artist_id ? { artist_mode: mode, from_artist: work.artist_id, to_artist: artistId } : {}) });
   const updated = await db.prepare('SELECT * FROM works WHERE id = ?').bind(id).first();
   return json({ ok: true, work: updated });
 });
