@@ -26,7 +26,7 @@ export const onRequestPost = handle(async ({ request, env, params }) => {
     name_en: v.text(a.name_en, { field: 'ชื่อภาษาอังกฤษ', max: 200 }),
     name_zh: v.text(a.name_zh, { field: 'ชื่อภาษาจีน', max: 200 }),
     academic_title_th: v.text(a.academic_title_th, { field: 'ตำแหน่งทางวิชาการ', max: 200 }),
-    email: v.email(a.email, { required: true }),
+    email: v.email(a.email), // optional (owner, 2026-11-12)
     phone: v.text(a.phone, { field: 'โทรศัพท์', max: 40 }),
     nationality: v.country(a.nationality, { required: true }),
     affiliation: v.text(a.affiliation, { field: 'สังกัด', max: 300 }),
@@ -62,7 +62,8 @@ export const onRequestPost = handle(async ({ request, env, params }) => {
   });
 
   // An earlier submission by the same artist = same email AND same name (owner, 2026-11-12: one email may send
-  // for several artists). The per-artist limit counts that artist's works across submissions.
+  // for several artists; email is optional, so "no email" + the same name is the same artist too).
+  // The per-artist limit counts that artist's works across submissions.
   const { results: sameEmail } = await db.prepare(
     `SELECT a.id, a.name_th, (SELECT COUNT(*) FROM works w WHERE w.artist_id = a.id AND w.deleted_at IS NULL) AS n
        FROM artists a WHERE a.exhibition_id = ? AND a.email = ? ORDER BY a.id LIMIT 200`
