@@ -151,3 +151,13 @@ th { font-size: 0.85rem; color: var(--muted); font-weight: 600; background: #faf
 
 /* Flags */
 img.flag { display: inline-block; width: 1.34em; height: 1em; max-width: none; object-fit: cover; vertical-align: -0.14em; margin-right: .3em; border-radius: 2px; box-shadow: 0 0 0 1px rgba(0, 0, 0, .14); }
+
+/* large picture while the mouse rests on a thumbnail (screening page) */
+.hover-preview { position: fixed; z-index: 60; pointer-events: none; background: #fff; border-radius: 8px; padding: 8px;
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.28); opacity: 0; visibility: hidden; transition: opacity 0.12s ease; }
+.hover-preview.show { opacity: 1; visibility: visible; }
+.hover-preview .hp-img { display: flex; align-items: center; justify-content: center; background: #ece9e1; border-radius: 4px; overflow: hidden; }
+.hover-preview img { display: block; width: 100%; object-fit: contain; }
+.hover-preview .hp-cap { padding: 8px 4px 2px; font-size: 0.875rem; line-height: 1.4; color: var(--muted); }
+.hover-preview .hp-cap div:first-child { color: var(--ink); font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { .hover-preview { transition: none; } }
