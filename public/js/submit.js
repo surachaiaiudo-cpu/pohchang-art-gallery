@@ -211,7 +211,8 @@ function collect() {
 function validate({ artist, works }) {
   if (!artist.name_th) return ['name_th', t('errName')];
   if (!artist.nationality) return ['nationality', t('errNationality')];
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(artist.email)) return ['email', t('errEmail')];
+  // Email is optional (owner, 2026-11-12); when typed it must look like an email.
+  if (artist.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(artist.email)) return ['email', t('errEmail')];
   const blocks = [...document.querySelectorAll('.work-block')];
   const cats = ex.categories || [];
   for (let i = 0; i < works.length; i++) {

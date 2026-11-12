@@ -112,10 +112,15 @@ to IP + slug; Turnstile when configured) → `POST /api/x/:slug/upload-auth` →
 (`public/js/upload.js`) and uploads straight to Cloudinary → `POST /api/x/:slug/submit` with the Cloudinary
 response. The server verifies each file: signed mode checks Cloudinary's response signature; unsigned-preset mode
 HEADs the delivery URL and takes the real size, and refuses a public_id in another exhibition's folder.
-Required: name, nationality (ISO list), email, consent; per work: image, title, technique group (from the
+Required: name, nationality (ISO list), consent (**email optional since 2026-11-12, owner**; checked only when typed); per work: image, title, technique group (from the
 exhibition's list; the technique text is then optional detail), category (+ sub-type,
 + video link for video art). Emails/phones never leave the back office.
 Rate limits per IP per hour: ticket 150, upload 240, submit 60; per exhibition uploads 1500/h.
+**Which artist (owner, 2026-11-12):** a submission joins an earlier artist only when **email AND name** match
+(no email + the same name counts as a match too)
+(`matchArtist()` in `functions/_lib/artist-match.js`: case, extra spaces and zero-width marks ignored). Before this, the
+email alone decided, so an organiser sending for several artists with one email had every work filed under the first
+name and the new names were lost (case "เนติ พิเคราะห์"). The per-artist limit counts that artist's works.
 Layout (2026-10-29): on screens ≤960px the title comes first, then the deadline card and the rules (folded,
 `details.aside-rules`), then the form; the category card is hidden there (the form's chips show the list).
 

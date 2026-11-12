@@ -6,6 +6,7 @@ import { enforce } from '../../../_lib/ratelimit.js';
 import * as v from '../../../_lib/validate.js';
 import { parseCategories, checkCategory, needsVideo } from '../../../_lib/categories.js';
 import { parseTechniques, checkTechnique } from '../../../_lib/techniques.js';
+import { matchArtist } from '../../../_lib/artist-match.js';
 
 // POST /api/x/:slug/submit { ticket, consent, artist: {...}, works: [{..., file}], artist: {..., avatar_file?} }
 // file = the JSON Cloudinary returned for that upload (public_id, version, signature, format, bytes, width, height)
@@ -25,7 +26,7 @@ export const onRequestPost = handle(async ({ request, env, params }) => {
     name_en: v.text(a.name_en, { field: 'ชื่อภาษาอังกฤษ', max: 200 }),
     name_zh: v.text(a.name_zh, { field: 'ชื่อภาษาจีน', max: 200 }),
     academic_title_th: v.text(a.academic_title_th, { field: 'ตำแหน่งทางวิชาการ', max: 200 }),
-    email: v.email(a.email, { required: true }),
+    email: v.email(a.email), // optional (owner, 2026-11-12)
     phone: v.text(a.phone, { field: 'โทรศัพท์', max: 40 }),
     nationality: v.country(a.nationality, { required: true }),
     affiliation: v.text(a.affiliation, { field: 'สังกัด', max: 300 }),
@@ -60,13 +61,16 @@ export const onRequestPost = handle(async ({ request, env, params }) => {
     if (needsVideo(w.category, w.subcategory) && !w.video_url) throw bad(`กรุณาใส่ลิงก์วิดีโอของผลงานชิ้นที่ ${i + 1}`);
   });
 
-  // Respect the per-artist limit across several submissions with the same email.
-  const prior = await db.prepare(
-    `SELECT a.id, (SELECT COUNT(*) FROM works w WHERE w.artist_id = a.id AND w.deleted_at IS NULL) AS n
-       FROM artists a WHERE a.exhibition_id = ? AND a.email = ? ORDER BY a.id LIMIT 1`
-  ).bind(ex.id, artist.email).first();
+  // An earlier submission by the same artist = same email AND same name (owner, 2026-11-12: one email may send
+  // for several artists; email is optional, so "no email" + the same name is the same artist too).
+  // The per-artist limit counts that artist's works across submissions.
+  const { results: sameEmail } = await db.prepare(
+    `SELECT a.id, a.name_th, (SELECT COUNT(*) FROM works w WHERE w.artist_id = a.id AND w.deleted_at IS NULL) AS n
+       FROM artists a WHERE a.exhibition_id = ? AND a.email = ? ORDER BY a.id LIMIT 200`
+  ).bind(ex.id, artist.email).all();
+  const prior = matchArtist(sameEmail, artist.name_th);
   if (prior && prior.n + works.length > ex.max_works_per_artist) {
-    throw bad(`อีเมลนี้ส่งผลงานไว้แล้ว ${prior.n} ชิ้น (สูงสุด ${ex.max_works_per_artist} ชิ้น)`);
+    throw bad(`ศิลปินท่านนี้ส่งผลงานไว้แล้ว ${prior.n} ชิ้น (สูงสุด ${ex.max_works_per_artist} ชิ้น)`);
   }
 
   const ids = works.map((w) => String(w.file.public_id || ''));
