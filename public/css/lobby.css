@@ -139,3 +139,19 @@
   .lobby-b .lobby-foot { margin-top: 0; }
 }
 .lobby-b .lobby-foot { margin-top: 0; }
+
+/* Endless right-to-left loops (owner, 2026-11-12): the Poh-Chang name band and the strip of works under
+   each room. lobby.js fills .loop-track with two identical halves; it moves by -50 % while on screen. */
+.loop { overflow: hidden; }
+.loop-track { display: inline-flex; width: max-content; animation: loop-x var(--loop-dur, 40s) linear infinite; animation-play-state: paused; }
+.loop.running .loop-track { animation-play-state: running; }
+.loop:hover .loop-track, .loop.paused .loop-track { animation-play-state: paused; }
+.loop-seq { display: inline-flex; align-items: flex-end; flex: none; }
+@keyframes loop-x { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .loop-track { animation: none; } }
+.room-strip { display: block; margin-top: 48px; }
+.room-strip img { display: block; height: 140px; width: auto; margin-right: 16px; border: var(--art-frame); background: var(--wall); }
+@media (max-width: 760px) {
+  .room-strip { margin-top: 24px; }
+  .room-strip img { height: 92px; margin-right: 10px; }
+}

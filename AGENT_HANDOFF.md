@@ -251,6 +251,14 @@ Chonburi + Sarabun; gold teeth under the header). Same `index.html` and `lobby.j
 exhibition pages keep their own 7 themes. Seal: `logo_url` if set, else `public/img/pohchang-seal-gold.png` (owner's file 2026-11-08, recoloured gold #c8a04a on transparent, 256 px), in the header and as the footer mark (`--pc-logo`). The pause button and quieter screen-reader label exist only in the
 Poh-Chang design (design B unchanged until the owner decides; see `claude/uiux-review-2026-10-30.md`).
 
+Endless loops on the home page (owner, 2026-11-12): (1) Poh-Chang design: the gold band of exhibition names under the
+hero; (2) both designs: a strip of up to 12 works (not those already on the room's wall) under each room of "on view"
+and "past" (needs ≥ 3 shown works). `fillLoop()` in lobby.js builds two identical halves (content repeated until a half
+is wider than the screen) and CSS moves `.loop-track` by -50 % (`--loop-dur`; names ~60 px/s, works ~40 px/s).
+Loops run only while on screen (IntersectionObserver adds `.running`; strip pictures load then, 400 px), hover pauses,
+a tap pauses the name band, reduced motion keeps them still. Strip pictures get their box from `w`/`h`, which
+`GET /api/exhibitions` now returns with each sample. lobby.css v=6, lobby-pohchang.css v=4, lobby.js v=13.
+
 ### 6.8 Importing old events
 `/admin` → "นำเข้างานจากระบบเดิม": preview (`step: preview`), then create a DRAFT exhibition and import in chunks of
 40 (`step: create`, `step: chunk` with a double-send guard). Reads only the old site's public
