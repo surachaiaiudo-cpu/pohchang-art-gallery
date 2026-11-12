@@ -77,7 +77,7 @@ public/
   js/i18n.js       th/en/zh dictionary, language choice, pick() fallbacks, dates
   js/countries.js  ISO country list, names via Intl.DisplayNames, flags   (also imported by Functions)
   js/core.js       api(), esc(), Cloudinary img()/srcset, theme + font loading
-  flags/*.svg      242 flag images (flag-icons, MIT, licence included)
+  flags/*.svg      242 flag images (flag-icons, MIT, licence included) + xr.svg (Kurdistan, drawn here)
   _redirects       /e/:slug, /e/:slug/work/:id, /e/:slug/submit, /manage/:slug, /review/:token rewrites
   _headers         CSS/JS revalidate every load; flags cached 7 days
 schema/0001..0007  SQL history (0001 creates everything; later files are also applied by migrate.js; 0006 lives only in migrate.js)
@@ -175,6 +175,12 @@ plus "ไม่ระบุประเทศ" for blank/unrecognised nationalit
 ### 6.6 Nationality and flags
 Stored as ISO 3166-1 alpha-2. Names come from `Intl.DisplayNames` in the page language. Flags are local SVGs.
 Old free text was converted by migration 0006 / the importer; unknown text is kept for curators to fix.
+
+Places outside ISO 3166-1 (owner, 2026-11-12): `EXTRA_PLACES` in `countries.js` with a code from the user-assigned
+range and their own th/en/zh names. **XR = Kurdistan** (เคอร์ดิสถาน / Kurdistan / 库尔德斯坦; owner chose the plain name
+"Kurdistan" and the flag of the Kurdistan Region, `flags/xr.svg`, drawn for this site). No flag emoji for these
+(the `<option>` lists show the name only). Old free text "Kurdistan" is turned into XR by the 0006 step through
+`COUNTRY_ALIASES` (added after the XR code was live, so no deploy ever wrote a code the live code could not read).
 
 ### 6.7 Themes and design
 "Gallery wall + museum labels": works hang on `--wall` with a label (catalogue No., title, flag + artist,
