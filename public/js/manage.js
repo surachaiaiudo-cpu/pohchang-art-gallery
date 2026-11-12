@@ -3,6 +3,7 @@ import { requireLogin, tabs, copyText, STATUS_TH, STATUS_HINT, submissionText, r
 import { PRESETS, cardOptions } from './presets.js';
 import { checkImageFile, uploadImage, fitForUpload } from './upload.js';
 import { countryOptions, isCountryCode, countryName, flagImg } from './countries.js';
+import { hoverPreview } from './hover-preview.js';
 
 const slug = slugFromPath(1);
 const M = `/api/manage/${encodeURIComponent(slug)}`;
@@ -599,3 +600,19 @@ async function main() {
   tabs($('tabs'), onTab);
 }
 main().catch(() => {});
+
+// Screening: resting the mouse on a work's picture shows it large beside the card (owner, 2026-11-12).
+hoverPreview($('w-grid'), '.thumb[data-open]', (el) => {
+  const w = S.works.find((x) => x.id === Number(el.dataset.open));
+  if (!w || !w.image_url) return null;
+  return {
+    small: img(w.image_url, 400),
+    large: img(w.image_url, 1600),
+    ratio: w.image_width && w.image_height ? w.image_width / w.image_height : 0,
+    lines: [
+      w.title_th,
+      [w.academic_title_th, w.artist_name_th].filter(Boolean).join(' '),
+      [cleanTechnique(w.technique_th), w.dimensions, w.year_created].filter(Boolean).join(' · ')
+    ]
+  };
+});
