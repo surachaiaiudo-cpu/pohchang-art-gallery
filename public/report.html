@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>รายงานสำหรับผู้ทรงคุณวุฒิ</title>
+  <link rel="stylesheet" href="/css/app.css?v=3">
+  <link rel="stylesheet" href="/css/report.css?v=5">
+  <script type="module" src="/js/report.js"></script>
+</head>
+<body>
+  <header class="topbar" id="topbar"></header>
+  <main class="page rep-page">
+    <div class="page-head">
+      <div><h1>รายงานศิลปินและผลงาน สำหรับผู้ทรงคุณวุฒิ</h1><div class="small muted" id="ex-sub">กำลังโหลด…</div></div>
+      <div class="row">
+        <a class="btn btn-ghost" id="back">กลับไปหน้าจัดการ</a>
+        <button class="btn" id="print" type="button" disabled>พิมพ์ / บันทึกเป็น PDF</button>
+      </div>
+    </div>
+
+    <div class="rep-layout">
+      <section class="card rep-opts" aria-label="ตั้งค่ารายงาน">
+        <h2>ตั้งค่า</h2>
+        <p class="small muted">A4 แนวนอน · ศิลปิน 1 ท่านต่อ 1 หน้า (ซ้ายข้อมูลและประวัติ ขวาผลงาน) · เรียงตามกลุ่มงาน · ใช้พิมพ์และนำเสนอบนจอได้ · ไม่มีอีเมล/เบอร์โทรในรายงาน</p>
+
+        <fieldset>
+          <legend>ผลงาน</legend>
+          <label for="o-status">สถานะ</label>
+          <select id="o-status"></select>
+          <label for="o-cat" style="margin-top:8px">กลุ่มงาน</label>
+          <select id="o-cat"></select>
+          <label for="o-order" style="margin-top:8px">เรียงศิลปินในแต่ละกลุ่ม</label>
+          <select id="o-order"></select>
+        </fieldset>
+
+        <fieldset>
+          <legend>ภาษา</legend>
+          <label for="o-lang">ภาษาหลัก</label>
+          <select id="o-lang"></select>
+          <div class="small muted" style="margin-top:6px">ภาษาเพิ่มเติม (ชื่อศิลปิน/ชื่อผลงานบรรทัดรอง เมื่อมีข้อมูล)</div>
+          <div class="rep-checks" id="o-extra"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend>จัดหน้า</legend>
+          <div class="small muted">ผลงานจัดวางอัตโนมัติตามจำนวน: 1–3 ชิ้นแถวเดียว, 4 ชิ้น 2 × 2, 5–6 ชิ้น 3 × 2</div>
+          <div class="rep-checks" id="o-layout"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend>ข้อมูลที่แสดง</legend>
+          <div class="rep-checks" id="o-fields"></div>
+          <label for="o-concept" style="margin-top:8px">แนวคิดผลงาน</label>
+          <select id="o-concept"></select>
+        </fieldset>
+        <div class="small muted" style="margin-top:10px">ค่าที่เลือกจำไว้ในเบราว์เซอร์นี้</div>
+
+        <div class="rep-note small">
+          <strong>นำเสนอบนจอ:</strong> บันทึกเป็น PDF แล้วเปิดไฟล์แบบเต็มจอ (เช่น Adobe Reader: Ctrl+L / ใน Mac Preview: มุมมองสไลด์) เลื่อนทีละหน้าได้<br>
+
+          กด <strong>พิมพ์ / บันทึกเป็น PDF</strong> แล้วเลือกเครื่องพิมพ์ <strong>“บันทึกเป็น PDF / Save as PDF”</strong>
+          กระดาษ <strong>A4 แนวนอน</strong>, ขนาด <strong>100%</strong>, ปิด “หัวกระดาษและท้ายกระดาษ” (เลขหน้ามีในรายงานแล้ว)
+          และเปิด <strong>“กราฟิกพื้นหลัง / Background graphics”</strong> · ระบบจะรอให้รูปโหลดครบก่อนเปิดหน้าพิมพ์
+        </div>
+      </section>
+
+      <section class="rep-preview-wrap" aria-label="ตัวอย่างรายงาน">
+        <div class="rep-status small" id="status" role="status"></div>
+        <div class="rep-paper" id="paper"></div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

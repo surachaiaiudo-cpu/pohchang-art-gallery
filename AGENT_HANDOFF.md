@@ -271,6 +271,28 @@ Print-run choices (status filter, category, order, start slot, selection) stay i
 Also: automatic text shrink down to 65 % with a red frame on captions that still overflow. Users must turn on
 "Background graphics" in the print dialog when a background is used. Text logic: `public/js/caption-text.js` (tested in `tests/captions.test.js`).
 
+### 6.11 Report for the expert panel (รายงานสำหรับผู้ทรงคุณวุฒิ, owner's request 2026-11-12; branch `review-report`)
+`/manage/<slug>/report` (button "รายงานสำหรับผู้ทรงฯ (PDF)" on the manage page). Read-only page, no new API or migration:
+uses `GET /api/manage/:slug` and `/works?status=all`. Owner's choices (2026-11-12): a page in the back office,
+**all submitted works** by default, **artist names and bios shown**, several works per page; then (20:30)
+**A4 landscape, one artist per page**, so the PDF can also be shown on a screen.
+Sheets are fixed 297 × 210 mm `.sheet` elements (`@page A4 landscape, margin 0`, page number in each sheet's footer):
+cover (title + summary table categories × artists × works), then one page per artist per category, in category order
+(list order, unknown categories, "ไม่ระบุกลุ่มงาน"). Artist page: strip "กลุ่มงานที่ n · name" + "ศิลปิน i / N ในกลุ่มนี้";
+left 74 mm = academic title, name (+extra language), country/flag, affiliation, work count, bio; right = works grid by
+count (`workGrid()`: 1–3 one row, 4 → 2×2, 5–6 → 3×2, more → 4 per row): image, No. through the whole report, status chip,
+title, technique · size · year · sub-type, video link, concept (short = clamped lines / full / none).
+**Order (owner, 2026-11-12 20:53):** cover, then **each category on its own**: divider sheet (ใบคั่น: กลุ่มงานที่ n, names
+in th/en/zh, counts) → checklist for that category → one page per artist. Options (all on by default): cover, divider,
+checklist, and **work titles in the checklist**. Checklist (`checklistPages(section, { titles })`): by artist (#, name ·
+country, number of works in merged cells); with titles one row + boxes ผ่าน / ไม่ผ่าน per work (No., title cut with …),
+without titles one row + boxes per artist with its No. list. 20 rows per sheet, an artist's rows stay on one sheet
+(split and marked "(ต่อ)" only if longer than a sheet), signature line (ลงชื่อ … ผู้ทรงคุณวุฒิ / วันที่) on every sheet.
+Text in each `[data-fit]` part shrinks to 70 % to fit; still too long → red frame on screen + warning. The preview is
+zoomed to the column width (`zoom`), reset to 1 for print. Print button waits for all images.
+Options in localStorage `report:<slug>`. **Emails/phones are never in the report.** Logic: `public/js/report-data.js`
+(tests/report.test.js).
+
 ## 7. API (all JSON; writes require same-origin)
 
 | Route | Who | Purpose |
