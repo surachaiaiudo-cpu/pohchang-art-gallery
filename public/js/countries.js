@@ -9,7 +9,15 @@ ID IE IL IM IN IQ IR IS IT JE JM JO JP KE KG KH KI KM KN KP KR KW KY KZ LA LB LC
 MA MC MD ME MF MG MH MK ML MM MN MO MP MQ MR MS MT MU MV MW MX MY MZ NA NC NE NF NG NI NL NO NP NR NU NZ
 OM PA PE PF PG PH PK PL PM PN PR PS PT PW PY QA RE RO RS RU RW SA SB SC SD SE SG SH SI SJ SK SL SM SN SO SR SS ST SV SX SY SZ
 TC TD TG TH TJ TK TL TM TN TO TR TT TV TW TZ UA UG US UY UZ VA VC VE VG VI VN VU WF WS YE YT ZA ZM ZW
+XR
 `.trim().split(/\s+/);
+
+// Places that are not in ISO 3166-1, added at the owner's request, with a code from the ISO
+// user-assigned range (X?) and their own names. The browser cannot name them, so names live here.
+// XR = Kurdistan (owner, 2026-11-12: name "Kurdistan", flag of the Kurdistan Region).
+export const EXTRA_PLACES = {
+  XR: { th: 'เคอร์ดิสถาน', en: 'Kurdistan', zh: '库尔德斯坦' }
+};
 
 // Shown first in the list.
 export const PINNED = ['TH', 'CN'];
@@ -21,6 +29,8 @@ const cache = {};
 // Country name in the given language ('th' | 'en' | 'zh-Hans' ...). Old free-text values pass through.
 export function countryName(code, locale = 'th') {
   if (!isCountryCode(code)) return code || '';
+  const extra = EXTRA_PLACES[code];
+  if (extra) return extra[String(locale).slice(0, 2)] || extra.en;
   try {
     cache[locale] = cache[locale] || new Intl.DisplayNames([locale], { type: 'region' });
     return cache[locale].of(code) || code;
@@ -57,7 +67,7 @@ export const COUNTRY_ALIASES = {
   GB: ['uk', 'united kingdom', 'england', 'british', 'อังกฤษ', 'สหราชอาณาจักร', 'gb']
 };
 
-// Flag images: public/flags/<code>.svg (from the MIT-licensed flag-icons project, 4:3).
+// Flag images: public/flags/<code>.svg (from the MIT-licensed flag-icons project, 4:3; xr.svg drawn for this site).
 export const flagUrl = (code) => (isCountryCode(code) ? `/flags/${code.toLowerCase()}.svg` : '');
 
 // <img> of the flag; alt carries the country name when the flag is shown without it.
@@ -68,7 +78,7 @@ export function flagImg(code, { alt = '', cls = 'flag' } = {}, escape = (s) => s
 
 // Flag emoji (🇹🇭) for places that only take text, like <option>. Windows shows letters
 // instead of flags, so it is only used where the system can draw them.
-export const flagEmoji = (code) => (isCountryCode(code)
+export const flagEmoji = (code) => (isCountryCode(code) && !EXTRA_PLACES[code]
   ? String.fromCodePoint(...[...code].map((ch) => 0x1F1E6 + ch.charCodeAt(0) - 65)) : '');
 
 let emojiOk;
