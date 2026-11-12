@@ -161,3 +161,10 @@ img.flag { display: inline-block; width: 1.34em; height: 1em; max-width: none; o
 .hover-preview .hp-cap { padding: 8px 4px 2px; font-size: 0.875rem; line-height: 1.4; color: var(--muted); }
 .hover-preview .hp-cap div:first-child { color: var(--ink); font-weight: 600; }
 @media (prefers-reduced-motion: reduce) { .hover-preview { transition: none; } }
+
+/* work editor: whose work is this (edit artist / new artist for this work / move to another artist) */
+.we-amode { border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 14px; margin: 0 0 14px; }
+.we-amode legend { padding: 0 4px; font-weight: 600; }
+.we-amode label { display: flex; gap: 8px; align-items: flex-start; margin: 6px 0; font-size: 0.95rem; }
+.we-amode .field { margin: 6px 0 0 26px; }
+.we-amode .hint:empty { display: none; }

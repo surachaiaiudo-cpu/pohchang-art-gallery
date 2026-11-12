@@ -170,6 +170,56 @@ async function setStatus(ids, status) {
   await Promise.all([loadWorks(), loadOverview()]);
 }
 
+// Owner, 2026-11-12: one work of an artist may really belong to someone else (sent on their behalf).
+// Choice in the work editor: edit the artist (all their works), make a new artist for this work only,
+// or give this work to an artist already in the exhibition.
+function artistsInExhibition() {
+  const map = new Map();
+  for (const x of S.works) {
+    if (!map.has(x.artist_id)) map.set(x.artist_id, { id: x.artist_id, name: [x.academic_title_th, x.artist_name_th].filter(Boolean).join(' ') || x.artist_name_en, n: 0 });
+    map.get(x.artist_id).n += 1;
+  }
+  return [...map.values()].sort((a, b) => a.name.localeCompare(b.name, 'th'));
+}
+function artistModeHtml(w) {
+  const all = artistsInExhibition();
+  const n = (all.find((a) => a.id === w.artist_id) || { n: 1 }).n;
+  const others = all.filter((a) => a.id !== w.artist_id);
+  return `<fieldset class="we-amode" id="we-amode">
+    <legend class="small">การแก้ไขข้อมูลศิลปิน${n > 1 ? ` · ศิลปินท่านนี้มี ${n} ผลงานในนิทรรศการ` : ''}</legend>
+    <label><input type="radio" name="we-amode" value="all" checked> แก้ข้อมูลศิลปินท่านนี้${n > 1 ? ` (เปลี่ยนทั้ง ${n} ผลงาน)` : ''}</label>
+    ${n > 1 ? `<label><input type="radio" name="we-amode" value="new"> เฉพาะผลงานชิ้นนี้: เป็นของศิลปินอีกท่าน (สร้างศิลปินใหม่จากข้อมูลด้านล่าง)</label>` : ''}
+    ${others.length ? `<label><input type="radio" name="we-amode" value="move"> ย้ายผลงานชิ้นนี้ไปเป็นของศิลปินที่มีอยู่แล้ว</label>
+    <div class="field" id="we-move-wrap" hidden><label for="we-move-to" class="sr-only">เลือกศิลปิน</label>
+      <select id="we-move-to"><option value="">— เลือกศิลปิน —</option>${others.map((a) => `<option value="${a.id}">${esc(a.name)} (${a.n} ผลงาน)</option>`).join('')}</select></div>` : ''}
+    <div class="hint" id="we-amode-hint"></div>
+  </fieldset>`;
+}
+let artistMode = 'all';
+function bindArtistMode(w) {
+  artistMode = 'all';
+  const box = $('we-amode');
+  const hint = {
+    all: '',
+    new: `ผลงานอื่นของ ${w.artist_name_th} ไม่เปลี่ยน · แก้ชื่อและข้อมูลด้านล่างให้เป็นของศิลปินผู้สร้างผลงานชิ้นนี้`,
+    move: 'ข้อมูลศิลปินจะเป็นของท่านที่เลือก ช่องด้านล่างจะไม่ถูกใช้'
+  };
+  box.addEventListener('change', () => {
+    artistMode = (box.querySelector('input[name="we-amode"]:checked') || {}).value || 'all';
+    $('we-amode-hint').textContent = hint[artistMode];
+    if ($('we-move-wrap')) $('we-move-wrap').hidden = artistMode !== 'move';
+    $('we-artist-fields').querySelectorAll('input, select').forEach((x) => { x.disabled = artistMode === 'move'; });
+  });
+}
+function artistModeBody() {
+  if (artistMode === 'move') {
+    const id = Number($('we-move-to').value);
+    if (!id) throw new Error('กรุณาเลือกศิลปินที่จะย้ายผลงานไป');
+    return { artist_mode: 'move', artist_id: id };
+  }
+  return { artist_mode: artistMode };
+}
+
 function workEditor(w) {
   const f = (k, label, v = w[k], type = 'text') => `<div class="field"><label for="we-${k}">${label}</label><input id="we-${k}" type="${type}" value="${esc(v)}"></div>`;
   openDrawer(w.title_th, `
@@ -202,7 +252,8 @@ function workEditor(w) {
       <div class="field"><label for="we-concept_en">แนวคิดภาษาอังกฤษ</label><textarea id="we-concept_en">${esc(w.concept_en)}</textarea></div>
       <div class="field"><label for="we-concept_zh">แนวคิดภาษาจีน</label><textarea id="we-concept_zh" lang="zh-Hans">${esc(w.concept_zh)}</textarea></div>
       <h3>ศิลปิน</h3>
-      <div class="grid-2">
+      ${artistModeHtml(w)}
+      <div class="grid-2" id="we-artist-fields">
         ${f('a-name_th', 'ชื่อ', w.artist_name_th)}${f('a-name_en', 'ชื่อภาษาอังกฤษ', w.artist_name_en)}${f('a-name_zh', 'ชื่อภาษาจีน', w.artist_name_zh)}
         ${f('a-academic_title_th', 'ตำแหน่งทางวิชาการ', w.academic_title_th)}${f('a-affiliation', 'สังกัด', w.affiliation)}
         ${f('a-email', 'อีเมล', w.artist_email, 'email')}${f('a-phone', 'โทรศัพท์', w.artist_phone)}
@@ -230,6 +281,7 @@ function workEditor(w) {
   $('we-category').addEventListener('change', () => syncSub(''));
   if ($('we-use-guess')) $('we-use-guess').addEventListener('click', () => { $('we-technique_group').value = w.technique_guess; });
   const val = (k) => $(`we-${k}`).value;
+  bindArtistMode(w);
   $('we-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     try {
@@ -243,6 +295,7 @@ function workEditor(w) {
           technique_th: val('technique_th'), technique_en: val('technique_en'), technique_zh: val('technique_zh'),
           dimensions: val('dimensions'), year_created: val('year_created'), zone: val('zone'), display_order: Number(val('display_order') || 0),
           concept_th: val('concept_th'), concept_en: val('concept_en'), concept_zh: val('concept_zh'),
+          ...artistModeBody(),
           artist: { name_th: val('a-name_th'), name_en: val('a-name_en'), name_zh: val('a-name_zh'), academic_title_th: val('a-academic_title_th'),
             affiliation: val('a-affiliation'), email: val('a-email'), phone: val('a-phone'), nationality: val('a-nationality') }
         }

@@ -125,6 +125,11 @@ Shown works appear publicly at once. Reviewers get personal links `/review/<toke
 `functions/_lib/review.js`: endorsed when approvals ≥ threshold; `needs_curator` when too many abstain to reach
 it; `not_endorsed` when it can no longer be reached. A curator `badge_override` wins. Badge label per exhibition.
 
+Whose work (owner, 2026-11-12): the work editor's artist section has a choice — edit the artist (all their works,
+the old behaviour), **this work only: a new artist** made from the form (for a work sent on someone's behalf), or **move
+this work to an artist already in the exhibition**. `PUT /api/manage/:slug/works/:id` `artist_mode: all|new|move`
+(+ `artist_id`); the previous artist row is deleted when no work (not even a soft-deleted one) refers to it; audited.
+
 Hover preview (owner, 2026-11-12): on the screening tab, resting the mouse on a work's picture for ~0.2 s shows it large
 (1600 px, the 400 px copy first) beside the card on the side with more room, with title / artist / technique · size · year.
 Mouse/trackpad only (`(hover: hover) and (pointer: fine)`), never takes clicks; hides on leave, click, scroll, Esc.
