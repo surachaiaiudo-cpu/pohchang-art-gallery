@@ -81,8 +81,14 @@ html:not([data-design="pohchang"]) .pc-only { display: none !important; }
 
 /* ---------- Gold band with the exhibitions' names ---------- */
 .pc-marquee { background: var(--pc-gold); color: var(--pc-lacquer); border-top: 4px solid var(--pc-lacquer); border-bottom: 4px solid var(--pc-lacquer); overflow: hidden; white-space: nowrap; padding: 14px 0; font-family: var(--pc-head); font-size: 1.6rem; line-height: 1.45; }
-.pc-marquee span { display: inline-block; padding-left: 40px; }
-.pc-marquee:has(span:empty) { display: none !important; }
+.pc-marquee > span { display: inline-flex; width: max-content; animation: pc-mq var(--mq-dur, 40s) linear infinite; }
+.pc-marquee .pc-mq-seq { display: inline-block; flex: none; }
+.pc-marquee i { font-style: normal; display: inline-block; padding: 0 0.9em; opacity: 0.75; }
+.pc-marquee:hover > span, .pc-marquee.paused > span { animation-play-state: paused; }
+.pc-marquee { cursor: default; user-select: none; }
+.pc-marquee:has(> span:empty) { display: none !important; }
+@keyframes pc-mq { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .pc-marquee > span { animation: none; padding-left: 40px; } }
 
 /* ---------- Rooms and open calls: each exhibition keeps its own colours, hung poster-style ---------- */
 [data-design="pohchang"] .rooms-b-title { font-family: var(--pc-head); font-weight: 400; font-size: clamp(2.6rem, 5.4vw, 5rem); line-height: 1.25; color: var(--pc-lacquer); }

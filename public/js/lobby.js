@@ -263,7 +263,33 @@ function pohchangExtras(now, calls, past) {
   const stats = [[works, 'pcStatWorks'], [now.length, 'pcStatRooms'], [calls.length, 'pcStatCalls']].filter(([n]) => n > 0);
   $('pc-stats').innerHTML = stats.map(([n, key]) => `<span class="pc-stat"><b>${esc(n.toLocaleString())}</b><span>${esc(t(key))}</span></span>`).join('');
   const names = [...new Set([...now, ...calls, ...past].map((e) => pick(e, 'title')).filter(Boolean))];
-  $('pc-marquee').textContent = names.length ? Array(3).fill(names.join(' ◆ ')).join(' ◆ ') : '';
+  marquee(names);
+}
+
+// The gold band of exhibition names runs right to left in an endless loop (owner, 2026-11-12).
+// Two identical halves move by exactly one half, so the joint never shows. Each half repeats the names
+// until it is wider than the screen. Hover pauses it; a tap pauses / resumes (touch screens have no hover).
+// With "reduce motion" the band stays still.
+const MARQUEE_SPEED = 60; // px per second
+function marquee(names) {
+  const track = $('pc-marquee');
+  if (!names.length) { track.textContent = ''; return; }
+  const unit = names.map((n) => `${esc(n)}<i>◆</i>`).join('');
+  const build = () => {
+    track.innerHTML = `<span class="pc-mq-seq">${unit}</span>`;
+    const one = track.firstElementChild.getBoundingClientRect().width || 1;
+    const reps = Math.max(1, Math.ceil((window.innerWidth + 40) / one));
+    const half = unit.repeat(reps);
+    track.innerHTML = `<span class="pc-mq-seq">${half}</span><span class="pc-mq-seq">${half}</span>`;
+    const w = track.firstElementChild.getBoundingClientRect().width;
+    track.style.setProperty('--mq-dur', `${Math.max(12, Math.round(w / MARQUEE_SPEED))}s`);
+  };
+  build();
+  if (document.fonts) document.fonts.ready.then(build);
+  let width = window.innerWidth;
+  window.addEventListener('resize', () => { if (Math.abs(window.innerWidth - width) > 40) { width = window.innerWidth; build(); } });
+  const band = track.parentElement;
+  band.addEventListener('click', () => band.classList.toggle('paused'));
 }
 
 function footer(site, name, exhibitions) {
