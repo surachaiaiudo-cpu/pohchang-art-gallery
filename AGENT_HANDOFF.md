@@ -271,6 +271,19 @@ Print-run choices (status filter, category, order, start slot, selection) stay i
 Also: automatic text shrink down to 65 % with a red frame on captions that still overflow. Users must turn on
 "Background graphics" in the print dialog when a background is used. Text logic: `public/js/caption-text.js` (tested in `tests/captions.test.js`).
 
+### 6.11 Report for the expert panel (รายงานสำหรับผู้ทรงคุณวุฒิ, owner's request 2026-11-12; branch `review-report`)
+`/manage/<slug>/report` (button "รายงานสำหรับผู้ทรงฯ (PDF)" on the manage page). Read-only page, no new API or migration:
+uses `GET /api/manage/:slug` and `/works?status=all`. Owner's choices (2026-11-12): a page in the back office,
+**all submitted works** by default, **artist names and bios shown**, **several works per page (grid)**.
+Layout: cover + summary table (categories × artists × works) → one section per category (list order, then unknown
+categories, then "ไม่ระบุกลุ่มงาน") → per artist: name (academic title), extra-language name, country/flag, affiliation, bio,
+then a grid of that artist's works in the category (image, No. through the whole report, status chip, title, technique,
+size · year, sub-type, video link, concept short/full/none). An artist in two categories appears in both.
+Options (localStorage `report:<slug>`): status, category, artist order (name/sent), main + extra languages, 2/3/4 per row,
+fields, cover, new page per category. Printed with the browser (Save as PDF); page numbers via `@page` margin boxes
+(Chrome 131+). The print button waits for all images first. **Emails/phones are never in the report.**
+Logic in `public/js/report-data.js` (tests/report.test.js).
+
 ## 7. API (all JSON; writes require same-origin)
 
 | Route | Who | Purpose |

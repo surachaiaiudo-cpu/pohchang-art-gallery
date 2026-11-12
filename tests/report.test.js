@@ -1,0 +1,41 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { buildReport, categoryOrder, categoryLabel, pickLang, paragraphs } from '../public/js/report-data.js';
+
+const cats = [
+  { name: 'จิตรกรรม', en: 'Painting', zh: '绘画' },
+  { name: 'ประติมากรรม', en: 'Sculpture', zh: '雕塑' }
+];
+const W = (id, artist_id, category, extra = {}) => ({
+  id, artist_id, category, status: 'submitted', display_order: 0,
+  artist_name_th: { 1: 'สมชาย', 2: 'กมล', 3: 'อนันต์' }[artist_id] || '', title_th: `งาน ${id}`, ...extra
+});
+
+test('groups by category in list order, artists by name, numbering runs through the report', () => {
+  const works = [W(1, 1, 'ประติมากรรม'), W(2, 2, 'จิตรกรรม'), W(3, 1, 'จิตรกรรม'), W(4, 2, 'จิตรกรรม'), W(5, 3, '')];
+  const r = buildReport(works, { categories: cats });
+  assert.deepEqual(r.sections.map((s) => s.cat.name), ['จิตรกรรม', 'ประติมากรรม', 'ไม่ระบุกลุ่มงาน']);
+  const painting = r.sections[0];
+  assert.deepEqual(painting.artists.map((a) => a.id), [2, 1]); // กมล before สมชาย
+  assert.deepEqual(painting.artists[0].works.map((w) => [w.id, w.no]), [[2, '001'], [4, '002']]);
+  assert.equal(r.sections[1].artists[0].works[0].no, '004');
+  assert.equal(r.total.works, 5);
+  assert.equal(r.total.artists, 3); // artist 1 is in two sections but counted once
+});
+
+test('status and category filters, artist order by first submission, unknown categories kept', () => {
+  const works = [W(1, 1, 'จิตรกรรม', { status: 'shown' }), W(2, 2, 'จิตรกรรม'), W(3, 3, 'Old cat'), W(4, 3, 'Old cat', { deleted_at: 'x' })];
+  assert.equal(buildReport(works, { categories: cats, status: 'shown' }).total.works, 1);
+  const sent = buildReport(works, { categories: cats, artistOrder: 'sent', cat: 'จิตรกรรม' });
+  assert.deepEqual(sent.sections.map((s) => s.artists.map((a) => a.id)), [[1, 2]]);
+  const old = buildReport(works, { categories: cats, cat: 'Old cat' });
+  assert.equal(old.sections[0].nWorks, 1);
+  assert.equal(categoryOrder(cats, works).at(-1).key, '');
+});
+
+test('labels and language fallback', () => {
+  assert.equal(categoryLabel(cats[0], 'en'), 'Painting');
+  assert.equal(categoryLabel({ name: 'x', en: 'y', zh: '' }, 'zh'), 'y');
+  assert.equal(pickLang({ bio_th: '', bio_en: 'Hello' }, 'bio', 'th'), 'Hello');
+  assert.deepEqual(paragraphs('a\n\n\nb\nc'), ['a', 'b\nc']);
+});
