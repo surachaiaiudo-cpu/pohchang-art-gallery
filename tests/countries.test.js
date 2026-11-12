@@ -12,3 +12,9 @@ test('Kurdistan is a selectable place with its own names and flag (owner, 2026-1
   assert.match(countryOptions('en'), /<option value="XR">Kurdistan<\/option>/);
   assert.equal(countryName('TH', 'en'), 'Thailand');
 });
+
+test('old free text Kurdistan maps to XR', async () => {
+  const { COUNTRY_ALIASES } = await import('../public/js/countries.js');
+  for (const t of ['kurdistan', 'kurdish', 'เคอร์ดิสถาน', '库尔德斯坦']) assert.ok(COUNTRY_ALIASES.XR.includes(t));
+  for (const names of Object.values(COUNTRY_ALIASES)) for (const n of names) assert.equal(n, n.toLowerCase().trim());
+});

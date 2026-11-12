@@ -8,7 +8,8 @@ test('old free-text nationalities become country codes', () => {
   assert.equal(matchCountry('United Kingdom').code, 'GB');
   assert.equal(matchCountry('Mexico').code, 'MX');
   assert.equal(matchCountry('เม็กซิโก').code, 'MX');
-  assert.equal(matchCountry('Kurdistan').kept, 'Kurdistan');
+  assert.equal(matchCountry('Kurdistan').code, 'XR'); // owner, 2026-11-12
+  assert.equal(matchCountry('Atlantis').kept, 'Atlantis');
   assert.deepEqual(matchCountry('someone@gmail.com'), { code: '', kept: '', dropped: true });
   assert.equal(matchCountry('-').code, '');
 });
@@ -36,11 +37,11 @@ test('an old work maps to the new shape; email kept private and lower-cased', ()
 });
 
 test('preview summary counts artists once and lists what needs a curator', () => {
-  const s = summarize([old, { ...old, id: 8, title_th: 'สอง' }, { ...old, id: 9, artist_email: '', artist_name_th: 'Ali', nationality: 'Kurdistan' },
+  const s = summarize([old, { ...old, id: 8, title_th: 'สอง' }, { ...old, id: 9, artist_email: '', artist_name_th: 'Ali', nationality: 'Atlantis' },
     { ...old, id: 10, artist_email: '', artist_name_th: 'Bo', nationality: 'bo@x.com' }, { ...old, id: 11, image_url: 'http://x/y.jpg' }]);
   assert.equal(s.works, 4);
   assert.equal(s.artists, 3);
-  assert.deepEqual(s.unknownNationalities, { Kurdistan: 1 });
+  assert.deepEqual(s.unknownNationalities, { Atlantis: 1 });
   assert.deepEqual(s.nationalityWasEmail, ['Bo']);
   assert.equal(s.skipped.length, 1);
   assert.equal(artistKey({ email: '', name_th: 'Ali' }), 'n:ali');
