@@ -90,14 +90,28 @@
 .wk-concept { font-size: calc(var(--s) * 8pt); line-height: 1.45; color: #45423d; margin-top: 1.2mm; overflow-wrap: anywhere; }
 .wk-concept.short { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: var(--lines, 3); line-clamp: var(--lines, 3); overflow: hidden; }
 
+/* divider sheet before each category */
+.sh-divider { background: color-mix(in srgb, var(--rep-accent) 7%, #fff); }
+.sh-divider::before { height: 100%; width: 14mm; right: auto; }
+.dv-in { flex: 1; display: flex; flex-direction: column; justify-content: center; padding-left: 22mm; }
+.dv-no { font-size: 13pt; font-weight: 600; color: var(--rep-accent); letter-spacing: 0.05em; }
+.dv-name { font-family: 'Noto Serif Thai', 'IBM Plex Sans Thai', serif; font-size: 40pt; line-height: 1.2; margin: 3mm 0 0; font-weight: 700; }
+.dv-x { font-size: 15pt; color: var(--rep-muted); margin-top: 1.5mm; }
+.dv-rule { height: 0.8mm; width: 36mm; background: var(--rep-accent); margin: 9mm 0 6mm; }
+.dv-count { font-size: 14pt; font-weight: 500; }
+.sh-divider .sh-foot { margin-left: 22mm; }
+
 /* checklist for ticking ผ่าน / ไม่ผ่าน: 20 rows per sheet, one line each */
-.ck-body { flex: 1; min-height: 0; padding-top: 4mm; overflow: hidden; }
+.ck-body { flex: 1; min-height: 0; padding-top: 2mm; overflow: hidden; }
 .ck { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 9pt; }
 .ck col.c-i { width: 9mm; } .ck col.c-a { width: 62mm; } .ck col.c-n { width: 19mm; } .ck col.c-no { width: 13mm; }
 .ck col.c-b { width: 16mm; } .ck col.c-r { width: 38mm; }
 .ck th, .ck td { height: 7.4mm; padding: 0 2mm; border: 0.25mm solid #bdb8ad; text-align: left; vertical-align: middle;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-sizing: border-box; }
 .ck th { height: 8mm; background: #f2f0eb; font-size: 8.5pt; font-weight: 600; }
+.ck col.c-a2 { width: 80mm; }
+.ck .ck-nos { color: var(--rep-muted); white-space: normal; font-variant-numeric: tabular-nums; }
+.ck-hint { flex: none; font-size: 8.5pt; color: var(--rep-muted); padding-top: 2mm; }
 .ck .ck-no { font-variant-numeric: tabular-nums; color: var(--rep-muted); }
 .ck .ck-t { font-weight: 500; }
 .ck td.ck-a, .ck td.ck-i, .ck td.ck-n { vertical-align: top; padding-top: 1.6mm; white-space: normal; }

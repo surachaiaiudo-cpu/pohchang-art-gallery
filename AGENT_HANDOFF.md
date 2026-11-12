@@ -282,11 +282,12 @@ cover (title + summary table categories × artists × works), then one page per 
 left 74 mm = academic title, name (+extra language), country/flag, affiliation, work count, bio; right = works grid by
 count (`workGrid()`: 1–3 one row, 4 → 2×2, 5–6 → 3×2, more → 4 per row): image, No. through the whole report, status chip,
 title, technique · size · year · sub-type, video link, concept (short = clamped lines / full / none).
-**Checklist** (owner, 2026-11-12 20:43 / 20:48; option on by default) right after the cover, for ticking by hand:
-grouped by category, then by **artist** (#, name · country, number of works in that category, merged cells) with the
-**titles** beside, one row per work with its No. and empty boxes ผ่าน / ไม่ผ่าน + หมายเหตุ. 20 rows per sheet
-(`checklistPages()`: an artist's rows stay on one sheet, a category row never ends a sheet), titles cut with … ,
-signature line (ลงชื่อ … ผู้ทรงคุณวุฒิ / วันที่) on every checklist sheet.
+**Order (owner, 2026-11-12 20:53):** cover, then **each category on its own**: divider sheet (ใบคั่น: กลุ่มงานที่ n, names
+in th/en/zh, counts) → checklist for that category → one page per artist. Options (all on by default): cover, divider,
+checklist, and **work titles in the checklist**. Checklist (`checklistPages(section, { titles })`): by artist (#, name ·
+country, number of works in merged cells); with titles one row + boxes ผ่าน / ไม่ผ่าน per work (No., title cut with …),
+without titles one row + boxes per artist with its No. list. 20 rows per sheet, an artist's rows stay on one sheet
+(split and marked "(ต่อ)" only if longer than a sheet), signature line (ลงชื่อ … ผู้ทรงคุณวุฒิ / วันที่) on every sheet.
 Text in each `[data-fit]` part shrinks to 70 % to fit; still too long → red frame on screen + warning. The preview is
 zoomed to the column width (`zoom`), reset to 1 for print. Print button waits for all images.
 Options in localStorage `report:<slug>`. **Emails/phones are never in the report.** Logic: `public/js/report-data.js`

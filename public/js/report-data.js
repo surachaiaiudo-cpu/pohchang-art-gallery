@@ -96,31 +96,27 @@ export function artistPages(rep) {
   return out;
 }
 
-// Checklist for ticking ผ่าน / ไม่ผ่าน (owner, 2026-11-12): grouped by category, then by artist (name, number of
-// works, then the titles, one row each with its own boxes). An artist's rows stay on one sheet (unless the artist
-// alone has more rows than a sheet holds) and a category row never ends a sheet.
-// -> pages: [[{ type: 'cat', cat, si, n } | { type: 'artist', artist, ai, works }]]
+// Checklist for ticking ผ่าน / ไม่ผ่าน (owner, 2026-11-12), one per category (each category starts on a new
+// page after its divider sheet). With titles: one row per work (boxes per work), the artist's name and number of
+// works in merged cells. Without titles (owner's option): one row per artist (boxes per artist).
+// An artist's rows stay on one sheet unless they alone need more than a sheet.
+// -> pages: [[{ artist, ai, works, cont }]]
 export const CHECK_ROWS_PER_PAGE = 20;
-const rowsOf = (it) => (it.type === 'cat' ? 1 : it.works.length);
-export function checklistPages(rep, perPage = CHECK_ROWS_PER_PAGE) {
+export function checklistPages(section, { perPage = CHECK_ROWS_PER_PAGE, titles = true } = {}) {
   const items = [];
-  rep.sections.forEach((s, si) => {
-    items.push({ type: 'cat', cat: s.cat, si, n: s.nWorks, nArtists: s.nArtists });
-    s.artists.forEach((a, ai) => {
-      // A very prolific artist is split into sheet-sized pieces.
-      for (let i = 0; i < a.works.length; i += perPage) {
-        items.push({ type: 'artist', artist: a, ai, works: a.works.slice(i, i + perPage), cont: i > 0 });
-      }
-    });
+  section.artists.forEach((a, ai) => {
+    if (!titles) { items.push({ artist: a, ai, works: a.works, cont: false, rows: 1 }); return; }
+    for (let i = 0; i < a.works.length; i += perPage) {
+      const works = a.works.slice(i, i + perPage);
+      items.push({ artist: a, ai, works, cont: i > 0, rows: works.length });
+    }
   });
   const pages = [];
   let cur = []; let used = 0;
-  items.forEach((it, k) => {
-    // A category row goes with the first artist after it.
-    const need = it.type === 'cat' && items[k + 1] ? 1 + rowsOf(items[k + 1]) : rowsOf(it);
-    if (cur.length && used + need > perPage) { pages.push(cur); cur = []; used = 0; }
-    cur.push(it); used += rowsOf(it);
-  });
+  for (const it of items) {
+    if (cur.length && used + it.rows > perPage) { pages.push(cur); cur = []; used = 0; }
+    cur.push(it); used += it.rows;
+  }
   if (cur.length) pages.push(cur);
   return pages;
 }

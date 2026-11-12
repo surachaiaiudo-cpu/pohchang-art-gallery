@@ -34,7 +34,9 @@ const FIELDS = [
 ];
 const LAYOUT = [
   { key: 'cover', label: 'หน้าปกและตารางสรุป' },
-  { key: 'checklist', label: 'ตารางรายชื่อสำหรับติ๊ก ผ่าน / ไม่ผ่าน' }
+  { key: 'divider', label: 'ใบคั่นก่อนแต่ละกลุ่มงาน' },
+  { key: 'checklist', label: 'ตารางติ๊ก ผ่าน / ไม่ผ่าน (ต้นแต่ละกลุ่มงาน)' },
+  { key: 'titles', label: '— แสดงรายชื่อผลงานในตารางติ๊ก (ติ๊กทีละผลงาน; ไม่แสดง = ติ๊กทีละศิลปิน)' }
 ];
 
 const S = {
@@ -42,7 +44,7 @@ const S = {
   o: {
     status: 'all', cat: '*', order: 'name', lang: 'th', extra: ['en'], concept: 'short',
     fields: Object.fromEntries(FIELDS.map((f) => [f.key, true])),
-    layout: { cover: true, checklist: true }
+    layout: { cover: true, divider: true, checklist: true, titles: true }
   }
 };
 try {
@@ -72,6 +74,8 @@ function renderControls() {
   $('o-concept').innerHTML = opts(CONCEPT_MODES, o.concept);
   $('o-fields').innerHTML = checks(FIELDS, o.fields);
   $('o-layout').innerHTML = checks(LAYOUT, o.layout);
+  const t = $('o-layout').querySelector('input[value="titles"]');
+  if (t) t.disabled = !o.layout.checklist;
 }
 
 function renderCats() {
@@ -118,41 +122,66 @@ function coverSheet(rep, total) {
         <tbody>${rows}</tbody>
         <tfoot><tr><td></td><td>รวม</td><td class="n">${rep.total.artists}</td><td class="n">${rep.total.works}</td></tr></tfoot>
       </table>
-      <p class="cv-note">หนึ่งหน้าต่อศิลปินหนึ่งท่านในแต่ละกลุ่มงาน · ศิลปินที่ส่งหลายกลุ่มงานจะมีหน้าในทุกกลุ่มที่ส่ง (จำนวนรวมนับครั้งเดียว) · เลข No. คือลำดับผลงานในรายงานนี้</p>
+      <p class="cv-note">แต่ละกลุ่มงานขึ้นหน้าใหม่ (ใบคั่น ตารางติ๊ก แล้วหน้าละหนึ่งศิลปิน) · ศิลปินที่ส่งหลายกลุ่มงานจะมีหน้าในทุกกลุ่มที่ส่ง (จำนวนรวมนับครั้งเดียว) · เลข No. คือลำดับผลงานในรายงานนี้</p>
     </div>
     ${foot(1, total)}
   </section>`;
 }
 
-// Checklist sheets for ticking ผ่าน / ไม่ผ่าน by hand (owner, 2026-11-12): by category, then artist (name, country,
-// number of works) with the titles beside, one row and one pair of boxes per work. Signature line on every sheet.
-function checklistSheet(items, i, count, page, total) {
+// Divider sheet before each category (ใบคั่น, owner 2026-11-12).
+function dividerSheet(section, si, page, total) {
+  const c = section.cat;
+  const names = [...new Set([categoryLabel(c, S.o.lang), c.name, c.en, c.zh])].filter(Boolean);
+  return `<section class="sheet sh-divider">
+    <div class="dv-in">
+      <div class="dv-no">กลุ่มงานที่ ${si + 1}</div>
+      <h2 class="dv-name">${esc(names[0])}</h2>
+      ${names.slice(1).map((n) => `<div class="dv-x">${esc(n)}</div>`).join('')}
+      <div class="dv-rule"></div>
+      <div class="dv-count">${section.nArtists} ศิลปิน · ${section.nWorks} ผลงาน</div>
+    </div>
+    ${foot(page, total)}
+  </section>`;
+}
+
+// Checklist sheets for ticking ผ่าน / ไม่ผ่าน by hand (owner, 2026-11-12), one set per category: by artist (name,
+// country, number of works); with titles each work has its own row and boxes, without them each artist has one.
+// Signature line on every sheet.
+function checklistSheet(section, si, items, i, count, page, total) {
   const L = S.o.lang;
+  const titles = !!S.o.layout.titles;
   const box = '<span class="ck-box" aria-hidden="true"></span>';
+  const ticks = `<td class="ck-b">${box}</td><td class="ck-b">${box}</td><td></td>`;
   const body = items.map((it) => {
-    if (it.type === 'cat') {
-      return `<tr class="ck-cat"><td colspan="8"><b>กลุ่มงานที่ ${it.si + 1}</b> · ${catName(it.cat)} <span class="x">(${it.nArtists} ศิลปิน · ${it.n} ผลงาน)</span></td></tr>`;
-    }
     const a = captionContent(it.artist.works[0], { langs: [L], fields: { artist: true, country: true, title: false, technique: false, size: false, year: false } });
-    const span = it.works.length;
+    const span = titles ? it.works.length : 1;
+    const head = `<td class="ck-i" rowspan="${span}">${it.ai + 1}</td>
+      <td class="ck-a${span === 1 ? ' one' : ''}" rowspan="${span}"><div class="ck-an">${esc(a.artists[0] || '')}${it.cont ? ' <span class="x">(ต่อ)</span>' : ''}</div>${a.place ? `<div class="ck-ac">${esc(a.place)}</div>` : ''}</td>
+      <td class="ck-n" rowspan="${span}">${it.artist.works.length} ชิ้น</td>`;
+    if (!titles) {
+      return `<tr class="ck-first">${head}<td class="ck-nos">${esc(it.works.map((w) => w.no).join(', '))}</td>${ticks}</tr>`;
+    }
     return it.works.map((w, k) => {
       const t = captionContent(w, { langs: [L], fields: { artist: false, country: false, title: true, technique: false, size: false, year: false } });
-      const head = k === 0 ? `<td class="ck-i" rowspan="${span}">${it.ai + 1}</td>
-        <td class="ck-a${span === 1 ? ' one' : ''}" rowspan="${span}"><div class="ck-an">${esc(a.artists[0] || '')}${it.cont ? ' <span class="x">(ต่อ)</span>' : ''}</div>${a.place ? `<div class="ck-ac">${esc(a.place)}</div>` : ''}</td>
-        <td class="ck-n" rowspan="${span}">${it.artist.works.length} ชิ้น</td>` : '';
-      return `<tr class="${k === 0 ? 'ck-first' : ''}">${head}<td class="ck-no">${esc(w.no)}</td><td class="ck-t">${esc(t.titles[0] || '')}</td>
-        <td class="ck-b">${box}</td><td class="ck-b">${box}</td><td></td></tr>`;
+      return `<tr class="${k === 0 ? 'ck-first' : ''}">${k === 0 ? head : ''}<td class="ck-no">${esc(w.no)}</td><td class="ck-t">${esc(t.titles[0] || '')}</td>${ticks}</tr>`;
     }).join('');
   }).join('');
+  const cols = titles
+    ? '<col class="c-i"><col class="c-a"><col class="c-n"><col class="c-no"><col><col class="c-b"><col class="c-b"><col class="c-r">'
+    : '<col class="c-i"><col class="c-a2"><col class="c-n"><col><col class="c-b"><col class="c-b"><col class="c-r">';
+  const th = titles
+    ? '<th>#</th><th>ชื่อศิลปิน</th><th class="ck-n">จำนวน (ชิ้น)</th><th>No.</th><th>ชื่อผลงาน</th>'
+    : '<th>#</th><th>ชื่อศิลปิน</th><th class="ck-n">จำนวน (ชิ้น)</th><th>No. ผลงาน</th>';
   return `<section class="sheet sh-check">
     <header class="sh-head">
-      <span class="sh-cat"><b>แบบบันทึกผลการพิจารณา</b> · ติ๊ก ✓ ในช่อง ผ่าน หรือ ไม่ผ่าน ของผลงานแต่ละชิ้น</span>
+      <span class="sh-cat"><b>แบบบันทึกผลการพิจารณา · กลุ่มงานที่ ${si + 1}</b> · ${catName(section.cat)}</span>
       <span>แผ่นที่ ${i + 1} / ${count}</span>
     </header>
+    <div class="ck-hint">ติ๊ก ✓ ในช่อง ผ่าน หรือ ไม่ผ่าน ${titles ? 'ของผลงานแต่ละชิ้น' : 'ของศิลปินแต่ละท่าน'} · ${section.nArtists} ศิลปิน · ${section.nWorks} ผลงาน</div>
     <div class="ck-body" data-fit>
       <table class="ck">
-        <colgroup><col class="c-i"><col class="c-a"><col class="c-n"><col class="c-no"><col><col class="c-b"><col class="c-b"><col class="c-r"></colgroup>
-        <thead><tr><th>#</th><th>ชื่อศิลปิน</th><th class="ck-n">จำนวน (ชิ้น)</th><th>No.</th><th>ชื่อผลงาน</th><th class="ck-b">ผ่าน</th><th class="ck-b">ไม่ผ่าน</th><th>หมายเหตุ</th></tr></thead>
+        <colgroup>${cols}</colgroup>
+        <thead><tr>${th}<th class="ck-b">ผ่าน</th><th class="ck-b">ไม่ผ่าน</th><th>หมายเหตุ</th></tr></thead>
         <tbody>${body}</tbody>
       </table>
     </div>
@@ -245,23 +274,28 @@ function zoomPreview() {
 }
 
 let last = { pages: 0, works: 0, artists: 0, sections: 0 };
+// Order (owner, 2026-11-12): cover, then for each category: divider, checklist, one page per artist.
 function render() {
   const rep = buildReport(S.works, { categories: S.ex.categories, status: S.o.status, cat: S.o.cat, artistOrder: S.o.order, lang: S.o.lang });
-  const pages = artistPages(rep);
-  const cover = S.o.layout.cover ? 1 : 0;
-  const checks = S.o.layout.checklist ? checklistPages(rep) : [];
-  const front = cover + checks.length;
-  const total = pages.length + front;
+  const lay = S.o.layout;
+  const plan = [];
+  if (lay.cover) plan.push((pg, total) => coverSheet(rep, total));
+  const byArtist = artistPages(rep);
+  rep.sections.forEach((section, si) => {
+    if (lay.divider) plan.push((pg, total) => dividerSheet(section, si, pg, total));
+    if (lay.checklist) {
+      const ck = checklistPages(section, { titles: !!lay.titles });
+      ck.forEach((items, i) => plan.push((pg, total) => checklistSheet(section, si, items, i, ck.length, pg, total)));
+    }
+    byArtist.filter((x) => x.si === si).forEach((x) => plan.push((pg, total) => artistSheet(x, pg, total)));
+  });
+  const total = plan.length;
   const p = themePalette(S.ex);
   const paper = $('paper');
   paper.style.setProperty('--rep-accent', p.accent === '#d4af37' ? '#8a6d12' : p.accent);
   paper.style.zoom = '1';
-  paper.innerHTML = pages.length
-    ? [cover ? coverSheet(rep, total) : '',
-      ...checks.map((rows, i) => checklistSheet(rows, i, checks.length, cover + i + 1, total)),
-      ...pages.map((x, i) => artistSheet(x, i + 1 + front, total))].join('')
-    : '<p class="rep-empty">ไม่มีผลงานตามที่เลือก</p>';
-  $('print').disabled = !pages.length;
+  paper.innerHTML = rep.total.works ? plan.map((f, i) => f(i + 1, total)).join('') : '<p class="rep-empty">ไม่มีผลงานตามที่เลือก</p>';
+  $('print').disabled = !rep.total.works;
   last = { pages: total, works: rep.total.works, artists: rep.total.artists, sections: rep.sections.length };
   refit();
 }
@@ -314,7 +348,7 @@ function bind() {
   $('o-extra').addEventListener('change', () => { S.o.extra = [...$('o-extra').querySelectorAll('input:checked')].map((x) => x.value); changed(); });
   $('o-concept').addEventListener('change', (e) => { S.o.concept = e.target.value; changed(); });
   $('o-fields').addEventListener('change', () => { $('o-fields').querySelectorAll('input').forEach((x) => { S.o.fields[x.value] = x.checked; }); changed(); });
-  $('o-layout').addEventListener('change', () => { $('o-layout').querySelectorAll('input').forEach((x) => { S.o.layout[x.value] = x.checked; }); changed(); });
+  $('o-layout').addEventListener('change', () => { $('o-layout').querySelectorAll('input').forEach((x) => { S.o.layout[x.value] = x.checked; }); renderControls(); changed(); });
   $('print').addEventListener('click', () => { printWhenReady(); });
   let t = null;
   window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(zoomPreview, 150); });

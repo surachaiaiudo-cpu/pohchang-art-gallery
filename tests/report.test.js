@@ -50,19 +50,17 @@ test('landscape grid and one page per artist per category', async () => {
   assert.deepEqual(pages.map((p) => [p.section.cat.name, p.artist.id]), [['จิตรกรรม', 2], ['จิตรกรรม', 1], ['ประติมากรรม', 1]]);
 });
 
-test('checklist pages: grouped by artist, an artist never split, category rows never at the bottom', async () => {
+test('checklist per category: artist rows kept together; one row per artist without titles', async () => {
   const { checklistPages } = await import('../public/js/report-data.js');
   const works = [];
   for (let i = 1; i <= 9; i += 1) works.push(W(i, (i % 3) + 1, 'จิตรกรรม'));
-  for (let i = 10; i <= 14; i += 1) works.push(W(i, 1, 'ประติมากรรม'));
-  const pages = checklistPages(buildReport(works, { categories: cats }), 8);
-  const flat = pages.flat();
-  assert.equal(flat.filter((r) => r.type === 'artist').reduce((n, r) => n + r.works.length, 0), 14);
-  assert.equal(flat.filter((r) => r.type === 'cat').length, 2);
-  for (const p of pages) {
-    assert.ok(p.reduce((n, r) => n + (r.type === 'cat' ? 1 : r.works.length), 0) <= 8);
-    assert.notEqual(p.at(-1).type, 'cat');
-  }
-  // Each artist of the painting group has 3 works and sits on one sheet.
-  assert.deepEqual(flat.filter((r) => r.type === 'artist').map((r) => r.works.length), [3, 3, 3, 5]);
+  for (let i = 10; i <= 14; i += 1) works.push(W(i, 1, 'จิตรกรรม'));
+  const sec = buildReport(works, { categories: cats }).sections[0];
+  const pages = checklistPages(sec, { perPage: 6 });
+  for (const p of pages) assert.ok(p.reduce((n, r) => n + r.rows, 0) <= 6);
+  assert.equal(pages.flat().reduce((n, r) => n + r.works.length, 0), 14);
+  assert.ok(pages.flat().some((r) => r.cont)); // artist 1 has 8 works > 6 rows: split, marked (ต่อ)
+  const short = checklistPages(sec, { perPage: 6, titles: false });
+  assert.deepEqual(short.map((p) => p.length), [3]);
+  assert.deepEqual(short[0].map((r) => r.works.length), [3, 8, 3]); // กมล, สมชาย, อนันต์
 });
