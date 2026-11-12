@@ -49,3 +49,15 @@ test('landscape grid and one page per artist per category', async () => {
   const pages = artistPages(buildReport(works, { categories: cats }));
   assert.deepEqual(pages.map((p) => [p.section.cat.name, p.artist.id]), [['จิตรกรรม', 2], ['จิตรกรรม', 1], ['ประติมากรรม', 1]]);
 });
+
+test('checklist pages: every work once, category rows never at the bottom of a page', async () => {
+  const { checklistPages } = await import('../public/js/report-data.js');
+  const works = [];
+  for (let i = 1; i <= 9; i += 1) works.push(W(i, (i % 3) + 1, 'จิตรกรรม'));
+  for (let i = 10; i <= 14; i += 1) works.push(W(i, 1, 'ประติมากรรม'));
+  const pages = checklistPages(buildReport(works, { categories: cats }), 10);
+  const flat = pages.flat();
+  assert.equal(flat.filter((r) => r.type === 'work').length, 14);
+  assert.equal(flat.filter((r) => r.type === 'cat').length, 2);
+  for (const p of pages) { assert.ok(p.length <= 10); assert.notEqual(p.at(-1).type, 'cat'); }
+});

@@ -95,3 +95,34 @@ export function artistPages(rep) {
   rep.sections.forEach((section, si) => section.artists.forEach((artist, ai) => out.push({ section, si, ai, artist })));
   return out;
 }
+
+// Checklist for ticking ผ่าน / ไม่ผ่าน (owner, 2026-11-12): one row per work in report order, with a
+// category row before each group. Rows are split into pages of `perPage`; a category row never ends a page.
+export const CHECK_ROWS_PER_PAGE = 20;
+export function checklistPages(rep, perPage = CHECK_ROWS_PER_PAGE) {
+  const rows = [];
+  rep.sections.forEach((s, si) => {
+    rows.push({ type: 'cat', cat: s.cat, si, n: s.nWorks });
+    s.artists.forEach((a) => a.works.forEach((w) => rows.push({ type: 'work', w })));
+  });
+  const pages = [];
+  let cur = [];
+  for (const r of rows) {
+    if (cur.length >= perPage) { pages.push(cur); cur = []; }
+    cur.push(r);
+  }
+  if (cur.length) pages.push(cur);
+  // Move a category row left at the bottom of a page to the top of the next one.
+  for (let i = 0; i < pages.length - 1; i += 1) {
+    const p = pages[i];
+    if (p.length > 1 && p[p.length - 1].type === 'cat') pages[i + 1].unshift(p.pop());
+  }
+  // A page that now holds too many rows passes the extra ones on.
+  for (let i = 0; i < pages.length; i += 1) {
+    while (pages[i].length > perPage) {
+      if (!pages[i + 1]) pages.push([]);
+      pages[i + 1].unshift(pages[i].pop());
+    }
+  }
+  return pages;
+}

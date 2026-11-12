@@ -90,6 +90,23 @@
 .wk-concept { font-size: calc(var(--s) * 8pt); line-height: 1.45; color: #45423d; margin-top: 1.2mm; overflow-wrap: anywhere; }
 .wk-concept.short { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: var(--lines, 3); line-clamp: var(--lines, 3); overflow: hidden; }
 
+/* checklist for ticking ผ่าน / ไม่ผ่าน: 20 rows per sheet, one line each */
+.ck-body { flex: 1; min-height: 0; padding-top: 4mm; overflow: hidden; }
+.ck { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 9pt; }
+.ck col.c-no { width: 13mm; } .ck col.c-a { width: 58mm; } .ck col.c-c { width: 30mm; }
+.ck col.c-b { width: 17mm; } .ck col.c-n { width: 42mm; }
+.ck th, .ck td { height: 7.4mm; padding: 0 2mm; border: 0.25mm solid #bdb8ad; text-align: left; vertical-align: middle;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-sizing: border-box; }
+.ck th { height: 8mm; background: #f2f0eb; font-size: 8.5pt; font-weight: 600; }
+.ck .ck-no { font-variant-numeric: tabular-nums; color: var(--rep-muted); }
+.ck .ck-t { font-weight: 500; }
+.ck .ck-c { color: var(--rep-muted); }
+.ck .ck-b { text-align: center; padding: 0; }
+.ck-box { display: inline-block; width: 4.6mm; height: 4.6mm; border: 0.35mm solid var(--rep-ink); border-radius: 0.6mm; vertical-align: middle; }
+.ck-cat td { background: color-mix(in srgb, var(--rep-accent) 9%, #fff); font-size: 9pt; }
+.ck-cat b { color: var(--rep-accent); }
+.ck-sign { flex: none; display: flex; justify-content: flex-end; gap: 10mm; align-items: flex-end; height: 13mm; padding-bottom: 2mm; font-size: 9pt; color: #3d3b37; }
+
 @media print {
   @page { size: A4 landscape; margin: 0; }
   html, body { background: #fff !important; margin: 0; }

@@ -282,6 +282,10 @@ cover (title + summary table categories × artists × works), then one page per 
 left 74 mm = academic title, name (+extra language), country/flag, affiliation, work count, bio; right = works grid by
 count (`workGrid()`: 1–3 one row, 4 → 2×2, 5–6 → 3×2, more → 4 per row): image, No. through the whole report, status chip,
 title, technique · size · year · sub-type, video link, concept (short = clamped lines / full / none).
+**Checklist** (owner, 2026-11-12 20:43; option on by default) right after the cover: one row per work in report order
+(No., title, artist, country, empty boxes ผ่าน / ไม่ผ่าน, หมายเหตุ) for ticking by hand, category rows between groups,
+20 rows per sheet (`checklistPages()`: a category row never ends a sheet), one-line cells cut with …, signature line
+(ลงชื่อ … ผู้ทรงคุณวุฒิ / วันที่) on every checklist sheet.
 Text in each `[data-fit]` part shrinks to 70 % to fit; still too long → red frame on screen + warning. The preview is
 zoomed to the column width (`zoom`), reset to 1 for print. Print button waits for all images.
 Options in localStorage `report:<slug>`. **Emails/phones are never in the report.** Logic: `public/js/report-data.js`

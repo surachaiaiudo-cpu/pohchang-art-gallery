@@ -8,7 +8,7 @@ import { flagUrl } from './countries.js';
 import { CAPTION_LANGS, LANG_TH, normLangs, captionContent, themePalette } from './caption-text.js';
 import {
   REPORT_STATUSES, STATUS_LABEL, ARTIST_ORDERS, CONCEPT_MODES,
-  buildReport, categoryOrder, categoryLabel, pickLang, paragraphs, workGrid, artistPages
+  buildReport, categoryOrder, categoryLabel, pickLang, paragraphs, workGrid, artistPages, checklistPages
 } from './report-data.js';
 
 loadFonts(['Noto Serif Thai']);
@@ -32,14 +32,17 @@ const FIELDS = [
   { key: 'sub', label: 'ประเภทย่อย' },
   { key: 'status', label: 'สถานะการคัดกรอง' }
 ];
-const LAYOUT = [{ key: 'cover', label: 'หน้าปกและตารางสรุป' }];
+const LAYOUT = [
+  { key: 'cover', label: 'หน้าปกและตารางสรุป' },
+  { key: 'checklist', label: 'ตารางรายชื่อสำหรับติ๊ก ผ่าน / ไม่ผ่าน' }
+];
 
 const S = {
   ex: null, works: [],
   o: {
     status: 'all', cat: '*', order: 'name', lang: 'th', extra: ['en'], concept: 'short',
     fields: Object.fromEntries(FIELDS.map((f) => [f.key, true])),
-    layout: { cover: true }
+    layout: { cover: true, checklist: true }
   }
 };
 try {
@@ -118,6 +121,35 @@ function coverSheet(rep, total) {
       <p class="cv-note">หนึ่งหน้าต่อศิลปินหนึ่งท่านในแต่ละกลุ่มงาน · ศิลปินที่ส่งหลายกลุ่มงานจะมีหน้าในทุกกลุ่มที่ส่ง (จำนวนรวมนับครั้งเดียว) · เลข No. คือลำดับผลงานในรายงานนี้</p>
     </div>
     ${foot(1, total)}
+  </section>`;
+}
+
+// Checklist sheets for ticking ผ่าน / ไม่ผ่าน by hand (owner, 2026-11-12), with a signature line on every sheet.
+function checklistSheet(rows, i, count, page, total) {
+  const L = S.o.lang;
+  const box = '<span class="ck-box" aria-hidden="true"></span>';
+  const body = rows.map((r) => (r.type === 'cat'
+    ? `<tr class="ck-cat"><td colspan="7"><b>กลุ่มงานที่ ${r.si + 1}</b> · ${catName(r.cat)} <span class="x">(${r.n} ผลงาน)</span></td></tr>`
+    : (() => {
+      const w = r.w;
+      const c = captionContent(w, { langs: [L], fields: { artist: true, country: true, title: true, technique: false, size: false, year: false } });
+      return `<tr><td class="ck-no">${esc(w.no)}</td><td class="ck-t">${esc(c.titles[0] || '')}</td><td class="ck-a">${esc(c.artists[0] || '')}</td>
+        <td class="ck-c">${esc(c.place)}</td><td class="ck-b">${box}</td><td class="ck-b">${box}</td><td></td></tr>`;
+    })())).join('');
+  return `<section class="sheet sh-check">
+    <header class="sh-head">
+      <span class="sh-cat"><b>แบบบันทึกผลการพิจารณา</b> · ติ๊ก ✓ ในช่อง ผ่าน หรือ ไม่ผ่าน</span>
+      <span>แผ่นที่ ${i + 1} / ${count}</span>
+    </header>
+    <div class="ck-body">
+      <table class="ck">
+        <colgroup><col class="c-no"><col><col class="c-a"><col class="c-c"><col class="c-b"><col class="c-b"><col class="c-n"></colgroup>
+        <thead><tr><th>No.</th><th>ชื่อผลงาน</th><th>ศิลปิน</th><th>ประเทศ</th><th class="ck-b">ผ่าน</th><th class="ck-b">ไม่ผ่าน</th><th>หมายเหตุ</th></tr></thead>
+        <tbody>${body}</tbody>
+      </table>
+    </div>
+    <div class="ck-sign"><span>ลงชื่อ ........................................................ ผู้ทรงคุณวุฒิ</span><span>(........................................................)</span><span>วันที่ ..........................</span></div>
+    ${foot(page, total)}
   </section>`;
 }
 
@@ -209,13 +241,17 @@ function render() {
   const rep = buildReport(S.works, { categories: S.ex.categories, status: S.o.status, cat: S.o.cat, artistOrder: S.o.order, lang: S.o.lang });
   const pages = artistPages(rep);
   const cover = S.o.layout.cover ? 1 : 0;
-  const total = pages.length + cover;
+  const checks = S.o.layout.checklist ? checklistPages(rep) : [];
+  const front = cover + checks.length;
+  const total = pages.length + front;
   const p = themePalette(S.ex);
   const paper = $('paper');
   paper.style.setProperty('--rep-accent', p.accent === '#d4af37' ? '#8a6d12' : p.accent);
   paper.style.zoom = '1';
   paper.innerHTML = pages.length
-    ? [cover ? coverSheet(rep, total) : '', ...pages.map((x, i) => artistSheet(x, i + 1 + cover, total))].join('')
+    ? [cover ? coverSheet(rep, total) : '',
+      ...checks.map((rows, i) => checklistSheet(rows, i, checks.length, cover + i + 1, total)),
+      ...pages.map((x, i) => artistSheet(x, i + 1 + front, total))].join('')
     : '<p class="rep-empty">ไม่มีผลงานตามที่เลือก</p>';
   $('print').disabled = !pages.length;
   last = { pages: total, works: rep.total.works, artists: rep.total.artists, sections: rep.sections.length };
