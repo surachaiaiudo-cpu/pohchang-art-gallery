@@ -7,8 +7,8 @@ const SAMPLE_POOL = 24;
 // GET /api/exhibitions - lobby: every public (open or archived) exhibition with its counts and a pool of sample images.
 export const onRequestGet = handle(async ({ env }) => {
   const samples = await env.DB.prepare(
-    `SELECT exhibition_id, id, image_url, title_th, title_en, title_zh, name_th, name_en, name_zh FROM (
-       SELECT w.exhibition_id, w.id, w.image_url, w.title_th, w.title_en, w.title_zh,
+    `SELECT exhibition_id, id, image_url, image_width, image_height, title_th, title_en, title_zh, name_th, name_en, name_zh FROM (
+       SELECT w.exhibition_id, w.id, w.image_url, w.image_width, w.image_height, w.title_th, w.title_en, w.title_zh,
               a.name_th, a.name_en, a.name_zh,
               ROW_NUMBER() OVER (PARTITION BY w.exhibition_id ORDER BY random()) AS rn
          FROM works w JOIN exhibitions e ON e.id = w.exhibition_id JOIN artists a ON a.id = w.artist_id
@@ -20,7 +20,7 @@ export const onRequestGet = handle(async ({ env }) => {
     if (!pool.has(r.exhibition_id)) pool.set(r.exhibition_id, []);
     // Title and artist name only, for the hero caption; never contact details.
     pool.get(r.exhibition_id).push({
-      id: r.id, url: r.image_url,
+      id: r.id, url: r.image_url, w: r.image_width || 0, h: r.image_height || 0,
       title_th: r.title_th || '', title_en: r.title_en || '', title_zh: r.title_zh || '',
       name_th: r.name_th || '', name_en: r.name_en || '', name_zh: r.name_zh || ''
     });

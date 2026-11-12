@@ -205,13 +205,15 @@ function room(e) {
   const title = pick(e, 'title');
   const other = pickOther(e, 'title');
   const works = shuffle(e.samples || []).slice(0, poster ? 3 : 4).map((w) => w.url);
+  const shown = esc(works.join(' '));
+  const strip = stripHtml(e, works);
   const text = `
         <span class="room-b-name">${esc(title)}</span>
         ${other ? `<span class="room-b-other">${esc(other)}</span>` : ''}
         <span class="room-b-meta">${esc(roomMeta(e))}</span>
         <span class="room-b-go">${esc(t('enterRoom'))} →</span>`;
   if (poster) {
-    return `<a class="room-b has-poster" href="/e/${encodeURIComponent(e.slug)}" ${look(e)}>
+    return `<a class="room-b has-poster" href="/e/${encodeURIComponent(e.slug)}" data-shown="${shown}" ${look(e)}>
     <span class="wrap room-b-in">
       <span class="room-b-poster"><img src="${esc(img(poster, 1200))}" alt="${esc(t('posterOf', { name: title }))}" loading="lazy"></span>
       <span class="room-b-side">
@@ -219,17 +221,19 @@ function room(e) {
         ${works.length ? `<span class="room-b-works">${works.map((u) => `<img src="${esc(img(u, 500))}" alt="" loading="lazy">`).join('')}</span>` : ''}
       </span>
     </span>
+    ${strip}
   </a>`;
   }
   const pics = works.length ? works : (e.cover_url ? [e.cover_url] : []);
   const wall = pics.length
     ? pics.map((u, k) => `<img${k ? '' : ' class="lead"'} src="${esc(img(u, k ? 500 : 900))}" alt="" loading="lazy">`).join('')
     : `<p class="empty-wall">${esc(t('wallEmpty'))}</p>`;
-  return `<a class="room-b" href="/e/${encodeURIComponent(e.slug)}" ${look(e)}>
+  return `<a class="room-b" href="/e/${encodeURIComponent(e.slug)}" data-shown="${shown}" ${look(e)}>
     <span class="wrap room-b-in">
       <span class="room-b-wall">${wall}</span>
       <span class="room-b-text">${text}</span>
     </span>
+    ${strip}
   </a>`;
 }
 
@@ -266,30 +270,78 @@ function pohchangExtras(now, calls, past) {
   marquee(names);
 }
 
-// The gold band of exhibition names runs right to left in an endless loop (owner, 2026-11-12).
-// Two identical halves move by exactly one half, so the joint never shows. Each half repeats the names
-// until it is wider than the screen. Hover pauses it; a tap pauses / resumes (touch screens have no hover).
-// With "reduce motion" the band stays still.
-const MARQUEE_SPEED = 60; // px per second
+// Endless right-to-left loops (owner, 2026-11-12): the gold band of exhibition names (Poh-Chang design) and a strip
+// of works under each exhibition room (both designs). Two identical halves move by exactly one half, so the joint
+// never shows; each half repeats the content until it is wider than the screen. Hover pauses; "reduce motion"
+// keeps them still. Loops only run while on screen.
+function fillLoop(track, unit, speed) {
+  const build = () => {
+    track.innerHTML = `<span class="loop-seq">${unit}</span>`;
+    const one = track.firstElementChild.getBoundingClientRect().width || 1;
+    const half = unit.repeat(Math.max(1, Math.ceil((window.innerWidth + 40) / one)));
+    track.innerHTML = `<span class="loop-seq">${half}</span><span class="loop-seq" aria-hidden="true">${half}</span>`;
+    const w = track.firstElementChild.getBoundingClientRect().width;
+    track.style.setProperty('--loop-dur', `${Math.max(12, Math.round(w / speed))}s`);
+  };
+  build();
+  return build;
+}
+const loops = [];
+let loopWidth = window.innerWidth;
+window.addEventListener('resize', () => {
+  if (Math.abs(window.innerWidth - loopWidth) < 40) return;
+  loopWidth = window.innerWidth;
+  loops.forEach((f) => f());
+});
+const onScreen = 'IntersectionObserver' in window ? new IntersectionObserver((entries) => {
+  for (const en of entries) {
+    if (!en.isIntersecting) { en.target.classList.remove('running'); continue; }
+    // Pictures load the first time a strip comes near the screen.
+    en.target.querySelectorAll('img[data-src]').forEach((im) => { im.src = im.dataset.src; im.removeAttribute('data-src'); });
+    en.target.classList.add('running');
+  }
+}, { rootMargin: '200px 0px' }) : null;
+function watch(el) { if (onScreen) onScreen.observe(el); else el.classList.add('running'); }
+
 function marquee(names) {
   const track = $('pc-marquee');
   if (!names.length) { track.textContent = ''; return; }
-  const unit = names.map((n) => `${esc(n)}<i>◆</i>`).join('');
-  const build = () => {
-    track.innerHTML = `<span class="pc-mq-seq">${unit}</span>`;
-    const one = track.firstElementChild.getBoundingClientRect().width || 1;
-    const reps = Math.max(1, Math.ceil((window.innerWidth + 40) / one));
-    const half = unit.repeat(reps);
-    track.innerHTML = `<span class="pc-mq-seq">${half}</span><span class="pc-mq-seq">${half}</span>`;
-    const w = track.firstElementChild.getBoundingClientRect().width;
-    track.style.setProperty('--mq-dur', `${Math.max(12, Math.round(w / MARQUEE_SPEED))}s`);
-  };
-  build();
-  if (document.fonts) document.fonts.ready.then(build);
-  let width = window.innerWidth;
-  window.addEventListener('resize', () => { if (Math.abs(window.innerWidth - width) > 40) { width = window.innerWidth; build(); } });
   const band = track.parentElement;
+  band.classList.add('loop');
+  loops.push(fillLoop(track, names.map((n) => `${esc(n)}<i>◆</i>`).join(''), 60));
+  if (document.fonts) document.fonts.ready.then(() => loops.forEach((f) => f()));
+  // A tap pauses / resumes it (touch screens have no hover).
   band.addEventListener('click', () => band.classList.toggle('paused'));
+  watch(band);
+}
+
+// Strip of works under a room: up to 12 pictures not already on the room's wall, in their own proportions.
+const STRIP_MIN = 3;
+function stripHtml(e, shownUrls) {
+  const pool = shuffle(e.samples || []);
+  let works = pool.filter((w) => !shownUrls.includes(w.url));
+  if (works.length < STRIP_MIN) works = pool;
+  works = works.slice(0, 12);
+  if (works.length < STRIP_MIN) return '';
+  return `<span class="room-strip loop" data-strip="${esc(e.slug)}"><span class="loop-track"></span></span>`;
+}
+function stripUnit(e, shownUrls) {
+  const pool = shuffle(e.samples || []);
+  let works = pool.filter((w) => !shownUrls.includes(w.url));
+  if (works.length < STRIP_MIN) works = pool;
+  return works.slice(0, 12).map((w) => {
+    const ratio = w.w && w.h ? w.w / w.h : 4 / 3;
+    // width/height give each picture its box before it loads, so the loop can be measured at once.
+    return `<img data-src="${esc(img(w.url, 400))}" alt="" width="${Math.round(300 * Math.min(Math.max(ratio, 0.3), 3))}" height="300" decoding="async">`;
+  }).join('');
+}
+function mountStrips(list) {
+  for (const e of list) {
+    const el = document.querySelector(`[data-strip="${CSS.escape(e.slug)}"]`);
+    if (!el) continue;
+    loops.push(fillLoop(el.firstElementChild, stripUnit(e, el.closest('.room-b').dataset.shown.split(' ')), 40));
+    watch(el);
+  }
 }
 
 function footer(site, name, exhibitions) {
@@ -337,6 +389,7 @@ async function main() {
     $('now-list').innerHTML = now.map(room).join('');
     $('call-list').innerHTML = calls.map(callCard).join('');
     $('past-list').innerHTML = past.map(room).join('');
+    mountStrips([...now, ...past]);
     pohchangExtras(now, calls, past);
     $('call-title').textContent = calls.length > 1 ? t('callsTitle', { n: calls.length }) : t('navCall');
     $('now').hidden = !now.length;
