@@ -64,7 +64,10 @@ export const COUNTRY_ALIASES = {
   PH: ['philippines', 'filipino', 'ฟิลิปปินส์', 'ph'],
   IN: ['india', 'indian', 'อินเดีย', 'in'],
   US: ['usa', 'united states', 'american', 'อเมริกา', 'สหรัฐอเมริกา', 'us'],
-  GB: ['uk', 'united kingdom', 'england', 'british', 'อังกฤษ', 'สหราชอาณาจักร', 'gb']
+  GB: ['uk', 'united kingdom', 'england', 'british', 'อังกฤษ', 'สหราชอาณาจักร', 'gb'],
+  // Owner, 2026-11-12: old text "Kurdistan" becomes XR (added once XR was live on main).
+  XR: ['kurdistan', 'kurdish', 'kurd', 'kurdistan region', 'kurdistan region of iraq', 'iraqi kurdistan', 'kurdistan iraq',
+    'kurdistan, iraq', 'kurdistan-iraq', 'krg', 'เคอร์ดิสถาน', 'เคิร์ดิสถาน', 'เคิร์ด', 'ชาวเคิร์ด', '库尔德斯坦', '库尔德']
 };
 
 // Flag images: public/flags/<code>.svg (from the MIT-licensed flag-icons project, 4:3; xr.svg drawn for this site).
