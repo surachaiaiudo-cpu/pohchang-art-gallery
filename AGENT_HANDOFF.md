@@ -274,15 +274,18 @@ Also: automatic text shrink down to 65 % with a red frame on captions that still
 ### 6.11 Report for the expert panel (รายงานสำหรับผู้ทรงคุณวุฒิ, owner's request 2026-11-12; branch `review-report`)
 `/manage/<slug>/report` (button "รายงานสำหรับผู้ทรงฯ (PDF)" on the manage page). Read-only page, no new API or migration:
 uses `GET /api/manage/:slug` and `/works?status=all`. Owner's choices (2026-11-12): a page in the back office,
-**all submitted works** by default, **artist names and bios shown**, **several works per page (grid)**.
-Layout: cover + summary table (categories × artists × works) → one section per category (list order, then unknown
-categories, then "ไม่ระบุกลุ่มงาน") → per artist: name (academic title), extra-language name, country/flag, affiliation, bio,
-then a grid of that artist's works in the category (image, No. through the whole report, status chip, title, technique,
-size · year, sub-type, video link, concept short/full/none). An artist in two categories appears in both.
-Options (localStorage `report:<slug>`): status, category, artist order (name/sent), main + extra languages, 2/3/4 per row,
-fields, cover, new page per category. Printed with the browser (Save as PDF); page numbers via `@page` margin boxes
-(Chrome 131+). The print button waits for all images first. **Emails/phones are never in the report.**
-Logic in `public/js/report-data.js` (tests/report.test.js).
+**all submitted works** by default, **artist names and bios shown**, several works per page; then (20:30)
+**A4 landscape, one artist per page**, so the PDF can also be shown on a screen.
+Sheets are fixed 297 × 210 mm `.sheet` elements (`@page A4 landscape, margin 0`, page number in each sheet's footer):
+cover (title + summary table categories × artists × works), then one page per artist per category, in category order
+(list order, unknown categories, "ไม่ระบุกลุ่มงาน"). Artist page: strip "กลุ่มงานที่ n · name" + "ศิลปิน i / N ในกลุ่มนี้";
+left 74 mm = academic title, name (+extra language), country/flag, affiliation, work count, bio; right = works grid by
+count (`workGrid()`: 1–3 one row, 4 → 2×2, 5–6 → 3×2, more → 4 per row): image, No. through the whole report, status chip,
+title, technique · size · year · sub-type, video link, concept (short = clamped lines / full / none).
+Text in each `[data-fit]` part shrinks to 70 % to fit; still too long → red frame on screen + warning. The preview is
+zoomed to the column width (`zoom`), reset to 1 for print. Print button waits for all images.
+Options in localStorage `report:<slug>`. **Emails/phones are never in the report.** Logic: `public/js/report-data.js`
+(tests/report.test.js).
 
 ## 7. API (all JSON; writes require same-origin)
 

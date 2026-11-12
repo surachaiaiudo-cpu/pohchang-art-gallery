@@ -39,3 +39,13 @@ test('labels and language fallback', () => {
   assert.equal(pickLang({ bio_th: '', bio_en: 'Hello' }, 'bio', 'th'), 'Hello');
   assert.deepEqual(paragraphs('a\n\n\nb\nc'), ['a', 'b\nc']);
 });
+
+test('landscape grid and one page per artist per category', async () => {
+  const { workGrid, artistPages } = await import('../public/js/report-data.js');
+  assert.deepEqual([1, 2, 3, 4, 5, 6, 7].map((n) => workGrid(n)), [
+    { cols: 1, rows: 1 }, { cols: 2, rows: 1 }, { cols: 3, rows: 1 }, { cols: 2, rows: 2 },
+    { cols: 3, rows: 2 }, { cols: 3, rows: 2 }, { cols: 4, rows: 2 }]);
+  const works = [W(1, 1, 'ประติมากรรม'), W(2, 2, 'จิตรกรรม'), W(3, 1, 'จิตรกรรม')];
+  const pages = artistPages(buildReport(works, { categories: cats }));
+  assert.deepEqual(pages.map((p) => [p.section.cat.name, p.artist.id]), [['จิตรกรรม', 2], ['จิตรกรรม', 1], ['ประติมากรรม', 1]]);
+});

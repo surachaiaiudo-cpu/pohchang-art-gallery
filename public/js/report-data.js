@@ -23,9 +23,8 @@ export const ARTIST_ORDERS = [
   { key: 'name', label: 'ตามชื่อศิลปิน (ก–ฮ / A–Z)' },
   { key: 'sent', label: 'ตามลำดับที่ส่ง' }
 ];
-export const REPORT_COLS = [2, 3, 4];
 export const CONCEPT_MODES = [
-  { key: 'short', label: 'ย่อ (ไม่เกิน 4 บรรทัด)' },
+  { key: 'short', label: 'ย่อ (ตัดให้พอดีช่อง)' },
   { key: 'full', label: 'เต็ม' },
   { key: 'none', label: 'ไม่แสดง' }
 ];
@@ -82,3 +81,17 @@ export function buildReport(works, { categories = [], status = 'all', cat = null
 
 // Bio/concept text -> paragraphs of plain text (escaping is the caller's job).
 export const paragraphs = (text) => String(text ?? '').replace(/\r/g, '').split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
+
+// Landscape sheet, one artist per page: how the works sit beside the artist panel.
+// 1-3 works in one row, 4 as 2 x 2, 5-6 as 3 x 2, more as 4 per row.
+export function workGrid(n) {
+  const cols = n <= 3 ? Math.max(1, n) : n === 4 ? 2 : n <= 6 ? 3 : 4;
+  return { cols, rows: Math.max(1, Math.ceil(n / cols)) };
+}
+
+// One page per artist per category, in report order -> [{ section, index, artist }]
+export function artistPages(rep) {
+  const out = [];
+  rep.sections.forEach((section, si) => section.artists.forEach((artist, ai) => out.push({ section, si, ai, artist })));
+  return out;
+}

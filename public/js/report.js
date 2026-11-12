@@ -1,4 +1,5 @@
-// /manage/<slug>/report - artists and works grouped by category, for the expert panel.
+// /manage/<slug>/report - report for the expert panel: A4 landscape, one artist per page
+// (owner, 2026-11-12), works grouped by category; also used on screen for presenting.
 // Printed with the browser (Save as PDF). Read-only: uses GET /api/manage/:slug and /works;
 // choices are kept in this browser only. Emails and phones are never put in the report.
 import { api, esc, img, toast, slugFromPath, thDate, loadFonts } from './core.js';
@@ -6,8 +7,8 @@ import { requireLogin } from './backoffice.js';
 import { flagUrl } from './countries.js';
 import { CAPTION_LANGS, LANG_TH, normLangs, captionContent, themePalette } from './caption-text.js';
 import {
-  REPORT_STATUSES, STATUS_LABEL, ARTIST_ORDERS, REPORT_COLS, CONCEPT_MODES,
-  buildReport, categoryOrder, categoryLabel, pickLang, paragraphs
+  REPORT_STATUSES, STATUS_LABEL, ARTIST_ORDERS, CONCEPT_MODES,
+  buildReport, categoryOrder, categoryLabel, pickLang, paragraphs, workGrid, artistPages
 } from './report-data.js';
 
 loadFonts(['Noto Serif Thai']);
@@ -16,6 +17,8 @@ const slug = slugFromPath(1);
 const M = `/api/manage/${encodeURIComponent(slug)}`;
 const $ = (id) => document.getElementById(id);
 const KEY = `report:${slug}`;
+const SHEET_W_MM = 297;
+const MIN_SCALE = 0.7;
 
 const FIELDS = [
   { key: 'bio', label: 'ประวัติศิลปิน' },
@@ -29,17 +32,14 @@ const FIELDS = [
   { key: 'sub', label: 'ประเภทย่อย' },
   { key: 'status', label: 'สถานะการคัดกรอง' }
 ];
-const LAYOUT = [
-  { key: 'cover', label: 'หน้าปกและตารางสรุป' },
-  { key: 'newPage', label: 'ขึ้นหน้าใหม่ทุกกลุ่มงาน' }
-];
+const LAYOUT = [{ key: 'cover', label: 'หน้าปกและตารางสรุป' }];
 
 const S = {
   ex: null, works: [],
   o: {
-    status: 'all', cat: '*', order: 'name', lang: 'th', extra: ['en'], cols: 3, concept: 'short',
+    status: 'all', cat: '*', order: 'name', lang: 'th', extra: ['en'], concept: 'short',
     fields: Object.fromEntries(FIELDS.map((f) => [f.key, true])),
-    layout: { cover: true, newPage: true }
+    layout: { cover: true }
   }
 };
 try {
@@ -59,7 +59,6 @@ function renderControls() {
   const o = S.o;
   if (!REPORT_STATUSES.some((x) => x.key === o.status)) o.status = 'all';
   if (!ARTIST_ORDERS.some((x) => x.key === o.order)) o.order = 'name';
-  if (!REPORT_COLS.includes(Number(o.cols))) o.cols = 3;
   if (!CONCEPT_MODES.some((x) => x.key === o.concept)) o.concept = 'short';
   if (!CAPTION_LANGS.includes(o.lang)) o.lang = 'th';
   $('o-status').innerHTML = opts(REPORT_STATUSES, o.status);
@@ -67,7 +66,6 @@ function renderControls() {
   $('o-lang').innerHTML = CAPTION_LANGS.map((l) => `<option value="${l}"${l === o.lang ? ' selected' : ''}>${LANG_TH[l]}</option>`).join('');
   $('o-extra').innerHTML = CAPTION_LANGS.filter((l) => l !== o.lang).map((l) => `<label>
     <input type="checkbox" value="${l}"${o.extra.includes(l) ? ' checked' : ''}> ${LANG_TH[l]}</label>`).join('');
-  $('o-cols').innerHTML = REPORT_COLS.map((n) => `<option value="${n}"${n === Number(o.cols) ? ' selected' : ''}>${n} ชิ้น${n === 3 ? ' (ค่าเริ่มต้น)' : ''}</option>`).join('');
   $('o-concept').innerHTML = opts(CONCEPT_MODES, o.concept);
   $('o-fields').innerHTML = checks(FIELDS, o.fields);
   $('o-layout').innerHTML = checks(LAYOUT, o.layout);
@@ -79,112 +77,159 @@ function renderCats() {
   $('o-cat').innerHTML = `<option value="*">ทุกกลุ่มงาน</option>${cats.map((c) => `<option value="${esc(c.key)}"${c.key === S.o.cat ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}`;
 }
 
-// ------------------------------------------------------------------ report
+// ------------------------------------------------------------------ sheets
 const langs = () => normLangs(S.o.lang, S.o.extra);
-
-function coverHtml(rep) {
-  const ex = S.ex;
+const exTitle = () => pickLang(S.ex, 'title', S.o.lang) || slug;
+const catName = (cat) => {
   const L = S.o.lang;
-  const titles = [...new Set([pickLang(ex, 'title', L), ...langs().slice(1).map((l) => String(ex[`title_${l}`] || '').trim())])].filter(Boolean);
+  const second = L === 'th' && cat.en && cat.en !== cat.name ? ` <span class="x">${esc(cat.en)}</span>` : '';
+  return `${esc(categoryLabel(cat, L))}${second}`;
+};
+const foot = (page, total) => `<footer class="sh-foot"><span>${esc(exTitle())} · รายงานสำหรับผู้ทรงคุณวุฒิ</span><span>${page} / ${total}</span></footer>`;
+
+function coverSheet(rep, total) {
+  const ex = S.ex;
+  const titles = [...new Set([exTitle(), ...langs().slice(1).map((l) => String(ex[`title_${l}`] || '').trim())])].filter(Boolean);
   const status = REPORT_STATUSES.find((x) => x.key === S.o.status).label;
-  const logo = ex.caption_logo_url ? `<img class="rep-cover-logo" src="${esc(img(ex.caption_logo_url, 400))}" alt="">` : '';
-  const rows = rep.sections.map((s, i) => `<tr><td>${i + 1}</td><td>${esc(categoryLabel(s.cat, L))}${L === 'th' && s.cat.en && s.cat.en !== s.cat.name ? `<span class="x">${esc(s.cat.en)}</span>` : ''}</td>
+  const logo = ex.caption_logo_url ? `<img class="cv-logo" src="${esc(img(ex.caption_logo_url, 400))}" alt="">` : '';
+  const rows = rep.sections.map((s, i) => `<tr><td>${i + 1}</td><td>${catName(s.cat)}</td>
     <td class="n">${s.nArtists}</td><td class="n">${s.nWorks}</td></tr>`).join('');
-  return `<section class="rep-cover">
-    ${logo}
-    <div class="rep-kicker">เอกสารประกอบการพิจารณาของคณะผู้ทรงคุณวุฒิ</div>
-    <h1 class="rep-cover-title">${esc(titles[0] || slug)}</h1>
-    ${titles.slice(1).map((t) => `<div class="rep-cover-sub">${esc(t)}</div>`).join('')}
-    <div class="rep-rule"></div>
-    <h2 class="rep-cover-h">รายงานศิลปินและผลงาน แยกตามกลุ่มงาน</h2>
-    <dl class="rep-facts">
-      <div><dt>ผลงานในรายงาน</dt><dd>${esc(status)}</dd></div>
-      <div><dt>จำนวน</dt><dd>${rep.total.artists} ศิลปิน · ${rep.total.works} ผลงาน · ${rep.sections.length} กลุ่มงาน</dd></div>
-      ${ex.submission_closes_at ? `<div><dt>ปิดรับผลงาน</dt><dd>${esc(thDate(ex.submission_closes_at, true))}</dd></div>` : ''}
-      <div><dt>จัดทำเมื่อ</dt><dd>${esc(thDate(new Date().toISOString(), true))}</dd></div>
-    </dl>
-    <table class="rep-sum">
-      <thead><tr><th>#</th><th>กลุ่มงาน</th><th class="n">ศิลปิน</th><th class="n">ผลงาน</th></tr></thead>
-      <tbody>${rows}</tbody>
-      <tfoot><tr><td></td><td>รวม</td><td class="n">${rep.total.artists}</td><td class="n">${rep.total.works}</td></tr></tfoot>
-    </table>
-    <p class="rep-cover-note">ศิลปินที่ส่งผลงานมากกว่าหนึ่งกลุ่มงาน จะปรากฏในทุกกลุ่มที่ส่ง (จำนวนรวมนับศิลปินครั้งเดียว) · เลข No. คือลำดับผลงานในรายงานนี้</p>
+  return `<section class="sheet sh-cover">
+    <div class="cv-main">
+      ${logo}
+      <div class="kicker">เอกสารประกอบการพิจารณาของคณะผู้ทรงคุณวุฒิ</div>
+      <h1 class="cv-title">${esc(titles[0])}</h1>
+      ${titles.slice(1).map((t) => `<div class="cv-sub">${esc(t)}</div>`).join('')}
+      <div class="rule"></div>
+      <h2 class="cv-h">รายงานศิลปินและผลงาน แยกตามกลุ่มงาน</h2>
+      <dl class="cv-facts">
+        <div><dt>ผลงานในรายงาน</dt><dd>${esc(status)}</dd></div>
+        <div><dt>จำนวน</dt><dd>${rep.total.artists} ศิลปิน · ${rep.total.works} ผลงาน · ${rep.sections.length} กลุ่มงาน</dd></div>
+        ${ex.submission_closes_at ? `<div><dt>ปิดรับผลงาน</dt><dd>${esc(thDate(ex.submission_closes_at, true))}</dd></div>` : ''}
+        <div><dt>จัดทำเมื่อ</dt><dd>${esc(thDate(new Date().toISOString(), true))}</dd></div>
+      </dl>
+    </div>
+    <div class="cv-side" data-fit>
+      <table class="cv-sum">
+        <thead><tr><th>#</th><th>กลุ่มงาน</th><th class="n">ศิลปิน</th><th class="n">ผลงาน</th></tr></thead>
+        <tbody>${rows}</tbody>
+        <tfoot><tr><td></td><td>รวม</td><td class="n">${rep.total.artists}</td><td class="n">${rep.total.works}</td></tr></tfoot>
+      </table>
+      <p class="cv-note">หนึ่งหน้าต่อศิลปินหนึ่งท่านในแต่ละกลุ่มงาน · ศิลปินที่ส่งหลายกลุ่มงานจะมีหน้าในทุกกลุ่มที่ส่ง (จำนวนรวมนับครั้งเดียว) · เลข No. คือลำดับผลงานในรายงานนี้</p>
+    </div>
+    ${foot(1, total)}
   </section>`;
 }
 
-function artistHtml(a) {
+function artistSheet({ section, si, ai, artist }, page, total) {
   const f = S.o.fields;
-  const w0 = a.works[0];
+  const w0 = artist.works[0];
   const c = captionContent(w0, { langs: langs(), fields: { artist: true, country: f.country, affiliation: f.affiliation, title: false, technique: false, size: false, year: false } });
   const [n0, ...nx] = c.artists;
   const academic = f.academic && S.o.lang === 'th' ? String(w0.academic_title_th || '').trim() : '';
-  const flag = f.flag && f.country && flagUrl(w0.nationality) ? `<img class="rep-flag" src="${esc(flagUrl(w0.nationality))}" alt="">` : '';
+  const flag = f.flag && f.country && flagUrl(w0.nationality) ? `<img class="flag" src="${esc(flagUrl(w0.nationality))}" alt="">` : '';
   const bio = f.bio ? paragraphs(pickLang(w0, 'bio', S.o.lang)) : [];
-  return `<article class="rep-artist">
-    <header class="rep-artist-head">
-      <div class="rep-artist-name">${academic ? `<span class="acad">${esc(academic)}</span> ` : ''}${esc(n0 || '—')}</div>
-      ${nx.map((x) => `<div class="rep-artist-x">${esc(x)}</div>`).join('')}
-      ${c.place || flag ? `<div class="rep-artist-place">${flag}${esc(c.place)}</div>` : ''}
+  const g = workGrid(artist.works.length);
+  return `<section class="sheet sh-artist">
+    <header class="sh-head">
+      <span class="sh-cat"><b>กลุ่มงานที่ ${si + 1}</b> · ${catName(section.cat)}</span>
+      <span>ศิลปิน ${ai + 1} / ${section.nArtists} ในกลุ่มนี้</span>
     </header>
-    ${bio.length ? `<div class="rep-bio">${bio.map((p) => `<p>${esc(p).replace(/\n/g, '<br>')}</p>`).join('')}</div>` : ''}
-    <div class="rep-works cols-${Number(S.o.cols)}">${a.works.map(workHtml).join('')}</div>
-  </article>`;
+    <div class="sh-body">
+      <aside class="ar-side" data-fit>
+        ${academic ? `<div class="ar-acad">${esc(academic)}</div>` : ''}
+        <h2 class="ar-name">${esc(n0 || '—')}</h2>
+        ${nx.map((x) => `<div class="ar-name-x">${esc(x)}</div>`).join('')}
+        ${c.place || flag ? `<div class="ar-place">${flag}${esc(c.place)}</div>` : ''}
+        <div class="ar-count">${artist.works.length} ผลงานในกลุ่มนี้</div>
+        ${bio.length ? `<div class="ar-bio-h">ประวัติ</div><div class="ar-bio">${bio.map((p) => `<p>${esc(p).replace(/\n/g, '<br>')}</p>`).join('')}</div>` : ''}
+      </aside>
+      <div class="ar-works" data-fit data-n="${artist.works.length}" style="grid-template-columns:repeat(${g.cols},minmax(0,1fr));grid-template-rows:repeat(${g.rows},minmax(0,1fr))">
+        ${artist.works.map((w) => workHtml(w, g)).join('')}
+      </div>
+    </div>
+    ${foot(page, total)}
+  </section>`;
 }
 
-function workHtml(w) {
+function workHtml(w, g) {
   const f = S.o.fields;
   const c = captionContent(w, { langs: langs(), fields: { artist: false, country: false, title: true, technique: f.technique, size: f.size, year: f.year }, techniques: S.ex.techniques || [] });
   const [t0, ...tx] = c.titles;
   const concept = S.o.concept !== 'none' ? pickLang(w, 'concept', S.o.lang) : '';
-  const width = Number(S.o.cols) >= 4 ? 400 : 800;
-  const sub = f.sub && w.subcategory ? `<div class="rep-meta">${esc(w.subcategory)}</div>` : '';
-  const st = f.status ? `<span class="rep-st st-${esc(w.status)}">${esc(STATUS_LABEL[w.status] || w.status)}</span>` : '';
-  const video = w.video_url ? `<div class="rep-meta rep-video">วิดีโอ: ${esc(w.video_url)}</div>` : '';
-  return `<figure class="rep-work">
-    <div class="rep-img">${w.image_url ? `<img src="${esc(img(w.image_url, width))}" alt="${esc(t0 || '')}" decoding="async">` : '<span>ไม่มีรูป</span>'}</div>
+  const width = g.cols >= 3 && g.rows > 1 ? 800 : 1600;
+  const meta = [...c.tech, c.dims, f.sub ? w.subcategory : ''].filter(Boolean);
+  const st = f.status ? `<span class="st st-${esc(w.status)}">${esc(STATUS_LABEL[w.status] || w.status)}</span>` : '';
+  // Short concept: fewer lines when the page holds more works.
+  const lines = g.rows > 1 ? 2 : g.cols >= 3 ? 4 : 6;
+  return `<figure class="wk">
+    <div class="wk-img">${w.image_url ? `<img src="${esc(img(w.image_url, width))}" alt="${esc(t0 || '')}" decoding="async">` : '<span>ไม่มีรูป</span>'}</div>
     <figcaption>
-      <div class="rep-no"><span>No. ${esc(w.no)}</span>${st}</div>
-      ${t0 ? `<div class="rep-title">${esc(t0)}</div>` : ''}
-      ${tx.map((x) => `<div class="rep-title-x">${esc(x)}</div>`).join('')}
-      ${c.tech.map((x) => `<div class="rep-meta">${esc(x)}</div>`).join('')}
-      ${c.dims ? `<div class="rep-meta">${esc(c.dims)}</div>` : ''}
-      ${sub}${video}
-      ${concept ? `<div class="rep-concept${S.o.concept === 'short' ? ' short' : ''}">${esc(concept).replace(/\n+/g, ' ')}</div>` : ''}
+      <div class="wk-no"><span>No. ${esc(w.no)}</span>${st}</div>
+      ${t0 ? `<div class="wk-title">${esc(t0)}</div>` : ''}
+      ${tx.map((x) => `<div class="wk-title-x">${esc(x)}</div>`).join('')}
+      ${meta.length ? `<div class="wk-meta">${meta.map(esc).join(' · ')}</div>` : ''}
+      ${w.video_url ? `<div class="wk-meta muted">วิดีโอ: ${esc(w.video_url)}</div>` : ''}
+      ${concept ? `<div class="wk-concept${S.o.concept === 'short' ? ' short' : ''}" style="--lines:${lines}">${esc(concept).replace(/\n+/g, ' ')}</div>` : ''}
     </figcaption>
   </figure>`;
 }
 
-// Page numbers and the exhibition name in the page margins (Chrome 131+ draws @page margin boxes).
-function pageStyle() {
-  const name = (pickLang(S.ex, 'title', S.o.lang) || slug).replace(/[\\"]/g, '\\$&').replace(/[\r\n]+/g, ' ').slice(0, 120);
-  let el = $('page-style');
-  if (!el) { el = document.createElement('style'); el.id = 'page-style'; document.head.appendChild(el); }
-  el.textContent = `@page { @bottom-left { content: "${name} · รายงานสำหรับผู้ทรงคุณวุฒิ"; } }
-    @page :first { @bottom-left { content: none; } @bottom-right { content: none; } }`;
+// Shrinks the text of each part step by step until it fits its box (not below 70 %); marks the rest.
+function fitAll() {
+  let shrunk = 0; let over = 0;
+  $('paper').querySelectorAll('.sheet').forEach((sheet) => {
+    let bad = false; let small = false;
+    sheet.querySelectorAll('[data-fit]').forEach((part) => {
+      let s = 1;
+      part.style.setProperty('--s', s);
+      while (part.scrollHeight > part.clientHeight + 1 && s > MIN_SCALE) {
+        s = Math.round((s - 0.05) * 100) / 100;
+        part.style.setProperty('--s', s);
+      }
+      if (s < 1) small = true;
+      if (part.scrollHeight > part.clientHeight + 1) bad = true;
+    });
+    sheet.classList.toggle('overflow', bad);
+    shrunk += small; over += bad;
+  });
+  return { shrunk, over };
 }
 
+// Shows the 297 mm sheets at the width of the preview column (print is always real size).
+function zoomPreview() {
+  const paper = $('paper');
+  const avail = paper.parentElement.clientWidth;
+  const full = SHEET_W_MM * 96 / 25.4;
+  paper.style.zoom = String(Math.min(1, avail / full));
+}
+
+let last = { pages: 0, works: 0, artists: 0, sections: 0 };
 function render() {
   const rep = buildReport(S.works, { categories: S.ex.categories, status: S.o.status, cat: S.o.cat, artistOrder: S.o.order, lang: S.o.lang });
-  const L = S.o.lang;
+  const pages = artistPages(rep);
+  const cover = S.o.layout.cover ? 1 : 0;
+  const total = pages.length + cover;
   const p = themePalette(S.ex);
   const paper = $('paper');
   paper.style.setProperty('--rep-accent', p.accent === '#d4af37' ? '#8a6d12' : p.accent);
-  paper.classList.toggle('new-page', !!S.o.layout.newPage);
-  paper.innerHTML = rep.total.works ? [
-    S.o.layout.cover ? coverHtml(rep) : '',
-    ...rep.sections.map((s, i) => `<section class="rep-sec">
-      <header class="rep-sec-head">
-        <div class="rep-sec-no">กลุ่มงานที่ ${i + 1}</div>
-        <h2>${esc(categoryLabel(s.cat, L))}${L === 'th' && s.cat.en && s.cat.en !== s.cat.name ? ` <span class="x">${esc(s.cat.en)}</span>` : ''}</h2>
-        <div class="rep-sec-count">${s.nArtists} ศิลปิน · ${s.nWorks} ผลงาน</div>
-      </header>
-      ${s.artists.map(artistHtml).join('')}
-    </section>`)
-  ].join('') : '<p class="rep-empty">ไม่มีผลงานตามที่เลือก</p>';
-  pageStyle();
-  $('print').disabled = !rep.total.works;
-  $('status').textContent = rep.total.works
-    ? `${rep.sections.length} กลุ่มงาน · ${rep.total.artists} ศิลปิน · ${rep.total.works} ผลงาน — ตัวอย่างนี้ไม่แบ่งหน้า เลขหน้าและการตัดหน้าจะเห็นในหน้าพิมพ์`
+  paper.style.zoom = '1';
+  paper.innerHTML = pages.length
+    ? [cover ? coverSheet(rep, total) : '', ...pages.map((x, i) => artistSheet(x, i + 1 + cover, total))].join('')
+    : '<p class="rep-empty">ไม่มีผลงานตามที่เลือก</p>';
+  $('print').disabled = !pages.length;
+  last = { pages: total, works: rep.total.works, artists: rep.total.artists, sections: rep.sections.length };
+  refit();
+}
+
+function refit() {
+  const paper = $('paper');
+  paper.style.zoom = '1';
+  const r = fitAll();
+  zoomPreview();
+  $('status').innerHTML = last.works
+    ? `${last.pages} หน้า A4 แนวนอน · ${last.sections} กลุ่มงาน · ${last.artists} ศิลปิน · ${last.works} ผลงาน${r.shrunk ? ` · ย่อตัวอักษรอัตโนมัติ ${r.shrunk} หน้า` : ''}${r.over
+      ? ` · <span class="warn">ข้อความยาวเกินหน้า ${r.over} หน้า (กรอบแดง) — ลองเลือกแนวคิด “ย่อ” หรือปิดภาษาเพิ่มเติม</span>` : ''}`
     : 'ยังไม่มีผลงานตามที่เลือก';
 }
 
@@ -223,11 +268,15 @@ function bind() {
     renderControls(); changed();
   });
   $('o-extra').addEventListener('change', () => { S.o.extra = [...$('o-extra').querySelectorAll('input:checked')].map((x) => x.value); changed(); });
-  $('o-cols').addEventListener('change', (e) => { S.o.cols = Number(e.target.value); changed(); });
   $('o-concept').addEventListener('change', (e) => { S.o.concept = e.target.value; changed(); });
   $('o-fields').addEventListener('change', () => { $('o-fields').querySelectorAll('input').forEach((x) => { S.o.fields[x.value] = x.checked; }); changed(); });
   $('o-layout').addEventListener('change', () => { $('o-layout').querySelectorAll('input').forEach((x) => { S.o.layout[x.value] = x.checked; }); changed(); });
   $('print').addEventListener('click', () => { printWhenReady(); });
+  let t = null;
+  window.addEventListener('resize', () => { clearTimeout(t); t = setTimeout(zoomPreview, 150); });
+  // Print is real size; the preview zoom comes back afterwards.
+  window.addEventListener('beforeprint', () => { $('paper').style.zoom = '1'; });
+  window.addEventListener('afterprint', zoomPreview);
 }
 
 (async function init() {
@@ -249,4 +298,6 @@ function bind() {
   renderCats();
   bind();
   render();
+  // Fonts change line breaks: fit again once they are in.
+  document.fonts.ready.then(refit);
 })();

@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex">
   <title>รายงานสำหรับผู้ทรงคุณวุฒิ</title>
   <link rel="stylesheet" href="/css/app.css?v=3">
-  <link rel="stylesheet" href="/css/report.css?v=1">
+  <link rel="stylesheet" href="/css/report.css?v=2">
   <script type="module" src="/js/report.js"></script>
 </head>
 <body>
@@ -23,7 +23,7 @@
     <div class="rep-layout">
       <section class="card rep-opts" aria-label="ตั้งค่ารายงาน">
         <h2>ตั้งค่า</h2>
-        <p class="small muted">A4 แนวตั้ง · แยกตามกลุ่มงาน · ในแต่ละกลุ่มเรียงตามศิลปิน (ชื่อ ประวัติ แล้วตามด้วยผลงาน) · ไม่มีอีเมล/เบอร์โทรในรายงาน</p>
+        <p class="small muted">A4 แนวนอน · ศิลปิน 1 ท่านต่อ 1 หน้า (ซ้ายข้อมูลและประวัติ ขวาผลงาน) · เรียงตามกลุ่มงาน · ใช้พิมพ์และนำเสนอบนจอได้ · ไม่มีอีเมล/เบอร์โทรในรายงาน</p>
 
         <fieldset>
           <legend>ผลงาน</legend>
@@ -45,8 +45,7 @@
 
         <fieldset>
           <legend>จัดหน้า</legend>
-          <label for="o-cols">จำนวนผลงานต่อแถว</label>
-          <select id="o-cols"></select>
+          <div class="small muted">ผลงานจัดวางอัตโนมัติตามจำนวน: 1–3 ชิ้นแถวเดียว, 4 ชิ้น 2 × 2, 5–6 ชิ้น 3 × 2</div>
           <div class="rep-checks" id="o-layout"></div>
         </fieldset>
 
@@ -59,8 +58,10 @@
         <div class="small muted" style="margin-top:10px">ค่าที่เลือกจำไว้ในเบราว์เซอร์นี้</div>
 
         <div class="rep-note small">
+          <strong>นำเสนอบนจอ:</strong> บันทึกเป็น PDF แล้วเปิดไฟล์แบบเต็มจอ (เช่น Adobe Reader: Ctrl+L / ใน Mac Preview: มุมมองสไลด์) เลื่อนทีละหน้าได้<br>
+
           กด <strong>พิมพ์ / บันทึกเป็น PDF</strong> แล้วเลือกเครื่องพิมพ์ <strong>“บันทึกเป็น PDF / Save as PDF”</strong>
-          กระดาษ <strong>A4</strong>, ขนาด <strong>100%</strong>, ปิด “หัวกระดาษและท้ายกระดาษ” (เลขหน้ามีในรายงานแล้ว)
+          กระดาษ <strong>A4 แนวนอน</strong>, ขนาด <strong>100%</strong>, ปิด “หัวกระดาษและท้ายกระดาษ” (เลขหน้ามีในรายงานแล้ว)
           และเปิด <strong>“กราฟิกพื้นหลัง / Background graphics”</strong> · ระบบจะรอให้รูปโหลดครบก่อนเปิดหน้าพิมพ์
         </div>
       </section>
