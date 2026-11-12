@@ -124,27 +124,35 @@ function coverSheet(rep, total) {
   </section>`;
 }
 
-// Checklist sheets for ticking ผ่าน / ไม่ผ่าน by hand (owner, 2026-11-12), with a signature line on every sheet.
-function checklistSheet(rows, i, count, page, total) {
+// Checklist sheets for ticking ผ่าน / ไม่ผ่าน by hand (owner, 2026-11-12): by category, then artist (name, country,
+// number of works) with the titles beside, one row and one pair of boxes per work. Signature line on every sheet.
+function checklistSheet(items, i, count, page, total) {
   const L = S.o.lang;
   const box = '<span class="ck-box" aria-hidden="true"></span>';
-  const body = rows.map((r) => (r.type === 'cat'
-    ? `<tr class="ck-cat"><td colspan="7"><b>กลุ่มงานที่ ${r.si + 1}</b> · ${catName(r.cat)} <span class="x">(${r.n} ผลงาน)</span></td></tr>`
-    : (() => {
-      const w = r.w;
-      const c = captionContent(w, { langs: [L], fields: { artist: true, country: true, title: true, technique: false, size: false, year: false } });
-      return `<tr><td class="ck-no">${esc(w.no)}</td><td class="ck-t">${esc(c.titles[0] || '')}</td><td class="ck-a">${esc(c.artists[0] || '')}</td>
-        <td class="ck-c">${esc(c.place)}</td><td class="ck-b">${box}</td><td class="ck-b">${box}</td><td></td></tr>`;
-    })())).join('');
+  const body = items.map((it) => {
+    if (it.type === 'cat') {
+      return `<tr class="ck-cat"><td colspan="8"><b>กลุ่มงานที่ ${it.si + 1}</b> · ${catName(it.cat)} <span class="x">(${it.nArtists} ศิลปิน · ${it.n} ผลงาน)</span></td></tr>`;
+    }
+    const a = captionContent(it.artist.works[0], { langs: [L], fields: { artist: true, country: true, title: false, technique: false, size: false, year: false } });
+    const span = it.works.length;
+    return it.works.map((w, k) => {
+      const t = captionContent(w, { langs: [L], fields: { artist: false, country: false, title: true, technique: false, size: false, year: false } });
+      const head = k === 0 ? `<td class="ck-i" rowspan="${span}">${it.ai + 1}</td>
+        <td class="ck-a${span === 1 ? ' one' : ''}" rowspan="${span}"><div class="ck-an">${esc(a.artists[0] || '')}${it.cont ? ' <span class="x">(ต่อ)</span>' : ''}</div>${a.place ? `<div class="ck-ac">${esc(a.place)}</div>` : ''}</td>
+        <td class="ck-n" rowspan="${span}">${it.artist.works.length} ชิ้น</td>` : '';
+      return `<tr class="${k === 0 ? 'ck-first' : ''}">${head}<td class="ck-no">${esc(w.no)}</td><td class="ck-t">${esc(t.titles[0] || '')}</td>
+        <td class="ck-b">${box}</td><td class="ck-b">${box}</td><td></td></tr>`;
+    }).join('');
+  }).join('');
   return `<section class="sheet sh-check">
     <header class="sh-head">
-      <span class="sh-cat"><b>แบบบันทึกผลการพิจารณา</b> · ติ๊ก ✓ ในช่อง ผ่าน หรือ ไม่ผ่าน</span>
+      <span class="sh-cat"><b>แบบบันทึกผลการพิจารณา</b> · ติ๊ก ✓ ในช่อง ผ่าน หรือ ไม่ผ่าน ของผลงานแต่ละชิ้น</span>
       <span>แผ่นที่ ${i + 1} / ${count}</span>
     </header>
-    <div class="ck-body">
+    <div class="ck-body" data-fit>
       <table class="ck">
-        <colgroup><col class="c-no"><col><col class="c-a"><col class="c-c"><col class="c-b"><col class="c-b"><col class="c-n"></colgroup>
-        <thead><tr><th>No.</th><th>ชื่อผลงาน</th><th>ศิลปิน</th><th>ประเทศ</th><th class="ck-b">ผ่าน</th><th class="ck-b">ไม่ผ่าน</th><th>หมายเหตุ</th></tr></thead>
+        <colgroup><col class="c-i"><col class="c-a"><col class="c-n"><col class="c-no"><col><col class="c-b"><col class="c-b"><col class="c-r"></colgroup>
+        <thead><tr><th>#</th><th>ชื่อศิลปิน</th><th class="ck-n">จำนวน (ชิ้น)</th><th>No.</th><th>ชื่อผลงาน</th><th class="ck-b">ผ่าน</th><th class="ck-b">ไม่ผ่าน</th><th>หมายเหตุ</th></tr></thead>
         <tbody>${body}</tbody>
       </table>
     </div>

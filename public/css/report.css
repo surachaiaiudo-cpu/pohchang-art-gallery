@@ -93,14 +93,23 @@
 /* checklist for ticking ผ่าน / ไม่ผ่าน: 20 rows per sheet, one line each */
 .ck-body { flex: 1; min-height: 0; padding-top: 4mm; overflow: hidden; }
 .ck { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 9pt; }
-.ck col.c-no { width: 13mm; } .ck col.c-a { width: 58mm; } .ck col.c-c { width: 30mm; }
-.ck col.c-b { width: 17mm; } .ck col.c-n { width: 42mm; }
+.ck col.c-i { width: 9mm; } .ck col.c-a { width: 62mm; } .ck col.c-n { width: 19mm; } .ck col.c-no { width: 13mm; }
+.ck col.c-b { width: 16mm; } .ck col.c-r { width: 38mm; }
 .ck th, .ck td { height: 7.4mm; padding: 0 2mm; border: 0.25mm solid #bdb8ad; text-align: left; vertical-align: middle;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-sizing: border-box; }
 .ck th { height: 8mm; background: #f2f0eb; font-size: 8.5pt; font-weight: 600; }
 .ck .ck-no { font-variant-numeric: tabular-nums; color: var(--rep-muted); }
 .ck .ck-t { font-weight: 500; }
-.ck .ck-c { color: var(--rep-muted); }
+.ck td.ck-a, .ck td.ck-i, .ck td.ck-n { vertical-align: top; padding-top: 1.6mm; white-space: normal; }
+.ck .ck-an { font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
+.ck .ck-ac { font-size: 8pt; color: var(--rep-muted); line-height: 1.3; }
+.ck .ck-i { color: var(--rep-muted); text-align: center; padding-left: 0; padding-right: 0; }
+.ck .ck-n { text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; }
+.ck th.ck-n { font-weight: 600; font-size: 8pt; white-space: normal; line-height: 1.15; }
+.ck td.ck-a.one { white-space: nowrap; }
+.ck td.ck-a.one .ck-an, .ck td.ck-a.one .ck-ac { display: inline; }
+.ck td.ck-a.one .ck-ac::before { content: ' · '; }
+.ck tr.ck-first td { border-top: 0.45mm solid #8f8a80; }
 .ck .ck-b { text-align: center; padding: 0; }
 .ck-box { display: inline-block; width: 4.6mm; height: 4.6mm; border: 0.35mm solid var(--rep-ink); border-radius: 0.6mm; vertical-align: middle; }
 .ck-cat td { background: color-mix(in srgb, var(--rep-accent) 9%, #fff); font-size: 9pt; }

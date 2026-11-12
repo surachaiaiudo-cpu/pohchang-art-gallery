@@ -50,14 +50,19 @@ test('landscape grid and one page per artist per category', async () => {
   assert.deepEqual(pages.map((p) => [p.section.cat.name, p.artist.id]), [['จิตรกรรม', 2], ['จิตรกรรม', 1], ['ประติมากรรม', 1]]);
 });
 
-test('checklist pages: every work once, category rows never at the bottom of a page', async () => {
+test('checklist pages: grouped by artist, an artist never split, category rows never at the bottom', async () => {
   const { checklistPages } = await import('../public/js/report-data.js');
   const works = [];
   for (let i = 1; i <= 9; i += 1) works.push(W(i, (i % 3) + 1, 'จิตรกรรม'));
   for (let i = 10; i <= 14; i += 1) works.push(W(i, 1, 'ประติมากรรม'));
-  const pages = checklistPages(buildReport(works, { categories: cats }), 10);
+  const pages = checklistPages(buildReport(works, { categories: cats }), 8);
   const flat = pages.flat();
-  assert.equal(flat.filter((r) => r.type === 'work').length, 14);
+  assert.equal(flat.filter((r) => r.type === 'artist').reduce((n, r) => n + r.works.length, 0), 14);
   assert.equal(flat.filter((r) => r.type === 'cat').length, 2);
-  for (const p of pages) { assert.ok(p.length <= 10); assert.notEqual(p.at(-1).type, 'cat'); }
+  for (const p of pages) {
+    assert.ok(p.reduce((n, r) => n + (r.type === 'cat' ? 1 : r.works.length), 0) <= 8);
+    assert.notEqual(p.at(-1).type, 'cat');
+  }
+  // Each artist of the painting group has 3 works and sits on one sheet.
+  assert.deepEqual(flat.filter((r) => r.type === 'artist').map((r) => r.works.length), [3, 3, 3, 5]);
 });

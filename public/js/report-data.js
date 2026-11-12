@@ -96,33 +96,31 @@ export function artistPages(rep) {
   return out;
 }
 
-// Checklist for ticking ผ่าน / ไม่ผ่าน (owner, 2026-11-12): one row per work in report order, with a
-// category row before each group. Rows are split into pages of `perPage`; a category row never ends a page.
+// Checklist for ticking ผ่าน / ไม่ผ่าน (owner, 2026-11-12): grouped by category, then by artist (name, number of
+// works, then the titles, one row each with its own boxes). An artist's rows stay on one sheet (unless the artist
+// alone has more rows than a sheet holds) and a category row never ends a sheet.
+// -> pages: [[{ type: 'cat', cat, si, n } | { type: 'artist', artist, ai, works }]]
 export const CHECK_ROWS_PER_PAGE = 20;
+const rowsOf = (it) => (it.type === 'cat' ? 1 : it.works.length);
 export function checklistPages(rep, perPage = CHECK_ROWS_PER_PAGE) {
-  const rows = [];
+  const items = [];
   rep.sections.forEach((s, si) => {
-    rows.push({ type: 'cat', cat: s.cat, si, n: s.nWorks });
-    s.artists.forEach((a) => a.works.forEach((w) => rows.push({ type: 'work', w })));
+    items.push({ type: 'cat', cat: s.cat, si, n: s.nWorks, nArtists: s.nArtists });
+    s.artists.forEach((a, ai) => {
+      // A very prolific artist is split into sheet-sized pieces.
+      for (let i = 0; i < a.works.length; i += perPage) {
+        items.push({ type: 'artist', artist: a, ai, works: a.works.slice(i, i + perPage), cont: i > 0 });
+      }
+    });
   });
   const pages = [];
-  let cur = [];
-  for (const r of rows) {
-    if (cur.length >= perPage) { pages.push(cur); cur = []; }
-    cur.push(r);
-  }
+  let cur = []; let used = 0;
+  items.forEach((it, k) => {
+    // A category row goes with the first artist after it.
+    const need = it.type === 'cat' && items[k + 1] ? 1 + rowsOf(items[k + 1]) : rowsOf(it);
+    if (cur.length && used + need > perPage) { pages.push(cur); cur = []; used = 0; }
+    cur.push(it); used += rowsOf(it);
+  });
   if (cur.length) pages.push(cur);
-  // Move a category row left at the bottom of a page to the top of the next one.
-  for (let i = 0; i < pages.length - 1; i += 1) {
-    const p = pages[i];
-    if (p.length > 1 && p[p.length - 1].type === 'cat') pages[i + 1].unshift(p.pop());
-  }
-  // A page that now holds too many rows passes the extra ones on.
-  for (let i = 0; i < pages.length; i += 1) {
-    while (pages[i].length > perPage) {
-      if (!pages[i + 1]) pages.push([]);
-      pages[i + 1].unshift(pages[i].pop());
-    }
-  }
   return pages;
 }
