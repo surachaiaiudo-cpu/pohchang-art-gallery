@@ -64,3 +64,18 @@ test('checklist per category: artist rows kept together; one row per artist with
   assert.deepEqual(short.map((p) => p.length), [3]);
   assert.deepEqual(short[0].map((r) => r.works.length), [3, 8, 3]); // กมล, สมชาย, อนันต์
 });
+
+test('Thai and foreign artists, countries sorted by Thai name, artists counted once', async () => {
+  const { countryStats } = await import('../public/js/report-data.js');
+  const names = { JP: 'ญี่ปุ่น', VN: 'เวียดนาม', FR: 'ฝรั่งเศส' };
+  const works = [
+    W(1, 1, 'จิตรกรรม', { nationality: 'TH' }), W(2, 1, 'ประติมากรรม', { nationality: 'TH' }),
+    W(3, 2, 'จิตรกรรม', { nationality: 'VN' }), W(4, 3, 'จิตรกรรม', { nationality: 'JP' }), W(5, 3, 'จิตรกรรม', { nationality: 'JP' }),
+    W(6, 4, 'จิตรกรรม', { nationality: '' })
+  ];
+  const s = countryStats(buildReport(works, { categories: cats }), (c) => names[c] || c);
+  assert.deepEqual(s.thai, { artists: 1, works: 2 });
+  assert.equal(s.foreign.countries, 2);
+  assert.equal(s.foreign.artists, 3);
+  assert.deepEqual(s.foreign.list.map((c) => [c.name, c.artists, c.works]), [['ญี่ปุ่น', 1, 2], ['เวียดนาม', 1, 1], ['ไม่ระบุประเทศ', 1, 1]]);
+});
