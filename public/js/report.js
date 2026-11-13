@@ -4,11 +4,11 @@
 // choices are kept in this browser only. Emails and phones are never put in the report.
 import { api, esc, img, toast, slugFromPath, thDate, loadFonts } from './core.js';
 import { requireLogin } from './backoffice.js';
-import { flagUrl } from './countries.js';
+import { flagUrl, countryName } from './countries.js';
 import { CAPTION_LANGS, LANG_TH, normLangs, captionContent, themePalette } from './caption-text.js';
 import {
   REPORT_STATUSES, STATUS_LABEL, ARTIST_ORDERS, CONCEPT_MODES,
-  buildReport, categoryOrder, categoryLabel, pickLang, paragraphs, workGrid, artistPages, checklistPages
+  buildReport, categoryOrder, categoryLabel, pickLang, paragraphs, workGrid, artistPages, checklistPages, countryStats
 } from './report-data.js';
 
 loadFonts(['Noto Serif Thai']);
@@ -34,6 +34,7 @@ const FIELDS = [
 ];
 const LAYOUT = [
   { key: 'cover', label: 'หน้าปกและตารางสรุป' },
+  { key: 'countries', label: 'สรุปศิลปินไทย / ต่างชาติ และรายชื่อประเทศ' },
   { key: 'divider', label: 'ใบคั่นก่อนแต่ละกลุ่มงาน' },
   { key: 'checklist', label: 'ตารางติ๊ก ผ่าน / ไม่ผ่าน (ต้นแต่ละกลุ่มงาน)' },
   { key: 'titles', label: '— แสดงรายชื่อผลงานในตารางติ๊ก (ติ๊กทีละผลงาน; ไม่แสดง = ติ๊กทีละศิลปิน)' }
@@ -44,7 +45,7 @@ const S = {
   o: {
     status: 'all', cat: '*', order: 'name', lang: 'th', extra: ['en'], concept: 'short',
     fields: Object.fromEntries(FIELDS.map((f) => [f.key, true])),
-    layout: { cover: true, divider: true, checklist: true, titles: true }
+    layout: { cover: true, countries: true, divider: true, checklist: true, titles: true }
   }
 };
 try {
@@ -126,6 +127,41 @@ function coverSheet(rep, total) {
     </div>
     ${foot(1, total)}
   </section>`;
+}
+
+// Thai and foreign artists, with the foreign countries (owner, 2026-11-13): after the cover, counted over the
+// whole report, countries ก–ฮ. Up to 40 countries per sheet in two columns.
+const COUNTRIES_PER_SHEET = 40;
+function countrySheets(rep) {
+  const st = countryStats(rep, countryName);
+  const chunks = [];
+  for (let i = 0; i < Math.max(1, st.foreign.list.length); i += COUNTRIES_PER_SHEET) chunks.push(st.foreign.list.slice(i, i + COUNTRIES_PER_SHEET));
+  return chunks.map((list, ci) => (pg, total) => {
+    const start = ci * COUNTRIES_PER_SHEET;
+    const row = (c, k) => `<tr><td class="n i">${start + k + 1}</td>
+      <td>${c.code && flagUrl(c.code) ? `<img class="flag" src="${esc(flagUrl(c.code))}" alt="">` : ''}${esc(c.name)}${c.code && countryName(c.code, 'en') !== c.name ? ` <span class="x">${esc(countryName(c.code, 'en'))}</span>` : ''}</td>
+      <td class="n">${c.artists}</td><td class="n">${c.works}</td></tr>`;
+    const half = Math.ceil(list.length / 2);
+    const table = (rows, off) => `<table class="ct">
+      <thead><tr><th class="n i">#</th><th>ประเทศ</th><th class="n">ศิลปิน</th><th class="n">ผลงาน</th></tr></thead>
+      <tbody>${rows.map((c, k) => row(c, off + k)).join('')}</tbody></table>`;
+    const all = st.thai.artists + st.foreign.artists;
+    const pct = (n) => (all ? Math.round((n / all) * 100) : 0);
+    return `<section class="sheet sh-countries">
+      <header class="sh-head"><span class="sh-cat"><b>ศิลปินไทยและศิลปินต่างชาติ</b> · นับจากผลงานในรายงานนี้ ศิลปินแต่ละท่านนับครั้งเดียว</span>
+        <span>${chunks.length > 1 ? `แผ่นที่ ${ci + 1} / ${chunks.length}` : ''}</span></header>
+      ${ci === 0 ? `<div class="ct-boxes">
+        <div class="ct-box"><div class="k">ศิลปินไทย</div><div class="v">${st.thai.artists} <small>ท่าน</small></div><div class="s">${st.thai.works} ผลงาน · ${pct(st.thai.artists)}%</div></div>
+        <div class="ct-box"><div class="k">ศิลปินต่างชาติ</div><div class="v">${st.foreign.artists} <small>ท่าน</small></div><div class="s">${st.foreign.works} ผลงาน · ${pct(st.foreign.artists)}%</div></div>
+        <div class="ct-box accent"><div class="k">ประเทศ (ไม่รวมไทย)</div><div class="v">${st.foreign.countries} <small>ประเทศ</small></div><div class="s">รวมทั้งหมด ${all} ศิลปิน</div></div>
+      </div>` : ''}
+      <div class="ct-body" data-fit>
+        ${list.length ? `<div class="ct-cols">${table(list.slice(0, half), 0)}${list.length > half ? table(list.slice(half), half) : ''}</div>`
+          : '<p class="ct-none">ไม่มีศิลปินต่างชาติในรายงานนี้</p>'}
+      </div>
+      ${foot(pg, total)}
+    </section>`;
+  });
 }
 
 // Divider sheet before each category (ใบคั่น, owner 2026-11-12).
@@ -274,12 +310,13 @@ function zoomPreview() {
 }
 
 let last = { pages: 0, works: 0, artists: 0, sections: 0 };
-// Order (owner, 2026-11-12): cover, then for each category: divider, checklist, one page per artist.
+// Order (owner, 2026-11-12/13): cover, Thai / foreign artists, then for each category: divider, checklist, one page per artist.
 function render() {
   const rep = buildReport(S.works, { categories: S.ex.categories, status: S.o.status, cat: S.o.cat, artistOrder: S.o.order, lang: S.o.lang });
   const lay = S.o.layout;
   const plan = [];
   if (lay.cover) plan.push((pg, total) => coverSheet(rep, total));
+  if (lay.countries) plan.push(...countrySheets(rep));
   const byArtist = artistPages(rep);
   rep.sections.forEach((section, si) => {
     if (lay.divider) plan.push((pg, total) => dividerSheet(section, si, pg, total));

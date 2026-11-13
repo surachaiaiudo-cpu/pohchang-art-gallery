@@ -120,3 +120,34 @@ export function checklistPages(section, { perPage = CHECK_ROWS_PER_PAGE, titles 
   if (cur.length) pages.push(cur);
   return pages;
 }
+
+// Thai and foreign artists (owner, 2026-11-13), counted over the whole report: each artist once (by artist_id),
+// works counted where they are. Foreign countries sorted by their Thai name (ก–ฮ). An artist with no country,
+// or old free text that is not a country code, is listed under its text or "ไม่ระบุประเทศ".
+// countryName(code, locale) is passed in so this file stays free of browser-only code.
+export function countryStats(rep, countryName, home = 'TH') {
+  const artists = new Map();
+  for (const s of rep.sections) {
+    for (const a of s.artists) {
+      const nat = clean(a.works[0].nationality).toUpperCase() === home ? home : clean(a.works[0].nationality);
+      const cur = artists.get(a.id) || { nat, works: 0 };
+      cur.works += a.works.length;
+      artists.set(a.id, cur);
+    }
+  }
+  const thai = { artists: 0, works: 0 };
+  const foreign = new Map();
+  for (const { nat, works } of artists.values()) {
+    if (nat === home) { thai.artists += 1; thai.works += works; continue; }
+    const key = nat || '';
+    const c = foreign.get(key) || { code: key, name: key ? (countryName(key, 'th') || key) : 'ไม่ระบุประเทศ', artists: 0, works: 0 };
+    c.artists += 1; c.works += works;
+    foreign.set(key, c);
+  }
+  const list = [...foreign.values()].sort((a, b) => (a.code === '') - (b.code === '') || a.name.localeCompare(b.name, 'th'));
+  const known = list.filter((c) => c.code);
+  return {
+    thai,
+    foreign: { artists: list.reduce((n, c) => n + c.artists, 0), works: list.reduce((n, c) => n + c.works, 0), countries: known.length, list }
+  };
+}

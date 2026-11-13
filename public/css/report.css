@@ -90,6 +90,25 @@
 .wk-concept { font-size: calc(var(--s) * 8pt); line-height: 1.45; color: #45423d; margin-top: 1.2mm; overflow-wrap: anywhere; }
 .wk-concept.short { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: var(--lines, 3); line-clamp: var(--lines, 3); overflow: hidden; }
 
+/* Thai / foreign artists and the foreign countries */
+.ct-boxes { flex: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6mm; padding: 5mm 0 4mm; }
+.ct-box { border: 0.3mm solid var(--rep-line); border-radius: 2mm; padding: 3.5mm 5mm; }
+.ct-box .k { font-size: 9pt; color: var(--rep-muted); font-weight: 600; }
+.ct-box .v { font-family: 'Noto Serif Thai', 'IBM Plex Sans Thai', serif; font-size: 26pt; font-weight: 700; line-height: 1.2; }
+.ct-box .v small { font-family: 'IBM Plex Sans Thai', sans-serif; font-size: 11pt; font-weight: 500; color: var(--rep-muted); }
+.ct-box .s { font-size: 9pt; color: #3d3b37; }
+.ct-box.accent { border-color: var(--rep-accent); background: color-mix(in srgb, var(--rep-accent) 7%, #fff); }
+.ct-box.accent .k, .ct-box.accent .v { color: var(--rep-accent); }
+.ct-body { flex: 1; min-height: 0; overflow: hidden; padding-bottom: 3mm; font-size: calc(var(--s) * 9.5pt); }
+.ct-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10mm; align-items: start; }
+.ct { width: 100%; border-collapse: collapse; }
+.ct th, .ct td { text-align: left; padding: calc(var(--s) * 1.5mm) 2mm; border-bottom: 0.25mm solid var(--rep-line); vertical-align: middle; }
+.ct th { font-size: 0.85em; color: var(--rep-muted); font-weight: 600; border-bottom: 0.4mm solid var(--rep-ink); }
+.ct .n { text-align: right; width: 16mm; font-variant-numeric: tabular-nums; }
+.ct .i { width: 8mm; text-align: left; color: var(--rep-muted); }
+.ct .x { font-size: 0.85em; }
+.ct-none { color: var(--rep-muted); }
+
 /* divider sheet before each category */
 .sh-divider { background: color-mix(in srgb, var(--rep-accent) 7%, #fff); }
 .sh-divider::before { height: 100%; width: 14mm; right: auto; }

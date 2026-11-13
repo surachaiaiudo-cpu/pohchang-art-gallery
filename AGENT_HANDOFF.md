@@ -316,6 +316,10 @@ cover (title + summary table categories × artists × works), then one page per 
 left 74 mm = academic title, name (+extra language), country/flag, affiliation, work count, bio; right = works grid by
 count (`workGrid()`: 1–3 one row, 4 → 2×2, 5–6 → 3×2, more → 4 per row): image, No. through the whole report, status chip,
 title, technique · size · year · sub-type, video link, concept (short = clamped lines / full / none).
+**Thai / foreign artists (owner, 2026-11-13):** sheet after the cover (option `countries`, on by default): three boxes
+(Thai artists, foreign artists, number of foreign countries) and the foreign countries ก–ฮ with flag, Thai + English
+name, artists and works; counted over the whole report, each artist once (`countryStats()` in report-data.js);
+40 countries per sheet in two columns; no country / old free text listed as its text or "ไม่ระบุประเทศ". report.js?v=2.
 **Order (owner, 2026-11-12 20:53):** cover, then **each category on its own**: divider sheet (ใบคั่น: กลุ่มงานที่ n, names
 in th/en/zh, counts) → checklist for that category → one page per artist. Options (all on by default): cover, divider,
 checklist, and **work titles in the checklist**. Checklist (`checklistPages(section, { titles })`): by artist (#, name ·
