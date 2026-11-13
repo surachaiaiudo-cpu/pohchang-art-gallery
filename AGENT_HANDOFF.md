@@ -130,6 +130,11 @@ Shown works appear publicly at once. Reviewers get personal links `/review/<toke
 `functions/_lib/review.js`: endorsed when approvals ≥ threshold; `needs_curator` when too many abstain to reach
 it; `not_endorsed` when it can no longer be reached. A curator `badge_override` wins. Badge label per exhibition.
 
+Screening order (owner, 2026-11-13): a select next to the search — as sent (display order, then id; default), by
+artist name (th collation, spaces normalised; one artist's works together) or by category (exhibition list order) then
+artist. Client-side only (`sortWorks()` in manage.js), remembered in localStorage `manage:sort`; the public page keeps
+the display order. manage.js?v=2.
+
 Whose work (owner, 2026-11-12): the work editor's artist section has a choice — edit the artist (all their works,
 the old behaviour), **this work only: a new artist** made from the form (for a work sent on someone's behalf), or **move
 this work to an artist already in the exhibition**. `PUT /api/manage/:slug/works/:id` `artist_mode: all|new|move`
