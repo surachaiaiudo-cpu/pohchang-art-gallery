@@ -8,7 +8,7 @@ import { hoverPreview } from './hover-preview.js';
 const slug = slugFromPath(1);
 const M = `/api/manage/${encodeURIComponent(slug)}`;
 const $ = (id) => document.getElementById(id);
-const S = { ex: null, counts: {}, works: [], status: 'submitted', q: '', cat: '', tech: '', selected: new Set(), reviewers: [], shownWorks: 0, headingFonts: [] };
+const S = { ex: null, counts: {}, works: [], status: 'submitted', q: '', cat: '', tech: '', sort: 'order', selected: new Set(), reviewers: [], shownWorks: 0, headingFonts: [] };
 
 const RESULT_TH = { pending: 'รอผล', endorsed: 'ได้ badge', not_endorsed: 'ไม่ได้ badge', needs_curator: 'ให้ภัณฑารักษ์ตัดสิน' };
 const DECISION = { approve: '✓', reject: '✕', abstain: '–' };
@@ -120,11 +120,27 @@ async function loadWorks() {
   renderWorks();
 }
 
+// Screening order (owner, 2026-11-13): as sent (display order, the default), by artist name, or by category
+// (the exhibition's list order) then artist. Only this page; the public page keeps the display order.
+const SORT_KEY = 'manage:sort';
+const artistKey = (w) => String(w.artist_name_th || w.artist_name_en || '').replace(/\s+/g, ' ').trim();
+const nameCmp = (a, b) => artistKey(a).localeCompare(artistKey(b), 'th', { sensitivity: 'base' }) || (a.artist_id - b.artist_id);
+const sentCmp = (a, b) => (a.display_order - b.display_order) || (a.id - b.id);
+function sortWorks(list) {
+  if (S.sort === 'artist') return [...list].sort((a, b) => nameCmp(a, b) || sentCmp(a, b));
+  if (S.sort === 'category') {
+    const names = (S.ex.categories || []).map((c) => c.name);
+    const rank = (w) => { const i = names.indexOf(w.category || ''); return i >= 0 ? i : (w.category ? names.length : names.length + 1); };
+    return [...list].sort((a, b) => (rank(a) - rank(b)) || String(a.category || '').localeCompare(String(b.category || ''), 'th') || nameCmp(a, b) || sentCmp(a, b));
+  }
+  return list; // the API already returns display order, then id
+}
+
 function visibleWorks() {
   const q = S.q.trim().toLowerCase();
   const techOk = (w) => !S.tech || (S.tech === UNCONFIRMED ? !w.technique_group : w.technique_group === S.tech);
-  return S.works.filter((w) => (S.status === 'all' || w.status === S.status) && (!S.cat || w.category === S.cat) && techOk(w) &&
-    (!q || [w.title_th, w.title_en, w.artist_name_th, w.artist_email].some((t) => (t || '').toLowerCase().includes(q))));
+  return sortWorks(S.works.filter((w) => (S.status === 'all' || w.status === S.status) && (!S.cat || w.category === S.cat) && techOk(w) &&
+    (!q || [w.title_th, w.title_en, w.artist_name_th, w.artist_email].some((t) => (t || '').toLowerCase().includes(q)))));
 }
 
 function renderWorks() {
@@ -571,6 +587,14 @@ $('sel-all').addEventListener('change', (e) => {
 $('w-cat').addEventListener('change', (e) => { S.cat = e.target.value; renderWorks(); });
 $('w-tech').addEventListener('change', (e) => { S.tech = e.target.value; renderWorks(); });
 $('w-q').addEventListener('input', (e) => { S.q = e.target.value; renderWorks(); });
+try { S.sort = localStorage.getItem(SORT_KEY) || 'order'; } catch { S.sort = 'order'; }
+if (![...$('w-sort').options].some((o) => o.value === S.sort)) S.sort = 'order';
+$('w-sort').value = S.sort;
+$('w-sort').addEventListener('change', (e) => {
+  S.sort = e.target.value;
+  try { localStorage.setItem(SORT_KEY, S.sort); } catch { /* ignore */ }
+  renderWorks();
+});
 $('res-csv').addEventListener('click', downloadCsv);
 $('set-form').addEventListener('submit', saveSettings);
 $('s-accent-pick').addEventListener('input', (e) => { $('s-accent').value = e.target.value; });

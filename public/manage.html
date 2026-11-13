@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex">
   <title>จัดการนิทรรศการ</title>
   <link rel="stylesheet" href="/css/app.css?v=5">
-  <script type="module" src="/js/manage.js"></script>
+  <script type="module" src="/js/manage.js?v=2"></script>
 </head>
 <body>
   <header class="topbar" id="topbar"></header>
@@ -35,6 +35,11 @@
         <div class="row">
           <label class="sr-only" for="w-cat">กลุ่มงาน</label><select id="w-cat" style="width:auto"><option value="">ทุกกลุ่มงาน</option></select>
           <label class="sr-only" for="w-tech">เทคนิค</label><select id="w-tech" style="width:auto" hidden><option value="">ทุกเทคนิค</option></select>
+          <label class="sr-only" for="w-sort">เรียงลำดับ</label><select id="w-sort" style="width:auto">
+            <option value="order">เรียง: ตามลำดับที่ส่ง</option>
+            <option value="artist">เรียง: ตามชื่อศิลปิน (ก–ฮ, A–Z)</option>
+            <option value="category">เรียง: ตามกลุ่มงาน แล้วตามชื่อศิลปิน</option>
+          </select>
           <label class="sr-only" for="w-q">ค้นหา</label><input id="w-q" type="search" placeholder="ค้นหาชื่อผลงาน/ศิลปิน" style="width:220px">
         </div>
       </div>
