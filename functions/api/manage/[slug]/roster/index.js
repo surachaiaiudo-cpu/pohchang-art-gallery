@@ -4,7 +4,9 @@ import { requireManager, audit } from '../../../../_lib/exhibitions.js';
 import { normName } from '../../../../_lib/artist-match.js';
 import * as v from '../../../../_lib/validate.js';
 import { STAGE_KEYS, planNumbers } from '../../../../../public/js/roster-logic.js';
-import { ROSTER_ARTIST_TEXT, channelOf, rosterOf } from '../../../../_lib/roster.js';
+import { ROSTER_ARTIST_TEXT, channelOf, rosterOf, parseImport, IMPORT_MAX_ROWS } from '../../../../_lib/roster.js';
+import { matchCountry } from '../../../../_lib/import-old.js';
+import { isCountryCode } from '../../../../../public/js/countries.js';
 
 
 // GET /api/manage/:slug/roster - every artist of the exhibition with channel, status, number and work counts.
@@ -31,6 +33,18 @@ export const onRequestGet = handle(async (context) => {
   return json({ ok: true, artists: results || [], work_stages: workStages, submit_stage: ex.submit_stage || 'exhibit' });
 });
 
+// Sheet rows from the browser: at most IMPORT_MAX_ROWS + 10 rows of 30 cells, each cell text up to 600 characters.
+function cleanSheet(rows) {
+  if (!Array.isArray(rows)) throw bad('ไม่พบข้อมูลในไฟล์');
+  return rows.slice(0, IMPORT_MAX_ROWS + 10).map((r) => (Array.isArray(r) ? r.slice(0, 30) : [])
+    .map((c) => (c === null || c === undefined ? '' : String(c).slice(0, 600))));
+}
+// "TH" / "th" as a code, else the importer's names in Thai, English and Chinese.
+const countryOf = (text) => {
+  const up = String(text || '').trim().toUpperCase();
+  return isCountryCode(up) ? { code: up } : matchCountry(text);
+};
+
 const ids = (list) => (Array.isArray(list) ? list : []).slice(0, 1000).map((i) => v.int(i, { field: 'id', min: 1 }));
 
 // POST /api/manage/:slug/roster
@@ -39,11 +53,33 @@ const ids = (list) => (Array.isArray(list) ? list : []).slice(0, 1000).map((i) =
 //   { action: 'number' }                                            give numbers to selected artists without one
 //   { action: 'clear_numbers' }                                     (admin) remove every number, to run again
 //   { action: 'stage_all', stage }                                  mark every current work as selection / exhibit
+//   { action: 'import_preview', rows: string[][] }                  check an Excel sheet, save nothing
+//   { action: 'import', rows: string[][], force_lines: [] }          save the good rows (duplicates only when forced)
 export const onRequestPost = handle(async (context) => {
   const { user, ex } = await requireManager(context);
   const db = context.env.DB;
-  const b = await readJson(context.request);
-  const action = v.oneOf(b.action, ['add', 'set', 'number', 'clear_numbers', 'stage_all'], { field: 'คำสั่ง' });
+  const b = await readJson(context.request, { max: 1536 * 1024 });
+  const action = v.oneOf(b.action, ['add', 'set', 'number', 'clear_numbers', 'stage_all', 'import_preview', 'import'], { field: 'คำสั่ง' });
+
+  if (action === 'import_preview' || action === 'import') {
+    const rows = cleanSheet(b.rows);
+    const { results } = await db.prepare('SELECT id, name_th, name_en FROM artists WHERE exhibition_id = ?').bind(ex.id).all();
+    let parsed;
+    try {
+      parsed = parseImport(rows, results || [], { matchCountry: countryOf, normName });
+    } catch (err) { throw bad(err.message); }
+    if (action === 'import_preview') return json({ ok: true, ...parsed });
+    const force = new Set((Array.isArray(b.force_lines) ? b.force_lines : []).map(Number));
+    const take = parsed.rows.filter((r) => !r.errors.length && (!r.duplicate || force.has(r.line)));
+    const stmts = take.map((r) => db.prepare(
+      `INSERT INTO artists (exhibition_id, name_th, name_en, academic_title_th, email, phone, nationality, affiliation, channel, roster, roster_note)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(ex.id, r.artist.name_th, r.artist.name_en, r.artist.academic_title_th, r.artist.email, r.artist.phone,
+      r.artist.nationality, r.artist.affiliation, r.channel, r.roster, r.roster_note));
+    for (let i = 0; i < stmts.length; i += 100) await db.batch(stmts.slice(i, i + 100));
+    await audit(db, ex.id, actorOf(user), 'roster.import', { added: take.length, rows: parsed.rows.length });
+    return json({ ok: true, added: take.length, skipped: parsed.rows.length - take.length });
+  }
 
   if (action === 'add') {
     const a = b.artist || {};

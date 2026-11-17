@@ -350,7 +350,16 @@ This is part A of the build ("do it, leave the rest for later", owner 2026-11-17
 Page `/manage/<slug>/roster` (link "รายชื่อศิลปิน / เลขที่"): stats, stage card (form stage select; "mark all current
 works as selection" and back, confirmed by typing the slug), filters, bulk channel/status, per-row channel/status/number/
 withdrawn/note (saved on change), delete (only artists with no works), add an artist by hand (duplicate-name warning, any
-th/en name against any). API `GET/POST /api/manage/:slug/roster` (actions add | set | number | clear_numbers | stage_all),
+th/en name against any). **Import from Excel (owner, 2026-11-17):** card "นำเข้ารายชื่อจาก Excel" on the roster page. Template
+`public/templates/roster-template.xlsx` (sheet 1 = list with dropdowns for channel/status, sheet 2 = how to fill + examples;
+channel and status per row, owner's choice). The browser reads the first sheet of .xlsx/.csv with no library
+(`public/js/xlsx-read.js`: zip via DecompressionStream, XML by regex; tested on the template and `tests/fixtures/roster-import.xlsx`)
+and posts the rows; the server finds the header (first of 10 rows with a name column; th/en spellings, "ไทย / English" headers,
+`parseImport()` in `functions/_lib/roster.js`), maps countries with the importer's `matchCountry()` (+ 2-letter codes), and
+returns a preview: ready / duplicate name (in the list or earlier in the file; skipped unless "เพิ่มอยู่ดี" is ticked) / error
+(no name, unknown country, bad email, channel or status) — errors are never saved. Max 1000 rows; request body up to 1.5 MB
+(`readJson(request, { max })`). Note: NFKC splits Thai ำ, so header spellings are normalised like the cells.
+API `GET/POST /api/manage/:slug/roster` (actions add | set | number | clear_numbers | stage_all | import_preview | import),
 `PUT/DELETE /api/manage/:slug/roster/:id`; all audited (no email/phone in the audit detail).
 **Not done on purpose (owner decides):** marking the 20th's 321 works as selection, setting channel 2 / statuses for its
 111 artists (round-1 voting still running), how an artist "passes" when several sample works are voted (per-row counts

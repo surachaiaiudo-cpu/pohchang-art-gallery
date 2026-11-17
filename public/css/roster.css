@@ -14,3 +14,10 @@ tr.ro-out .ro-name b { text-decoration: line-through; }
 .ro-stats { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); margin-bottom: 16px; }
 .ro-warn { background: #fffbe8; border-color: #ecd98d; }
 .ro-actions .btn { white-space: nowrap; }
+.im-ok { color: var(--ok); font-weight: 600; white-space: nowrap; }
+.im-bad { color: var(--bad); }
+.im-dup { color: #6b4a00; }
+tr.im-skip td { background: #f6f3ee; color: var(--muted); }
+#import-box label.btn { cursor: pointer; }
+#import-box:has(#im-file:focus-visible) label.btn { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ro-name > span { display: block; }

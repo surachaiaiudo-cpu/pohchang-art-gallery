@@ -4,11 +4,12 @@ import { api, esc, toast, slugFromPath } from './core.js';
 import { requireLogin } from './backoffice.js';
 import { flagImg, countryName, countryOptions } from './countries.js';
 import { CHANNELS, ROSTER, STAGES, formatNo } from './roster-logic.js';
+import { readSpreadsheet } from './xlsx-read.js';
 
 const slug = slugFromPath(1);
 const M = `/api/manage/${encodeURIComponent(slug)}`;
 const $ = (id) => document.getElementById(id);
-const S = { me: null, ex: null, artists: [], stages: { exhibit: 0, selection: 0 }, submitStage: 'exhibit', sel: new Set() };
+const S = { me: null, ex: null, artists: [], stages: { exhibit: 0, selection: 0 }, submitStage: 'exhibit', sel: new Set(), im: null };
 
 const opts = (list, value, first) => (first ? `<option value="">${esc(first)}</option>` : '')
   + list.map((x) => `<option value="${esc(String(x.key))}"${String(x.key) === String(value) ? ' selected' : ''}>${esc(x.label)}</option>`).join('');
@@ -237,6 +238,86 @@ function wire() {
   });
 }
 
+// ------------------------------------------------------------- import from Excel (owner, 2026-11-17)
+function importPreview() {
+  const { rows } = S.im.result;
+  const ok = rows.filter((r) => !r.errors.length && !r.duplicate).length;
+  const dup = rows.filter((r) => !r.errors.length && r.duplicate).length;
+  const bad = rows.filter((r) => r.errors.length).length;
+  const force = rows.filter((r) => S.im.force.has(r.line)).length;
+  $('im-summary').innerHTML = `ทั้งหมด <b>${rows.length}</b> แถว · พร้อมนำเข้า <b class="im-ok">${ok}</b>`
+    + ` · ชื่อซ้ำ <b class="im-dup">${dup}</b> (ข้าม เว้นแต่ติ๊ก “เพิ่มอยู่ดี”) · มีปัญหา <b class="im-bad">${bad}</b> (ข้าม แก้ในไฟล์แล้วนำเข้าใหม่)`;
+  $('im-go').textContent = `บันทึกเข้ารายชื่อ ${ok + force} ท่าน`;
+  $('im-go').disabled = ok + force === 0;
+  $('im-rows').innerHTML = rows.map((r) => {
+    const a = r.artist;
+    let state;
+    if (r.errors.length) state = `<span class="im-bad">✕ ${esc(r.errors.join(' · '))}</span>`;
+    else if (r.duplicate) {
+      const who = r.duplicate.where === 'list'
+        ? `ชื่อซ้ำกับ “${esc(r.duplicate.name_th)}${r.duplicate.name_en ? ` / ${esc(r.duplicate.name_en)}` : ''}” ในรายชื่อ`
+        : `ชื่อซ้ำกับแถว ${r.duplicate.line} ในไฟล์`;
+      state = `<span class="im-dup">⚠ ${who}</span><label class="check small" style="min-height:0"><input type="checkbox" data-force="${r.line}"${S.im.force.has(r.line) ? ' checked' : ''}> เพิ่มอยู่ดี</label>`;
+    } else state = '<span class="im-ok">✓ พร้อม</span>';
+    const skip = r.errors.length || (r.duplicate && !S.im.force.has(r.line));
+    return `<tr class="${skip ? 'im-skip' : ''}">
+      <td>${r.line}</td><td>${state}</td>
+      <td class="ro-name"><b>${esc(a.name_th || '—')}</b>${a.name_en && a.name_en !== a.name_th ? `<span class="small">${esc(a.name_en)}</span>` : ''}${a.academic_title_th ? `<span class="small muted">${esc(a.academic_title_th)}</span>` : ''}</td>
+      <td class="small">${a.nationality ? `${flagImg(a.nationality, {}, esc)}${esc(countryName(a.nationality, 'th'))}` : '<span class="muted">—</span>'}</td>
+      <td class="small">${esc(label(CHANNELS, r.channel))}</td>
+      <td class="small">${esc(label(ROSTER, r.roster))}${r.roster_note ? `<br><span class="muted">${esc(r.roster_note)}</span>` : ''}</td>
+      <td class="small muted">${esc([a.email, a.phone, a.affiliation].filter(Boolean).join(' · ') || '—')}</td>
+    </tr>`;
+  }).join('');
+  $('im-preview').hidden = false;
+}
+
+function importReset() {
+  S.im = null;
+  $('im-preview').hidden = true;
+  $('im-file').value = '';
+  $('im-name').textContent = '';
+}
+
+function wireImport() {
+  $('im-file').addEventListener('change', async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    $('im-name').textContent = `กำลังอ่าน ${file.name}…`;
+    try {
+      const rows = await readSpreadsheet(file);
+      if (!rows.length) throw new Error('ไฟล์นี้ไม่มีข้อมูลในแผ่นงานแรก');
+      const result = await api(`${M}/roster`, { method: 'POST', body: { action: 'import_preview', rows } });
+      S.im = { rows, result, force: new Set() };
+      $('im-name').textContent = `${file.name} · หัวตารางแถวที่ ${result.headerLine}`;
+      importPreview();
+    } catch (err) {
+      importReset();
+      toast(err.message, 'error');
+    }
+  });
+  $('im-rows').addEventListener('change', (e) => {
+    if (!e.target.matches('[data-force]')) return;
+    const line = Number(e.target.dataset.force);
+    if (e.target.checked) S.im.force.add(line); else S.im.force.delete(line);
+    importPreview();
+  });
+  $('im-cancel').addEventListener('click', importReset);
+  $('im-go').addEventListener('click', async () => {
+    if (!S.im) return;
+    $('im-go').disabled = true;
+    try {
+      const r = await api(`${M}/roster`, { method: 'POST', body: { action: 'import', rows: S.im.rows, force_lines: [...S.im.force] } });
+      toast(`นำเข้าแล้ว ${r.added} ท่าน${r.skipped ? ` · ข้าม ${r.skipped} แถว` : ''}`);
+      importReset();
+      await load();
+    } catch (err) {
+      toast(err.message, 'error');
+      $('im-go').disabled = false;
+    }
+  });
+}
+
 (async () => {
   try {
     S.me = await requireLogin();
@@ -247,6 +328,7 @@ function wire() {
     $('back').href = `/manage/${encodeURIComponent(S.ex.slug)}`;
     $('clear-numbers').hidden = S.me.user.role !== 'admin';
     wire();
+    wireImport();
     await load();
   } catch (err) {
     if (err.message !== 'redirect') $('ex-sub').textContent = err.message;

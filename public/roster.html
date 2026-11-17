@@ -6,8 +6,8 @@
   <meta name="robots" content="noindex">
   <title>รายชื่อศิลปิน</title>
   <link rel="stylesheet" href="/css/app.css?v=5">
-  <link rel="stylesheet" href="/css/roster.css?v=1">
-  <script type="module" src="/js/roster.js?v=1"></script>
+  <link rel="stylesheet" href="/css/roster.css?v=2">
+  <script type="module" src="/js/roster.js?v=2"></script>
 </head>
 <body>
   <header class="topbar" id="topbar"></header>
@@ -71,6 +71,30 @@
         <tbody id="rows"><tr><td colspan="9" class="muted">กำลังโหลด…</td></tr></tbody>
       </table>
     </div>
+
+    <section class="card" id="import-box" style="margin-top:16px">
+      <h2 style="margin-top:0">นำเข้ารายชื่อจาก Excel</h2>
+      <p class="small">กรอกรายชื่อในแบบฟอร์ม Excel (1 แถว = ศิลปิน 1 ท่าน ใส่ช่องทางและสถานะในแต่ละแถวได้) แล้วเลือกไฟล์ ระบบจะแสดงตัวอย่างให้ตรวจก่อนบันทึก</p>
+      <div class="row">
+        <a class="btn btn-ghost btn-sm" href="/templates/roster-template.xlsx" download="แบบฟอร์มรายชื่อศิลปิน.xlsx">ดาวน์โหลดแบบฟอร์ม Excel</a>
+        <label class="btn btn-sm" for="im-file">เลือกไฟล์ Excel (.xlsx / .csv)</label>
+        <input id="im-file" type="file" accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" class="sr-only">
+        <span class="small muted" id="im-name"></span>
+      </div>
+      <div id="im-preview" hidden>
+        <p class="small" id="im-summary" style="margin:12px 0 8px"></p>
+        <div class="table-wrap" style="max-height:55vh">
+          <table class="ro-table">
+            <thead><tr><th scope="col">แถว</th><th scope="col">ผล</th><th scope="col">ชื่อ</th><th scope="col">ประเทศ</th><th scope="col">ช่องทาง</th><th scope="col">สถานะ</th><th scope="col">อีเมล / โทร / สังกัด</th></tr></thead>
+            <tbody id="im-rows"></tbody>
+          </table>
+        </div>
+        <div class="row" style="margin-top:12px">
+          <button class="btn" type="button" id="im-go">บันทึกเข้ารายชื่อ</button>
+          <button class="btn btn-ghost" type="button" id="im-cancel">ยกเลิก</button>
+        </div>
+      </div>
+    </section>
 
     <details class="card" id="add-box" style="margin-top:16px">
       <summary><b>เพิ่มศิลปินเอง</b> <span class="small muted">(ช่องทาง 1 เชิญโดยตรง, 3 MOU หรือกรณีอื่น)</span></summary>
