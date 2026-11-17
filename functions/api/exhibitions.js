@@ -12,7 +12,7 @@ export const onRequestGet = handle(async ({ env }) => {
               a.name_th, a.name_en, a.name_zh,
               ROW_NUMBER() OVER (PARTITION BY w.exhibition_id ORDER BY random()) AS rn
          FROM works w JOIN exhibitions e ON e.id = w.exhibition_id JOIN artists a ON a.id = w.artist_id
-        WHERE w.status = 'shown' AND w.deleted_at IS NULL AND e.status IN ('open', 'archived'))
+        WHERE w.status = 'shown' AND w.stage != 'selection' AND w.deleted_at IS NULL AND e.status IN ('open', 'archived'))
       WHERE rn <= ?`
   ).bind(SAMPLE_POOL).all();
   const pool = new Map();
@@ -27,9 +27,9 @@ export const onRequestGet = handle(async ({ env }) => {
   }
   const { results } = await env.DB.prepare(
     `SELECT e.*,
-            (SELECT COUNT(*) FROM works w WHERE w.exhibition_id = e.id AND w.status = 'shown' AND w.deleted_at IS NULL) AS work_count,
-            (SELECT COUNT(*) FROM works w WHERE w.exhibition_id = e.id AND w.status = 'shown' AND w.endorsed = 1 AND w.deleted_at IS NULL) AS endorsed_count,
-            (SELECT image_url FROM works w WHERE w.exhibition_id = e.id AND w.status = 'shown' AND w.deleted_at IS NULL
+            (SELECT COUNT(*) FROM works w WHERE w.exhibition_id = e.id AND w.status = 'shown' AND w.stage != 'selection' AND w.deleted_at IS NULL) AS work_count,
+            (SELECT COUNT(*) FROM works w WHERE w.exhibition_id = e.id AND w.status = 'shown' AND w.stage != 'selection' AND w.endorsed = 1 AND w.deleted_at IS NULL) AS endorsed_count,
+            (SELECT image_url FROM works w WHERE w.exhibition_id = e.id AND w.status = 'shown' AND w.stage != 'selection' AND w.deleted_at IS NULL
               ORDER BY w.endorsed DESC, w.display_order, w.id LIMIT 1) AS cover_url
        FROM exhibitions e WHERE e.status IN ('open', 'archived')
       ORDER BY COALESCE(e.starts_on, e.created_at) DESC`

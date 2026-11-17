@@ -6,6 +6,7 @@ import { recompute, reviewOpen } from '../../../_lib/review.js';
 import * as v from '../../../_lib/validate.js';
 import { normalizeCategories, parseCategories } from '../../../_lib/categories.js';
 import { normalizeTechniques, parseTechniques } from '../../../_lib/techniques.js';
+import { STAGE_KEYS } from '../../../../public/js/roster-logic.js';
 
 function managerView(ex) {
   const { cloudinary_api_secret_enc, ...rest } = ex;
@@ -69,6 +70,7 @@ export const onRequestPut = handle(async (context) => {
   }
   if (b.on_view !== undefined) set.on_view = b.on_view ? 1 : 0;
   if (b.accepting !== undefined) set.accepting = b.accepting ? 1 : 0;
+  if (b.submit_stage !== undefined) set.submit_stage = v.oneOf(b.submit_stage, STAGE_KEYS, { field: 'ประเภทผลงานที่รับผ่านฟอร์ม' });
   if (b.starts_on !== undefined) set.starts_on = v.dateOnly(b.starts_on, { field: 'วันเริ่มนิทรรศการ' });
   if (b.ends_on !== undefined) set.ends_on = v.dateOnly(b.ends_on, { field: 'วันสิ้นสุดนิทรรศการ' });
   if (b.submission_opens_at !== undefined) set.submission_opens_at = v.dateTime(b.submission_opens_at, { field: 'วันเปิดรับผลงาน' });

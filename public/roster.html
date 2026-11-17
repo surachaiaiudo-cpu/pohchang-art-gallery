@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>รายชื่อศิลปิน</title>
+  <link rel="stylesheet" href="/css/app.css?v=5">
+  <link rel="stylesheet" href="/css/roster.css?v=1">
+  <script type="module" src="/js/roster.js?v=1"></script>
+</head>
+<body>
+  <header class="topbar" id="topbar"></header>
+  <main class="page">
+    <div class="page-head">
+      <div><h1>รายชื่อศิลปิน</h1><div class="small muted" id="ex-sub">กำลังโหลด…</div></div>
+      <div class="row"><a class="btn btn-ghost" id="back">กลับไปหน้าจัดการ</a></div>
+    </div>
+
+    <div class="ro-stats" id="stats"></div>
+
+    <section class="card ro-warn" id="stage-card" hidden>
+      <h2 style="margin-top:0">ผลงานรอบคัดเลือก (ไม่เผยแพร่)</h2>
+      <p class="small" id="stage-text"></p>
+      <div class="row">
+        <label for="submit-stage" class="small"><b>ผลงานที่ส่งเข้ามาทางฟอร์มของนิทรรศการนี้ เป็น</b></label>
+        <select id="submit-stage" style="width:auto"></select>
+        <button class="btn btn-ghost btn-sm" type="button" id="stage-all">ทำเครื่องหมายผลงานทั้งหมดที่มีตอนนี้เป็น “รอบคัดเลือก”</button>
+        <button class="btn btn-ghost btn-sm" type="button" id="stage-back" hidden>เปลี่ยนผลงานทั้งหมดกลับเป็น “ผลงานจัดแสดง”</button>
+      </div>
+      <p class="hint">ผลงานรอบคัดเลือกเห็นได้เฉพาะผู้ดูแลและผู้ทรงคุณวุฒิ ไม่แสดงบนหน้าเว็บสาธารณะ หน้าแรก หรือแกลเลอรีเลย แม้นิทรรศการจะเปิดแสดง</p>
+    </section>
+
+    <section class="card">
+      <div class="row" style="justify-content:space-between">
+        <div class="row">
+          <label class="sr-only" for="f-channel">ช่องทาง</label><select id="f-channel" style="width:auto"></select>
+          <label class="sr-only" for="f-roster">สถานะ</label><select id="f-roster" style="width:auto"></select>
+          <label class="sr-only" for="f-q">ค้นหา</label><input id="f-q" type="search" placeholder="ค้นหาชื่อ / ประเทศ / เลขที่" style="width:220px">
+        </div>
+        <div class="row ro-actions">
+          <button class="btn btn-sm" type="button" id="number">รันเลขที่ศิลปิน</button>
+          <button class="btn btn-danger btn-sm" type="button" id="clear-numbers" hidden>ล้างเลขที่ทั้งหมด</button>
+        </div>
+      </div>
+      <p class="hint" style="margin-bottom:0">รันเลขที่: ให้เลข 3 หลักกับศิลปินที่ “ได้รับคัดเลือก” และยังไม่มีเลข — ต่างประเทศก่อน เรียงตามประเทศ (ชื่ออังกฤษ A–Z) แล้วตามชื่อภาษาอังกฤษ ศิลปินไทยอยู่ท้าย เรียงตามชื่อภาษาอังกฤษ · เลขที่ให้ไปแล้วไม่เปลี่ยน ผู้ถอนตัวคงเลขเดิม · แก้เลขเองได้ในตาราง</p>
+    </section>
+
+    <section class="card row" id="bulk" style="justify-content:space-between">
+      <label class="check"><input type="checkbox" id="sel-all"> เลือกทั้งหมดที่แสดง <span class="muted" id="sel-count"></span></label>
+      <div class="row">
+        <label class="sr-only" for="b-channel">ตั้งช่องทาง</label><select id="b-channel" style="width:auto"></select>
+        <label class="sr-only" for="b-roster">ตั้งสถานะ</label><select id="b-roster" style="width:auto"></select>
+        <button class="btn btn-sm" type="button" id="b-apply">ใช้กับที่เลือก</button>
+      </div>
+    </section>
+
+    <div class="table-wrap">
+      <table class="ro-table">
+        <thead><tr>
+          <th scope="col"><span class="sr-only">เลือก</span></th>
+          <th scope="col">เลขที่</th>
+          <th scope="col">ศิลปิน</th>
+          <th scope="col">ช่องทาง</th>
+          <th scope="col">สถานะการคัดเลือก</th>
+          <th scope="col">ผลงาน</th>
+          <th scope="col">ถอนตัว</th>
+          <th scope="col">หมายเหตุ</th>
+          <th scope="col"><span class="sr-only">ลบ</span></th>
+        </tr></thead>
+        <tbody id="rows"><tr><td colspan="9" class="muted">กำลังโหลด…</td></tr></tbody>
+      </table>
+    </div>
+
+    <details class="card" id="add-box" style="margin-top:16px">
+      <summary><b>เพิ่มศิลปินเอง</b> <span class="small muted">(ช่องทาง 1 เชิญโดยตรง, 3 MOU หรือกรณีอื่น)</span></summary>
+      <form id="add-form" novalidate style="margin-top:14px">
+        <div class="grid-2">
+          <div class="field"><label for="a-name-th">ชื่อ-นามสกุล (ภาษาหลัก) *</label><input id="a-name-th" type="text" maxlength="200" required></div>
+          <div class="field"><label for="a-name-en">ชื่อภาษาอังกฤษ</label><input id="a-name-en" type="text" maxlength="200"><span class="hint">ใช้เรียงเลขที่ศิลปิน</span></div>
+          <div class="field"><label for="a-title">ตำแหน่งทางวิชาการ</label><input id="a-title" type="text" maxlength="200"></div>
+          <div class="field"><label for="a-nat">ประเทศ</label><select id="a-nat"></select></div>
+          <div class="field"><label for="a-email">อีเมล</label><input id="a-email" type="email" maxlength="200"></div>
+          <div class="field"><label for="a-phone">โทรศัพท์</label><input id="a-phone" type="text" maxlength="40"></div>
+          <div class="field"><label for="a-aff">สังกัด</label><input id="a-aff" type="text" maxlength="300"></div>
+          <div class="field"><label for="a-channel">ช่องทาง</label><select id="a-channel"></select></div>
+          <div class="field"><label for="a-roster">สถานะการคัดเลือก</label><select id="a-roster"></select></div>
+        </div>
+        <button class="btn" type="submit">เพิ่มเข้ารายชื่อ</button>
+      </form>
+    </details>
+  </main>
+</body>
+</html>

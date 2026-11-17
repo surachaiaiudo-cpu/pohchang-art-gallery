@@ -1,0 +1,16 @@
+/* /manage/<slug>/roster - artist roster (back office). */
+.ro-table td, .ro-table th { vertical-align: middle; }
+.ro-table select, .ro-table input[type="text"], .ro-table input[type="number"] { min-height: 34px; padding: 2px 6px; font-size: .88rem; width: auto; max-width: 100%; }
+.ro-table .ro-no input { width: 4.2em; font-variant-numeric: tabular-nums; text-align: center; }
+.ro-table .ro-note input { width: 10em; }
+.ro-name { min-width: 220px; }
+.ro-table td:first-child, .ro-table th:first-child { width: 36px; }
+.ro-name b { display: block; }
+.ro-name .flag { width: 18px; height: auto; vertical-align: -2px; margin-right: 4px; border: 1px solid #ddd; }
+tr.ro-out td { background: #f6f3ee; color: var(--muted); }
+tr.ro-out .ro-name b { text-decoration: line-through; }
+.ro-works .tag { margin: 1px 2px 1px 0; }
+.tag-sel { background: #f1ecfb; border-color: #cfc2ee; color: #4a2f8c; }
+.ro-stats { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); margin-bottom: 16px; }
+.ro-warn { background: #fffbe8; border-color: #ecd98d; }
+.ro-actions .btn { white-space: nowrap; }

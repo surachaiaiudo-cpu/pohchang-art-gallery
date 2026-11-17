@@ -106,12 +106,14 @@ export const onRequestPost = handle(async ({ request, env, params }) => {
     `INSERT INTO works (exhibition_id, artist_id, title_th, title_en, title_zh, technique_th, technique_en, technique_zh,
                         dimensions, year_created, concept_th, concept_en, concept_zh,
                         category, subcategory, technique_group, video_url,
-                        image_url, image_file_id, image_width, image_height, image_bytes, display_order)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+                        image_url, image_file_id, image_width, image_height, image_bytes, display_order, stage)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).bind(ex.id, artistId, w.title_th, w.title_en, w.title_zh, w.technique_th, w.technique_en, w.technique_zh,
     w.dimensions, w.year_created, w.concept_th, w.concept_en, w.concept_zh,
     w.category, w.subcategory, w.technique_group, w.video_url,
-    files[i].url, files[i].fileId, files[i].width, files[i].height, files[i].size, order.m + 10 * (i + 1)));
+    files[i].url, files[i].fileId, files[i].width, files[i].height, files[i].size, order.m + 10 * (i + 1),
+    // Selection-round samples (owner, 2026-11-14) are kept off every public page.
+    ex.submit_stage === 'selection' ? 'selection' : 'exhibit'));
   stmts.push(db.prepare('UPDATE exhibitions SET storage_bytes = storage_bytes + ? WHERE id = ?').bind(added, ex.id));
   await db.batch(stmts);
   await audit(db, ex.id, 'public', 'submission', { artistId, works: works.length });

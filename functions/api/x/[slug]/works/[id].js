@@ -10,7 +10,7 @@ export const onRequestGet = handle(async ({ env, params }) => {
   const work = await env.DB.prepare(`${PUBLIC_WORK_SQL} AND w.id = ?`).bind(ex.id, id).first();
   if (!work) throw notFound('ไม่พบผลงาน');
   const { results } = await env.DB.prepare(
-    "SELECT id, title_th, title_en, title_zh FROM works WHERE exhibition_id = ? AND status = 'shown' AND deleted_at IS NULL ORDER BY display_order, id"
+    "SELECT id, title_th, title_en, title_zh FROM works WHERE exhibition_id = ? AND status = 'shown' AND stage != 'selection' AND deleted_at IS NULL ORDER BY display_order, id"
   ).bind(ex.id).all();
   const rows = results || [];
   const i = rows.findIndex((r) => r.id === id);

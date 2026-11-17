@@ -169,6 +169,26 @@ const STEPS = [
       "ALTER TABLE exhibitions ADD COLUMN caption_bg_body_url TEXT NOT NULL DEFAULT ''",
       "ALTER TABLE exhibitions ADD COLUMN caption_bg_body_file_id TEXT NOT NULL DEFAULT ''"
     ]
+  },
+  {
+    // Artist roster (owner's workshop process, 2026-11-14): channel, selection status, artist number,
+    // withdrawn + note on artists; works.stage ('selection' works are never public); the stage given to
+    // works sent through the form. Columns only, no data is changed.
+    name: '0017_roster',
+    needed: async (db) => !(await db.prepare(
+      "SELECT 1 AS x FROM pragma_table_info('exhibitions') WHERE name = 'submit_stage'"
+    ).first()),
+    sql: [
+      'ALTER TABLE artists ADD COLUMN channel INTEGER NOT NULL DEFAULT 0',
+      "ALTER TABLE artists ADD COLUMN roster TEXT NOT NULL DEFAULT ''",
+      'ALTER TABLE artists ADD COLUMN artist_no INTEGER',
+      'ALTER TABLE artists ADD COLUMN withdrawn INTEGER NOT NULL DEFAULT 0',
+      "ALTER TABLE artists ADD COLUMN roster_note TEXT NOT NULL DEFAULT ''",
+      "ALTER TABLE works ADD COLUMN stage TEXT NOT NULL DEFAULT 'exhibit'",
+      'CREATE INDEX IF NOT EXISTS idx_artists_no ON artists(exhibition_id, artist_no)',
+      // Last, because needed() looks for it: a half-applied retry fails on the first ALTER and is re-checked.
+      "ALTER TABLE exhibitions ADD COLUMN submit_stage TEXT NOT NULL DEFAULT 'exhibit'"
+    ]
   }
 ];
 
