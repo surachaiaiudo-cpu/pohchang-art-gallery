@@ -337,7 +337,7 @@ academic review) is planned in the claude.ai project doc `claude/workshop-proces
 This is part A of the build ("do it, leave the rest for later", owner 2026-11-17). Migration `0017_roster` (columns only):
 - `artists.channel` 0 not set | 1 invited directly (e.g. National Artist) | 2 committee picks samples → expert panel |
   3 MOU partner | 4 self-applied → expert panel (opens after round 1; same panel, 3 of 5).
-- `artists.roster` '' | candidate | selected | not_selected; `withdrawn` (0/1) + `roster_note`.
+- `artists.roster` '' (not decided) | selected = **ผ่าน** | not_selected = **ไม่ผ่าน** (owner 2026-11-19: pass / not pass only, as two tick boxes per row — one at a time, neither = ยังไม่พิจารณา; "candidate" dropped). The table is split by result with tabs ยังไม่พิจารณา / ผ่าน / ไม่ผ่าน / ทั้งหมด (counts; ticking moves the row to the other tab with a toast; last tab remembered `roster:view`; first time: ยังไม่พิจารณา if any, else ผ่าน) — owner 2026-11-19 "แยกออกเป็นตาราง ผ่าน ไม่ผ่าน"; `withdrawn` (0/1) + `roster_note`.
 - `artists.artist_no` = **เลขที่ศิลปิน**, 3 digits, unique per exhibition (checked in code). "รันเลขที่" (`planNumbers()`
   in `public/js/roster-logic.js`, tested): selected, not withdrawn, no number yet; **foreign first, by country (English
   name A–Z), then English name A–Z; Thai last by English name** (Thai name if no English); unknown nationality between.
