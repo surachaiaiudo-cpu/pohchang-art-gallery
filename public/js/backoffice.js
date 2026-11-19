@@ -14,7 +14,8 @@ export async function requireLogin() {
   if (bar) {
     bar.innerHTML = `<div class="in">
       <a href="/admin"><strong>หอศิลป์ออนไลน์</strong> · ระบบผู้จัด</a>
-      <div class="who"><span>${esc(me.user.name)} (${me.user.role === 'admin' ? 'ผู้ดูแลหอศิลป์' : 'ผู้ดูแลนิทรรศการ'})</span>
+      <div class="who"><span>${esc(me.user.name)} (${me.user.role === 'admin' ? 'ผู้ดูแลหอศิลป์'
+        : (me.exhibitions || []).length && me.exhibitions.every((e) => e.member_role === 'coordinator') ? 'ผู้ประสานงาน' : 'ผู้ดูแลนิทรรศการ'})</span>
         <button class="btn btn-ghost btn-sm" id="logout" type="button">ออกจากระบบ</button></div></div>`;
     document.getElementById('logout').addEventListener('click', async () => {
       await api('/api/auth/logout', { method: 'POST' });

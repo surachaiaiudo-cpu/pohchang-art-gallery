@@ -29,9 +29,11 @@ export const onRequestPut = handle(async (context) => {
   }
   if (body.reset_password || !active) stmts.push(db.prepare('DELETE FROM sessions WHERE user_id = ?').bind(id));
   if (Array.isArray(body.exhibition_slugs)) {
-    stmts.push(db.prepare('DELETE FROM exhibition_members WHERE user_id = ?').bind(id));
+    // Manager memberships only; coordinator memberships are set in the exhibition editor.
+    stmts.push(db.prepare("DELETE FROM exhibition_members WHERE user_id = ? AND member_role = 'manager'").bind(id));
     for (const s of body.exhibition_slugs.slice(0, 50)) {
-      stmts.push(db.prepare('INSERT OR IGNORE INTO exhibition_members (exhibition_id, user_id) SELECT id, ? FROM exhibitions WHERE slug = ?')
+      stmts.push(db.prepare(`INSERT INTO exhibition_members (exhibition_id, user_id, member_role) SELECT id, ?, 'manager' FROM exhibitions WHERE slug = ?
+                             ON CONFLICT (exhibition_id, user_id) DO UPDATE SET member_role = 'manager'`)
         .bind(id, String(s)));
     }
   }

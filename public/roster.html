@@ -6,18 +6,20 @@
   <meta name="robots" content="noindex">
   <title>รายชื่อศิลปิน</title>
   <link rel="stylesheet" href="/css/app.css?v=5">
-  <link rel="stylesheet" href="/css/roster.css?v=3">
-  <script type="module" src="/js/roster.js?v=8"></script>
+  <link rel="stylesheet" href="/css/roster.css?v=4">
+  <script type="module" src="/js/roster.js?v=9"></script>
 </head>
 <body>
   <header class="topbar" id="topbar"></header>
   <main class="page">
     <div class="page-head">
       <div><h1>รายชื่อศิลปิน</h1><div class="small muted" id="ex-sub">กำลังโหลด…</div></div>
-      <div class="row"><a class="btn btn-ghost" id="back">กลับไปหน้าจัดการ</a></div>
+      <div class="row"><a class="btn btn-ghost" id="coord-link">หน้าผู้ประสานงาน</a><a class="btn btn-ghost" id="back">กลับไปหน้าจัดการ</a></div>
     </div>
 
     <div class="ro-stats" id="stats"></div>
+
+    <section class="card" id="coord-sum" hidden></section>
 
     <section class="card ro-warn" id="stage-card" hidden>
       <h2 style="margin-top:0">ผลงานรอบคัดเลือก (ไม่เผยแพร่)</h2>
@@ -58,6 +60,7 @@
       <div class="row">
         <label class="sr-only" for="b-channel">ตั้งช่องทาง</label><select id="b-channel" style="width:auto"></select>
         <label class="sr-only" for="b-roster">ตั้งสถานะ</label><select id="b-roster" style="width:auto"></select>
+        <label class="sr-only" for="b-coord">ตั้งผู้ประสานงาน</label><select id="b-coord" style="width:auto"></select>
         <button class="btn btn-sm" type="button" id="b-apply">ใช้กับที่เลือก</button>
       </div>
     </section>
@@ -70,13 +73,14 @@
           <th scope="col">ศิลปิน</th>
           <th scope="col">ช่องทาง</th>
           <th scope="col">ผลการคัดเลือก</th>
+          <th scope="col">ผู้ประสานงาน</th>
           <th scope="col">กลุ่มงาน</th>
           <th scope="col">ผลงาน</th>
           <th scope="col">ถอนตัว</th>
           <th scope="col">หมายเหตุ</th>
           <th scope="col"><span class="sr-only">ลบ</span></th>
         </tr></thead>
-        <tbody id="rows"><tr><td colspan="10" class="muted">กำลังโหลด…</td></tr></tbody>
+        <tbody id="rows"><tr><td colspan="11" class="muted">กำลังโหลด…</td></tr></tbody>
       </table>
     </div>
 

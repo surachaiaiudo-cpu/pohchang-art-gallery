@@ -3,7 +3,7 @@ import { actorOf } from '../../../../_lib/auth.js';
 import { requireManager, audit } from '../../../../_lib/exhibitions.js';
 import * as v from '../../../../_lib/validate.js';
 import { MAX_ARTIST_NO } from '../../../../../public/js/roster-logic.js';
-import { ROSTER_ARTIST_TEXT, channelOf, rosterOf } from '../../../../_lib/roster.js';
+import { ROSTER_ARTIST_TEXT, channelOf, rosterOf, coordinatorOf } from '../../../../_lib/roster.js';
 
 async function loadArtist(db, ex, id) {
   const a = await db.prepare('SELECT * FROM artists WHERE id = ? AND exhibition_id = ?').bind(id, ex.id).first();
@@ -25,6 +25,7 @@ export const onRequestPut = handle(async (context) => {
   if (b.channel !== undefined) set.channel = channelOf(b.channel);
   if (b.roster !== undefined) set.roster = rosterOf(b.roster);
   if (b.withdrawn !== undefined) set.withdrawn = b.withdrawn ? 1 : 0;
+  if (b.coordinator_id !== undefined) set.coordinator_id = await coordinatorOf(db, ex.id, b.coordinator_id);
   if (b.roster_note !== undefined) set.roster_note = v.text(b.roster_note, { field: 'หมายเหตุ', max: 500 });
   if (b.artist_no !== undefined) {
     set.artist_no = b.artist_no === null || b.artist_no === '' ? null

@@ -9,7 +9,7 @@ import { readSpreadsheet } from './xlsx-read.js';
 const slug = slugFromPath(1);
 const M = `/api/manage/${encodeURIComponent(slug)}`;
 const $ = (id) => document.getElementById(id);
-const S = { me: null, ex: null, artists: [], stages: { exhibit: 0, selection: 0 }, submitStage: 'exhibit', sel: new Set(), im: null, view: null };
+const S = { me: null, ex: null, artists: [], coords: [], stages: { exhibit: 0, selection: 0 }, submitStage: 'exhibit', sel: new Set(), im: null, view: null };
 
 // Separate tables by result (owner, 2026-11-19): ยังไม่พิจารณา / ผ่าน / ไม่ผ่าน / ทั้งหมด. Ticking moves the artist to
 // the other table; withdrawn artists stay in their result's table (struck through). Last view remembered.
@@ -95,7 +95,7 @@ function rows() {
   const list = visible();
   $('sel-count').textContent = S.sel.size ? `(เลือก ${S.sel.size})` : '';
   $('sel-all').checked = list.length > 0 && list.every((a) => S.sel.has(a.id));
-  if (!list.length) { $('rows').innerHTML = '<tr><td colspan="10" class="muted">ไม่มีศิลปินตามเงื่อนไขนี้</td></tr>'; return; }
+  if (!list.length) { $('rows').innerHTML = '<tr><td colspan="11" class="muted">ไม่มีศิลปินตามเงื่อนไขนี้</td></tr>'; return; }
   $('rows').innerHTML = list.map((a) => {
     const works = [
       a.works_selection ? `<span class="tag tag-sel" title="ผลงานรอบคัดเลือก (ไม่เผยแพร่)">รอบคัดเลือก ${a.works_selection}</span>` : '',
@@ -109,6 +109,7 @@ function rows() {
       <td><select data-f="channel" aria-label="ช่องทาง">${opts(CHANNELS, a.channel)}</select></td>
       <td class="ro-pass"><label class="check"><input type="checkbox" data-pass="selected" aria-label="ผ่าน ${esc(a.name_th)}"${a.roster === 'selected' ? ' checked' : ''}> ผ่าน</label>
         <label class="check"><input type="checkbox" data-pass="not_selected" aria-label="ไม่ผ่าน ${esc(a.name_th)}"${a.roster === 'not_selected' ? ' checked' : ''}> ไม่ผ่าน</label></td>
+      <td class="ro-coord">${coordCell(a)}</td>
       <td class="small">${(a.categories || []).length ? a.categories.map((c) => (c ? esc(c) : '<span class="muted">ไม่ระบุ</span>')).join('<br>') : '<span class="muted">—</span>'}</td>
       <td class="ro-works">${works}</td>
       <td><input type="checkbox" data-f="withdrawn" aria-label="ถอนตัว"${a.withdrawn ? ' checked' : ''}></td>
@@ -127,13 +128,39 @@ function views() {
   $('views').innerHTML = VIEWS.map((v) => `<button type="button" role="tab" data-view="${v.key}" aria-controls="ro-panel" aria-selected="${v.key === S.view}">${esc(v.label)} (${S.artists.filter(v.test).length})</button>`).join('');
 }
 
-const render = () => { stats(); stageCard(); catFilter(); views(); rows(); };
+// Coordinators (owner, 2026-11-19): one per artist, chosen here; progress (notified / signed) comes from /coord.
+const when = (s) => (s ? new Date(`${s.replace(' ', 'T')}Z`) : null);
+const fmtDate = (d) => d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+function progress(a) {
+  if (a.accepted_at) return `<span class="small co-signed">✓ ลงนามแล้ว ${fmtDate(when(a.accepted_at))}</span>`;
+  if (a.notified_at) return `<span class="small co-wait">แจ้งแล้ว ${fmtDate(when(a.notified_at))}</span>`;
+  return a.roster === 'selected' ? '<span class="small co-todo">ยังไม่แจ้ง</span>' : '';
+}
+function coordCell(a) {
+  if (!S.coords.length && !a.coordinator_id) return '<span class="small muted">— (admin ยังไม่เพิ่มผู้ประสานงาน)</span>';
+  return `<select data-f="coordinator_id" aria-label="ผู้ประสานงานของ ${esc(a.name_th)}"><option value="">— ไม่มี —</option>${S.coords
+    .map((c) => `<option value="${c.id}"${c.id === a.coordinator_id ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select><div>${progress(a)}</div>`;
+}
+function coordSummary() {
+  const sel = S.artists.filter((a) => a.roster === 'selected' && !a.withdrawn);
+  if (!S.coords.length || !sel.length) { $('coord-sum').hidden = true; return; }
+  const line = (name, list) => `<tr><td>${esc(name)}</td><td>${list.length}</td><td>${list.filter((a) => a.notified_at && !a.accepted_at).length}</td><td>${list.filter((a) => a.accepted_at).length}</td><td>${list.filter((a) => !a.notified_at && !a.accepted_at).length}</td></tr>`;
+  const none = sel.filter((a) => !a.coordinator_id);
+  $('coord-sum').hidden = false;
+  $('coord-sum').innerHTML = `<h2 style="margin-top:0">ผู้ประสานงาน (ศิลปินที่ผ่าน ไม่นับผู้ถอนตัว)</h2>
+    <div class="table-wrap"><table><thead><tr><th scope="col">ผู้ประสานงาน</th><th scope="col">ดูแล</th><th scope="col">แจ้งแล้ว รอลงนาม</th><th scope="col">ลงนามแล้ว</th><th scope="col">ยังไม่แจ้ง</th></tr></thead><tbody>
+    ${S.coords.map((c) => line(c.name, sel.filter((a) => a.coordinator_id === c.id))).join('')}
+    ${none.length ? line('ยังไม่กำหนดผู้ประสานงาน', none) : ''}</tbody></table></div>`;
+}
+
+const render = () => { stats(); stageCard(); coordSummary(); catFilter(); views(); rows(); };
 
 async function load() {
   const d = await api(`${M}/roster`);
   S.artists = d.artists;
   S.stages = d.work_stages;
   S.submitStage = d.submit_stage;
+  S.coords = d.coordinators || [];
   const ids = new Set(S.artists.map((a) => a.id));
   for (const id of [...S.sel]) if (!ids.has(id)) S.sel.delete(id);
   render();
@@ -143,6 +170,7 @@ async function saveField(a, field, input) {
   let value;
   if (field === 'withdrawn') value = input.checked;
   else if (field === 'channel') value = Number(input.value);
+  else if (field === 'coordinator_id') value = input.value ? Number(input.value) : null;
   else if (field === 'artist_no') {
     const t = input.value.trim();
     if (t === formatNo(a.artist_no)) return;
@@ -160,7 +188,7 @@ async function saveField(a, field, input) {
     await api(`${M}/roster/${a.id}`, { method: 'PUT', body: { [field]: value } });
     Object.assign(a, { [field]: field === 'withdrawn' ? (value ? 1 : 0) : value });
     if (field === 'roster' && !viewOf(S.view).test(a)) toast(`ย้าย ${a.name_th} ไปตาราง “${viewOf(value || 'pending').label}” แล้ว`);
-    if (field === 'withdrawn' || field === 'roster' || field === 'artist_no') render();
+    if (['withdrawn', 'roster', 'artist_no', 'coordinator_id'].includes(field)) render();
     else stats();
   } catch (err) {
     toast(err.message, 'error');
@@ -223,7 +251,8 @@ function wire() {
     const body = { action: 'set', ids: [...S.sel] };
     if ($('b-channel').value !== '') body.channel = Number($('b-channel').value);
     if ($('b-roster').value !== '*') body.roster = $('b-roster').value;
-    if (body.channel === undefined && body.roster === undefined) { toast('เลือกช่องทางหรือสถานะที่จะตั้งก่อน', 'error'); return; }
+    if ($('b-coord').value !== '*') body.coordinator_id = $('b-coord').value ? Number($('b-coord').value) : null;
+    if (body.channel === undefined && body.roster === undefined && body.coordinator_id === undefined) { toast('เลือกช่องทาง สถานะ หรือผู้ประสานงานที่จะตั้งก่อน', 'error'); return; }
     try {
       const r = await api(`${M}/roster`, { method: 'POST', body });
       toast(`ปรับแล้ว ${r.updated} ท่าน`);
@@ -331,7 +360,7 @@ function importPreview() {
       <td class="small">${a.nationality ? `${flagImg(a.nationality, {}, esc)}${esc(countryName(a.nationality, 'th'))}` : '<span class="muted">—</span>'}</td>
       <td class="small">${esc(label(CHANNELS, r.channel))}</td>
       <td class="small">${esc(label(ROSTER, r.roster))}${r.roster_note ? `<br><span class="muted">${esc(r.roster_note)}</span>` : ''}</td>
-      <td class="small muted">${esc([a.email, a.phone, a.affiliation].filter(Boolean).join(' · ') || '—')}</td>
+      <td class="small muted">${esc([a.email, a.phone, a.affiliation].filter(Boolean).join(' · ') || '—')}${r.coordinator_id ? `<br>ผู้ประสานงาน: ${esc((S.coords.find((c) => c.id === r.coordinator_id) || {}).name || '')}` : ''}</td>
     </tr>`;
   }).join('');
   $('im-preview').hidden = false;
@@ -391,10 +420,14 @@ function wireImport() {
     document.title = `รายชื่อศิลปิน · ${S.ex.title_th}`;
     $('ex-sub').textContent = S.ex.title_th;
     $('back').href = `/manage/${encodeURIComponent(S.ex.slug)}`;
+    $('coord-link').href = `/coord/${encodeURIComponent(S.ex.slug)}`;
     $('clear-numbers').hidden = S.me.user.role !== 'admin';
     wire();
     wireImport();
     await load();
+    $('b-coord').innerHTML = `<option value="*">— ผู้ประสานงาน (ไม่เปลี่ยน) —</option><option value="">ไม่มีผู้ประสานงาน</option>${S.coords
+      .map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join('')}`;
+    $('b-coord').hidden = !S.coords.length;
   } catch (err) {
     if (err.message !== 'redirect') $('ex-sub').textContent = err.message;
   }

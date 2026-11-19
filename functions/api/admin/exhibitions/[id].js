@@ -37,11 +37,25 @@ export const onRequestPut = handle(async (context) => {
     stmts.push(db.prepare("UPDATE exhibitions SET card_style = ?, updated_at = datetime('now') WHERE id = ?").bind(card, id));
   }
   if (Array.isArray(body.staff_user_ids)) {
-    stmts.push(db.prepare('DELETE FROM exhibition_members WHERE exhibition_id = ?').bind(id));
+    stmts.push(db.prepare("DELETE FROM exhibition_members WHERE exhibition_id = ? AND member_role = 'manager'").bind(id));
     for (const uid of body.staff_user_ids.slice(0, 50)) {
-      stmts.push(db.prepare('INSERT OR IGNORE INTO exhibition_members (exhibition_id, user_id) SELECT ?, id FROM users WHERE id = ?')
+      // A manager wins over a coordinator for the same person.
+      stmts.push(db.prepare(`INSERT INTO exhibition_members (exhibition_id, user_id, member_role) SELECT ?, id, 'manager' FROM users WHERE id = ?
+                             ON CONFLICT (exhibition_id, user_id) DO UPDATE SET member_role = 'manager'`)
         .bind(id, v.int(uid, { field: 'ผู้ใช้', min: 1 })));
     }
+  }
+  // Coordinators (ผู้ประสานงาน, owner 2026-11-19): set by the admin. Their artists lose the link when removed.
+  if (Array.isArray(body.coordinator_user_ids)) {
+    const keep = body.coordinator_user_ids.slice(0, 100).map((uid) => v.int(uid, { field: 'ผู้ใช้', min: 1 }));
+    stmts.push(db.prepare("DELETE FROM exhibition_members WHERE exhibition_id = ? AND member_role = 'coordinator'").bind(id));
+    for (const uid of keep) {
+      stmts.push(db.prepare(`INSERT INTO exhibition_members (exhibition_id, user_id, member_role) SELECT ?, id, 'coordinator' FROM users WHERE id = ?
+                             ON CONFLICT (exhibition_id, user_id) DO NOTHING`).bind(id, uid));
+    }
+    stmts.push(db.prepare(`UPDATE artists SET coordinator_id = NULL WHERE exhibition_id = ? AND coordinator_id IS NOT NULL
+                             AND coordinator_id NOT IN (SELECT user_id FROM exhibition_members WHERE exhibition_id = ? AND member_role = 'coordinator')`)
+      .bind(id, id));
   }
   if (stmts.length) await db.batch(stmts);
   await audit(db, id, actorOf(admin), 'exhibition.admin_update', body);

@@ -44,7 +44,7 @@ function renderExRows() {
       <td><span class="tag">${esc(STATUS_TH[e.status] || e.status)}</span>${submissionCell(e)}</td>
       <td>${e.shown} / ${e.works}</td>
       <td>${e.has_storage ? `Cloudinary · ${bytes(e.storage_bytes)}` : '<span class="muted">ยังไม่ตั้งค่า</span>'}</td>
-      <td class="small">${e.staff.map((s) => esc(s.name)).join(', ') || '<span class="muted">—</span>'}</td>
+      <td class="small">${e.staff.map((s) => esc(s.name)).join(', ') || '<span class="muted">—</span>'}${(e.coordinators || []).length ? `<div class="muted">ผู้ประสานงาน: ${e.coordinators.map((s) => esc(s.name)).join(', ')}</div>` : ''}</td>
       <td><div class="row">
         <a class="btn btn-sm" href="/manage/${encodeURIComponent(e.slug)}">จัดการ</a>
         <button class="btn btn-ghost btn-sm" data-ex-edit="${e.id}">สถานะ/ผู้ดูแล</button>
@@ -54,7 +54,10 @@ function renderExRows() {
 
 function exEditor(e) {
   const staffIds = new Set(e.staff.map((s) => s.id));
+  const coordIds = new Set((e.coordinators || []).map((s) => s.id));
   const staffUsers = users.filter((u) => u.active);
+  // Coordinators (owner, 2026-11-19): staff accounts that only see /coord/<slug> for this exhibition.
+  const coordUsers = users.filter((u) => u.active && u.role !== 'admin');
   openDrawer(e.title_th, `
     <form id="ex-form">
       <div class="field"><label for="ee-slug">slug</label><input id="ee-slug" type="text" value="${esc(e.slug)}">
@@ -70,6 +73,10 @@ function exEditor(e) {
       <div class="field"><span class="label">ผู้ดูแลนิทรรศการนี้</span>
         ${staffUsers.map((u) => `<label class="check"><input type="checkbox" name="staff" value="${u.id}" ${staffIds.has(u.id) ? 'checked' : ''}> ${esc(u.name)} <span class="muted small">${esc(u.email)}</span></label>`).join('') || '<p class="muted">ยังไม่มีผู้ใช้ เพิ่มได้ที่แท็บผู้ใช้</p>'}
       </div>
+      <div class="field"><span class="label">ผู้ประสานงานของนิทรรศการนี้</span>
+        <span class="hint">เห็นเฉพาะหน้า "ศิลปินที่ฉันดูแล" ของนิทรรศการนี้ ไม่เข้าหน้าจัดการ ผู้ดูแลนิทรรศการกำหนดศิลปินให้แต่ละคนในหน้า "รายชื่อศิลปิน" · ถ้าติ๊กเป็นทั้งผู้ดูแลและผู้ประสานงาน จะเป็นผู้ดูแล</span>
+        ${coordUsers.map((u) => `<label class="check"><input type="checkbox" name="coord" value="${u.id}" ${coordIds.has(u.id) ? 'checked' : ''}> ${esc(u.name)} <span class="muted small">${esc(u.email)}</span></label>`).join('') || '<p class="muted">ยังไม่มีผู้ใช้ เพิ่มได้ที่แท็บผู้ใช้ (บทบาท "ผู้ดูแลนิทรรศการ" แล้วไม่ต้องเลือกนิทรรศการ)</p>'}
+      </div>
       <button class="btn" type="submit">บันทึก</button> <span class="error-text" id="ee-err"></span>
     </form>`);
   $('ex-form').addEventListener('submit', async (ev) => {
@@ -82,7 +89,8 @@ function exEditor(e) {
           status: $('ee-status').value,
           on_view: $('ee-on_view').checked, accepting: $('ee-accepting').checked,
           card_style: $('ee-card').value,
-          staff_user_ids: [...document.querySelectorAll('input[name="staff"]:checked')].map((x) => Number(x.value))
+          staff_user_ids: [...document.querySelectorAll('input[name="staff"]:checked')].map((x) => Number(x.value)),
+          coordinator_user_ids: [...document.querySelectorAll('input[name="coord"]:checked')].map((x) => Number(x.value))
         }
       });
       toast('บันทึกแล้ว', 'ok');
@@ -99,7 +107,7 @@ function renderUserRows() {
       <td>${esc(u.name)}${u.active ? '' : ' <span class="tag">ปิดใช้งาน</span>'}${u.must_change_password ? ' <span class="tag">รอตั้งรหัส</span>' : ''}</td>
       <td>${esc(u.email)}</td>
       <td>${u.role === 'admin' ? 'ผู้ดูแลหอศิลป์' : 'ผู้ดูแลนิทรรศการ'}</td>
-      <td class="small">${u.role === 'admin' ? '<span class="muted">ทุกนิทรรศการ</span>' : u.exhibitions.map((x) => esc(x.title_th)).join(', ') || '<span class="muted">—</span>'}</td>
+      <td class="small">${u.role === 'admin' ? '<span class="muted">ทุกนิทรรศการ</span>' : u.exhibitions.map((x) => esc(x.title_th)).join(', ') || '<span class="muted">—</span>'}${(u.coordinating || []).length ? `<div class="muted">ผู้ประสานงาน: ${u.coordinating.map((x) => esc(x.title_th)).join(', ')}</div>` : ''}</td>
       <td class="small">${u.last_login_at ? esc(thDate(u.last_login_at.replace(' ', 'T') + 'Z', true)) : '<span class="muted">ยังไม่เคย</span>'}</td>
       <td><button class="btn btn-ghost btn-sm" data-user-edit="${u.id}">แก้ไข</button></td>
     </tr>`).join('');
@@ -158,7 +166,9 @@ async function main() {
   if (me.user.role !== 'admin') {
     $('staff-home').hidden = false;
     $('my-list').innerHTML = me.exhibitions.length
-      ? me.exhibitions.map((e) => `<div class="card row" style="justify-content:space-between"><div><strong>${esc(e.title_th)}</strong> <span class="tag">${esc(STATUS_TH[e.status] || e.status)}</span></div><a class="btn" href="/manage/${encodeURIComponent(e.slug)}">จัดการ</a></div>`).join('')
+      ? me.exhibitions.map((e) => `<div class="card row" style="justify-content:space-between"><div><strong>${esc(e.title_th)}</strong> <span class="tag">${esc(STATUS_TH[e.status] || e.status)}</span>${e.member_role === 'coordinator' ? ' <span class="tag">ผู้ประสานงาน</span>' : ''}</div>${e.member_role === 'coordinator'
+        ? `<a class="btn" href="/coord/${encodeURIComponent(e.slug)}">ศิลปินที่ฉันดูแล</a>`
+        : `<a class="btn" href="/manage/${encodeURIComponent(e.slug)}">จัดการ</a>`}</div>`).join('')
       : '<p class="muted">ยังไม่ได้รับมอบหมายให้ดูแลนิทรรศการ กรุณาติดต่อผู้ดูแลหอศิลป์</p>';
     return;
   }

@@ -16,14 +16,17 @@ export const onRequestGet = handle(async (context) => {
   const db = context.env.DB;
   const [users, members] = await db.batch([
     db.prepare('SELECT id, email, name, role, active, must_change_password, created_at, last_login_at FROM users ORDER BY role, name'),
-    db.prepare('SELECT m.user_id, e.slug, e.title_th FROM exhibition_members m JOIN exhibitions e ON e.id = m.exhibition_id')
+    db.prepare('SELECT m.user_id, m.member_role, e.slug, e.title_th FROM exhibition_members m JOIN exhibitions e ON e.id = m.exhibition_id')
   ]);
+  // exhibitions = where the user is a manager; coordinating = where a coordinator (set in the exhibition editor).
   const byUser = new Map();
+  const coordBy = new Map();
   for (const m of members.results || []) {
-    if (!byUser.has(m.user_id)) byUser.set(m.user_id, []);
-    byUser.get(m.user_id).push({ slug: m.slug, title_th: m.title_th });
+    const map = m.member_role === 'coordinator' ? coordBy : byUser;
+    if (!map.has(m.user_id)) map.set(m.user_id, []);
+    map.get(m.user_id).push({ slug: m.slug, title_th: m.title_th });
   }
-  return json({ ok: true, users: (users.results || []).map((u) => ({ ...u, exhibitions: byUser.get(u.id) || [] })) });
+  return json({ ok: true, users: (users.results || []).map((u) => ({ ...u, exhibitions: byUser.get(u.id) || [], coordinating: coordBy.get(u.id) || [] })) });
 });
 
 // POST /api/admin/users { email, name, role, exhibition_slugs? } -> returns a one-time temporary password

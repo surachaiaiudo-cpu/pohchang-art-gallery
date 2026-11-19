@@ -4,5 +4,6 @@
 /manage/:slug/captions  /captions  200
 /manage/:slug/report    /report    200
 /manage/:slug/roster    /roster    200
+/coord/:slug            /coord     200
 /manage/:slug      /manage  200
 /review/:token     /review  200
