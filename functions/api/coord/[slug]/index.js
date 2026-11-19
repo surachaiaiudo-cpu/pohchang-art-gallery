@@ -8,17 +8,18 @@ import { coordinatorsOf } from '../../../_lib/roster.js';
 // follows whether they have signed the acceptance on the website. Coordinators see every selected artist (to help
 // each other, owner 2026-11-14) but only this page; admins and managers see it too. Notices are on the page only.
 
-// GET /api/coord/:slug -> the selected artists (passed, incl. withdrawn) with contact details and progress.
+// GET /api/coord/:slug -> every artist of the exhibition with result, contact details and progress. Coordinators see
+// all results (owner 2026-11-20 "ให้ผู้ดูแลเห็นสถานะทุกอย่าง"); "แจ้งแล้ว" stays for passed artists only.
 export const onRequestGet = handle(async (context) => {
   const { user, ex, role } = await requireCoordinator(context);
   const db = context.env.DB;
   const { results } = await db.prepare(
     `SELECT a.id, a.artist_no, a.name_th, a.name_en, a.academic_title_th, a.nationality, a.affiliation, a.email, a.phone,
-            a.channel, a.withdrawn, a.roster_note, a.coordinator_id, a.notified_at, a.notified_by, a.accepted_at, a.accepted_by,
+            a.channel, a.roster, a.withdrawn, a.roster_note, a.coordinator_id, a.notified_at, a.notified_by, a.accepted_at, a.accepted_by,
             n.name AS notified_by_name
        FROM artists a LEFT JOIN users n ON n.id = a.notified_by
-      WHERE a.exhibition_id = ? AND a.roster = 'selected'
-      ORDER BY a.artist_no IS NULL, a.artist_no, a.id`
+      WHERE a.exhibition_id = ?
+      ORDER BY CASE a.roster WHEN 'selected' THEN 0 WHEN '' THEN 1 ELSE 2 END, a.artist_no IS NULL, a.artist_no, a.id`
   ).bind(ex.id).all();
   return json({
     ok: true,

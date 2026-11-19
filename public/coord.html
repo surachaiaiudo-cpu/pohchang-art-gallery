@@ -7,7 +7,7 @@
   <title>ศิลปินที่ฉันดูแล</title>
   <link rel="stylesheet" href="/css/app.css?v=5">
   <link rel="stylesheet" href="/css/roster.css?v=4">
-  <script type="module" src="/js/coord.js?v=1"></script>
+  <script type="module" src="/js/coord.js?v=2"></script>
 </head>
 <body>
   <header class="topbar" id="topbar"></header>
@@ -21,6 +21,8 @@
 
     <div class="ro-stats" id="stats"></div>
 
+    <div class="tabs" role="tablist" aria-label="ผลการคัดเลือก" id="views"></div>
+
     <section class="card">
       <div class="row">
         <label class="sr-only" for="f-who">ศิลปินของใคร</label><select id="f-who" style="width:auto"></select>
@@ -33,7 +35,7 @@
         </select>
         <label class="sr-only" for="f-q">ค้นหา</label><input id="f-q" type="search" placeholder="ค้นหาชื่อ / ประเทศ / เลขที่" style="width:220px">
       </div>
-      <p class="hint" style="margin-bottom:0">หลังส่งจดหมายเชิญหรือแจ้งศิลปินแล้ว กด “แจ้งแล้ว” ระบบจะบันทึกวันที่ไว้ · เมื่อศิลปินลงนามตอบรับบนเว็บ สถานะจะเปลี่ยนเป็น “ลงนามแล้ว” เอง และขึ้นแจ้งเตือนที่หน้านี้</p>
+      <p class="hint" style="margin-bottom:0">เห็นศิลปินทุกสถานะ (ผ่าน / ยังไม่พิจารณา / ไม่ผ่าน) · สถานะการแจ้งใช้กับศิลปินที่ผ่าน · หลังส่งจดหมายเชิญหรือแจ้งศิลปินแล้ว กด “แจ้งแล้ว” ระบบจะบันทึกวันที่ไว้ · เมื่อศิลปินลงนามตอบรับบนเว็บ สถานะจะเปลี่ยนเป็น “ลงนามแล้ว” เอง และขึ้นแจ้งเตือนที่หน้านี้</p>
     </section>
 
     <div class="table-wrap">
@@ -43,10 +45,11 @@
           <th scope="col">ศิลปิน</th>
           <th scope="col">ติดต่อ</th>
           <th scope="col">ผู้ประสานงาน</th>
-          <th scope="col">สถานะ</th>
+          <th scope="col">ผลการคัดเลือก</th>
+          <th scope="col">การแจ้ง / ลงนาม</th>
           <th scope="col"><span class="sr-only">แจ้งแล้ว</span></th>
         </tr></thead>
-        <tbody id="rows"><tr><td colspan="6" class="muted">กำลังโหลด…</td></tr></tbody>
+        <tbody id="rows"><tr><td colspan="7" class="muted">กำลังโหลด…</td></tr></tbody>
       </table>
     </div>
   </main>
