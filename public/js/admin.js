@@ -44,7 +44,7 @@ function renderExRows() {
       <td><span class="tag">${esc(STATUS_TH[e.status] || e.status)}</span>${submissionCell(e)}</td>
       <td>${e.shown} / ${e.works}</td>
       <td>${e.has_storage ? `Cloudinary · ${bytes(e.storage_bytes)}` : '<span class="muted">ยังไม่ตั้งค่า</span>'}</td>
-      <td class="small">${e.staff.map((s) => esc(s.name)).join(', ') || '<span class="muted">—</span>'}</td>
+      <td class="small">${e.staff.map((s) => esc(s.name)).join(', ') || '<span class="muted">—</span>'}${(e.coordinators || []).length ? `<div class="muted">ผู้ประสานงาน: ${e.coordinators.map((s) => esc(s.name)).join(', ')}</div>` : ''}</td>
       <td><div class="row">
         <a class="btn btn-sm" href="/manage/${encodeURIComponent(e.slug)}">จัดการ</a>
         <button class="btn btn-ghost btn-sm" data-ex-edit="${e.id}">สถานะ/ผู้ดูแล</button>
@@ -54,7 +54,10 @@ function renderExRows() {
 
 function exEditor(e) {
   const staffIds = new Set(e.staff.map((s) => s.id));
+  const coordIds = new Set((e.coordinators || []).map((s) => s.id));
   const staffUsers = users.filter((u) => u.active);
+  // Coordinators (owner, 2026-11-19): staff accounts that only see /coord/<slug> for this exhibition.
+  const coordUsers = users.filter((u) => u.active && u.role !== 'admin');
   openDrawer(e.title_th, `
     <form id="ex-form">
       <div class="field"><label for="ee-slug">slug</label><input id="ee-slug" type="text" value="${esc(e.slug)}">
@@ -70,6 +73,10 @@ function exEditor(e) {
       <div class="field"><span class="label">ผู้ดูแลนิทรรศการนี้</span>
         ${staffUsers.map((u) => `<label class="check"><input type="checkbox" name="staff" value="${u.id}" ${staffIds.has(u.id) ? 'checked' : ''}> ${esc(u.name)} <span class="muted small">${esc(u.email)}</span></label>`).join('') || '<p class="muted">ยังไม่มีผู้ใช้ เพิ่มได้ที่แท็บผู้ใช้</p>'}
       </div>
+      <div class="field"><span class="label">ผู้ประสานงานของนิทรรศการนี้</span>
+        <span class="hint">เห็นเฉพาะหน้า "ศิลปินที่ฉันดูแล" ของนิทรรศการนี้ ไม่เข้าหน้าจัดการ ผู้ดูแลนิทรรศการกำหนดศิลปินให้แต่ละคนในหน้า "รายชื่อศิลปิน" · ถ้าติ๊กเป็นทั้งผู้ดูแลและผู้ประสานงาน จะเป็นผู้ดูแล</span>
+        ${coordUsers.map((u) => `<label class="check"><input type="checkbox" name="coord" value="${u.id}" ${coordIds.has(u.id) ? 'checked' : ''}> ${esc(u.name)} <span class="muted small">${esc(u.email)}</span></label>`).join('') || '<p class="muted">ยังไม่มีผู้ใช้ เพิ่มได้ที่แท็บผู้ใช้ (บทบาท "ผู้ดูแลนิทรรศการ" แล้วไม่ต้องเลือกนิทรรศการ)</p>'}
+      </div>
       <button class="btn" type="submit">บันทึก</button> <span class="error-text" id="ee-err"></span>
     </form>`);
   $('ex-form').addEventListener('submit', async (ev) => {
@@ -82,7 +89,8 @@ function exEditor(e) {
           status: $('ee-status').value,
           on_view: $('ee-on_view').checked, accepting: $('ee-accepting').checked,
           card_style: $('ee-card').value,
-          staff_user_ids: [...document.querySelectorAll('input[name="staff"]:checked')].map((x) => Number(x.value))
+          staff_user_ids: [...document.querySelectorAll('input[name="staff"]:checked')].map((x) => Number(x.value)),
+          coordinator_user_ids: [...document.querySelectorAll('input[name="coord"]:checked')].map((x) => Number(x.value))
         }
       });
       toast('บันทึกแล้ว', 'ok');
@@ -99,7 +107,7 @@ function renderUserRows() {
       <td>${esc(u.name)}${u.active ? '' : ' <span class="tag">ปิดใช้งาน</span>'}${u.must_change_password ? ' <span class="tag">รอตั้งรหัส</span>' : ''}</td>
       <td>${esc(u.email)}</td>
       <td>${u.role === 'admin' ? 'ผู้ดูแลหอศิลป์' : 'ผู้ดูแลนิทรรศการ'}</td>
-      <td class="small">${u.role === 'admin' ? '<span class="muted">ทุกนิทรรศการ</span>' : u.exhibitions.map((x) => esc(x.title_th)).join(', ') || '<span class="muted">—</span>'}</td>
+      <td class="small">${u.role === 'admin' ? '<span class="muted">ทุกนิทรรศการ</span>' : u.exhibitions.map((x) => esc(x.title_th)).join(', ') || '<span class="muted">—</span>'}${(u.coordinating || []).length ? `<div class="muted">ผู้ประสานงาน: ${u.coordinating.map((x) => esc(x.title_th)).join(', ')}</div>` : ''}</td>
       <td class="small">${u.last_login_at ? esc(thDate(u.last_login_at.replace(' ', 'T') + 'Z', true)) : '<span class="muted">ยังไม่เคย</span>'}</td>
       <td><button class="btn btn-ghost btn-sm" data-user-edit="${u.id}">แก้ไข</button></td>
     </tr>`).join('');
@@ -121,9 +129,44 @@ function userEditor(u) {
       <div class="field"><span class="label">ดูแลนิทรรศการ</span>${exCheckboxes('ue-ex', sel)}</div>
       <label class="check"><input type="checkbox" id="ue-active" ${u.active ? 'checked' : ''}> เปิดใช้งานบัญชี</label>
       <label class="check"><input type="checkbox" id="ue-reset"> ออกรหัสผ่านชั่วคราวใหม่ (ลืมรหัสผ่าน)</label>
+      <div class="field"><span class="label">รหัสผ่านปัจจุบัน</span>
+        <div class="row"><span id="ue-pw-view" class="muted">ซ่อนอยู่</span><button class="btn btn-ghost btn-sm" type="button" id="ue-pw-show">ดูรหัสผ่าน</button></div>
+        <span class="hint">การดูรหัสผ่านทุกครั้งถูกบันทึกไว้ในประวัติการใช้งาน</span></div>
+      <div class="field"><label for="ue-pw">หรือตั้งรหัสผ่านใหม่เอง</label><input id="ue-pw" type="text" autocomplete="new-password" spellcheck="false" maxlength="200" placeholder="อย่างน้อย 10 ตัวอักษร · เว้นว่าง = ไม่เปลี่ยน">
+        <label class="check"><input type="checkbox" id="ue-must" checked> ให้เปลี่ยนรหัสผ่านเมื่อเข้าระบบครั้งถัดไป</label></div>
       <p><button class="btn" type="submit">บันทึก</button> <span class="error-text" id="ue-err"></span></p>
       <div id="ue-result"></div>
+      <hr>
+      <p class="small muted">ลบบัญชี: เข้าระบบไม่ได้อีก ถอดออกจากทุกนิทรรศการ และศิลปินที่บัญชีนี้เป็นผู้ประสานงานจะไม่มีผู้ประสานงาน (ประวัติ “แจ้งแล้ว” ยังอยู่) ย้อนกลับไม่ได้</p>
+      <button class="btn btn-danger btn-sm" type="button" id="ue-delete">ลบบัญชีนี้</button>
     </form>`);
+  $('ue-pw-show').addEventListener('click', async () => {
+    if ($('ue-pw-show').dataset.open) {
+      $('ue-pw-view').textContent = 'ซ่อนอยู่'; $('ue-pw-view').className = 'muted';
+      $('ue-pw-show').textContent = 'ดูรหัสผ่าน'; delete $('ue-pw-show').dataset.open; return;
+    }
+    try {
+      const d = await api(`/api/admin/users/${u.id}`);
+      if (d.stored) {
+        $('ue-pw-view').textContent = d.password; $('ue-pw-view').className = '';
+        $('ue-pw-view').style.fontFamily = 'ui-monospace, monospace';
+        $('ue-pw-show').textContent = 'ซ่อน'; $('ue-pw-show').dataset.open = '1';
+      } else {
+        $('ue-pw-view').textContent = 'ไม่มีรหัสที่เก็บไว้ (ตั้งก่อนเปิดใช้ความสามารถนี้) — ตั้งรหัสใหม่ด้านล่างได้';
+      }
+    } catch (err) { $('ue-err').textContent = err.message; }
+  });
+  $('ue-delete').addEventListener('click', async () => {
+    const typed = prompt(`ลบบัญชี ${u.name} (${u.email}) ถาวร?\nพิมพ์อีเมลของบัญชีนี้เพื่อยืนยัน`);
+    if (typed === null) return;
+    if (typed.trim().toLowerCase() !== u.email.toLowerCase()) { $('ue-err').textContent = 'อีเมลไม่ตรง ยังไม่ได้ลบ'; return; }
+    try {
+      const d = await api(`/api/admin/users/${u.id}`, { method: 'DELETE' });
+      toast(`ลบบัญชี ${u.name} แล้ว${d.artistsUnassigned ? ` · ศิลปิน ${d.artistsUnassigned} ท่านไม่มีผู้ประสานงานแล้ว` : ''}`, 'ok');
+      closeDrawer();
+      await load();
+    } catch (err) { $('ue-err').textContent = err.message; }
+  });
   $('u-form').addEventListener('submit', async (ev) => {
     ev.preventDefault();
     try {
@@ -132,10 +175,11 @@ function userEditor(u) {
         body: {
           name: $('ue-name').value, role: $('ue-role').value, active: $('ue-active').checked,
           reset_password: $('ue-reset').checked,
+          set_password: $('ue-pw').value, must_change: $('ue-must').checked,
           exhibition_slugs: [...document.querySelectorAll('input[name="ue-ex"]:checked')].map((x) => x.value)
         }
       });
-      toast('บันทึกแล้ว', 'ok');
+      toast($('ue-pw').value && !$('ue-reset').checked ? 'บันทึกแล้ว · ตั้งรหัสผ่านใหม่แล้ว' : 'บันทึกแล้ว', 'ok');
       if (d.temporaryPassword) $('ue-result').innerHTML = tempPasswordHtml(u.name, d.temporaryPassword);
       else closeDrawer();
       await load();
@@ -158,7 +202,9 @@ async function main() {
   if (me.user.role !== 'admin') {
     $('staff-home').hidden = false;
     $('my-list').innerHTML = me.exhibitions.length
-      ? me.exhibitions.map((e) => `<div class="card row" style="justify-content:space-between"><div><strong>${esc(e.title_th)}</strong> <span class="tag">${esc(STATUS_TH[e.status] || e.status)}</span></div><a class="btn" href="/manage/${encodeURIComponent(e.slug)}">จัดการ</a></div>`).join('')
+      ? me.exhibitions.map((e) => `<div class="card row" style="justify-content:space-between"><div><strong>${esc(e.title_th)}</strong> <span class="tag">${esc(STATUS_TH[e.status] || e.status)}</span>${e.member_role === 'coordinator' ? ' <span class="tag">ผู้ประสานงาน</span>' : ''}</div>${e.member_role === 'coordinator'
+        ? `<a class="btn" href="/coord/${encodeURIComponent(e.slug)}">ศิลปินที่ฉันดูแล</a>`
+        : `<a class="btn" href="/manage/${encodeURIComponent(e.slug)}">จัดการ</a>`}</div>`).join('')
       : '<p class="muted">ยังไม่ได้รับมอบหมายให้ดูแลนิทรรศการ กรุณาติดต่อผู้ดูแลหอศิลป์</p>';
     return;
   }
@@ -269,11 +315,13 @@ $('new-user').addEventListener('submit', async (e) => {
       method: 'POST',
       body: {
         name: $('nu-name').value, email: $('nu-email').value, role: $('nu-role').value,
-        exhibition_slugs: [...document.querySelectorAll('input[name="nu-ex"]:checked')].map((x) => x.value)
+        exhibition_slugs: [...document.querySelectorAll('input[name="nu-ex"]:checked')].map((x) => x.value),
+        password: $('nu-pw').value, must_change: $('nu-must').checked
       }
     });
     $('nu-result').hidden = false;
-    $('nu-result').innerHTML = tempPasswordHtml(d.user.name, d.temporaryPassword);
+    $('nu-result').innerHTML = d.temporaryPassword ? tempPasswordHtml(d.user.name, d.temporaryPassword)
+      : `<div class="card"><strong>สร้างบัญชี ${esc(d.user.name)} แล้ว</strong> ด้วยรหัสผ่านที่ตั้งไว้${d.mustChange ? ' · ต้องเปลี่ยนรหัสเมื่อเข้าระบบครั้งแรก' : ''}</div>`;
     e.target.reset();
     await load();
   } catch (err) { $('nu-err').textContent = err.message; }

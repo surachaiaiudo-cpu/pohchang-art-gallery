@@ -36,11 +36,18 @@ export async function loadPublicExhibition(db, slug) {
   return ex;
 }
 
-export async function canManage(db, user, exhibitionId) {
-  if (user.role === 'admin') return true;
-  const m = await db.prepare('SELECT 1 FROM exhibition_members WHERE exhibition_id = ? AND user_id = ?')
+// 'admin' | 'manager' (ผู้ดูแลนิทรรศการ) | 'coordinator' (ผู้ประสานงาน, owner 2026-11-19) | null
+export async function memberRole(db, user, exhibitionId) {
+  if (user.role === 'admin') return 'admin';
+  const m = await db.prepare('SELECT member_role FROM exhibition_members WHERE exhibition_id = ? AND user_id = ?')
     .bind(exhibitionId, user.id).first();
-  return !!m;
+  return m ? (m.member_role === 'coordinator' ? 'coordinator' : 'manager') : null;
+}
+
+// Coordinators are members too, but they only get /coord/<slug>, never the manage pages.
+export async function canManage(db, user, exhibitionId) {
+  const r = await memberRole(db, user, exhibitionId);
+  return r === 'admin' || r === 'manager';
 }
 
 // For /api/manage/:slug/* — returns { user, ex } or throws 401/403/404.
@@ -50,6 +57,16 @@ export async function requireManager(context) {
   if (!ex) throw notFound('ไม่พบนิทรรศการ');
   if (!(await canManage(context.env.DB, user, ex.id))) throw forbidden('คุณไม่ได้เป็นผู้ดูแลนิทรรศการนี้');
   return { user, ex };
+}
+
+// For /api/coord/:slug/* — admins, managers and coordinators of the exhibition -> { user, ex, role }.
+export async function requireCoordinator(context) {
+  const user = await requireUser(context);
+  const ex = await findBySlug(context.env.DB, context.params.slug);
+  if (!ex) throw notFound('ไม่พบนิทรรศการ');
+  const role = await memberRole(context.env.DB, user, ex.id);
+  if (!role) throw forbidden('คุณไม่ได้เป็นผู้ประสานงานหรือผู้ดูแลนิทรรศการนี้');
+  return { user, ex, role };
 }
 
 export function hasStorage(ex) {

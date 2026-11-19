@@ -189,6 +189,32 @@ const STEPS = [
       // Last, because needed() looks for it: a half-applied retry fails on the first ALTER and is re-checked.
       "ALTER TABLE exhibitions ADD COLUMN submit_stage TEXT NOT NULL DEFAULT 'exhibit'"
     ]
+  },
+  {
+    // Coordinators (owner, 2026-11-19): exhibition_members.member_role ('manager' | 'coordinator'; existing rows stay
+    // managers), artists.coordinator_id (one per artist), notified_at / notified_by, accepted_at / accepted_by.
+    name: '0018_coordinators',
+    needed: async (db) => !(await db.prepare(
+      "SELECT 1 AS x FROM pragma_table_info('exhibition_members') WHERE name = 'member_role'"
+    ).first()),
+    sql: [
+      'ALTER TABLE artists ADD COLUMN coordinator_id INTEGER',
+      'ALTER TABLE artists ADD COLUMN notified_at TEXT',
+      'ALTER TABLE artists ADD COLUMN notified_by INTEGER',
+      'ALTER TABLE artists ADD COLUMN accepted_at TEXT',
+      "ALTER TABLE artists ADD COLUMN accepted_by TEXT NOT NULL DEFAULT ''",
+      'CREATE INDEX IF NOT EXISTS idx_artists_coord ON artists(exhibition_id, coordinator_id)',
+      // Last, because needed() looks for it.
+      "ALTER TABLE exhibition_members ADD COLUMN member_role TEXT NOT NULL DEFAULT 'manager'"
+    ]
+  },
+  {
+    // Admin can view passwords (owner's choice 2026-11-19, after the risks were explained): an AES-GCM copy.
+    name: '0019_password_view',
+    needed: async (db) => !(await db.prepare(
+      "SELECT 1 AS x FROM pragma_table_info('users') WHERE name = 'password_enc'"
+    ).first()),
+    sql: ["ALTER TABLE users ADD COLUMN password_enc TEXT NOT NULL DEFAULT ''"]
   }
 ];
 

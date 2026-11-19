@@ -23,3 +23,12 @@ tr.im-skip td { background: #f6f3ee; color: var(--muted); }
 .ro-name > span { display: block; }
 .ro-pass { white-space: nowrap; }
 .ro-pass .check { display: inline-flex; min-height: 34px; margin-right: 10px; }
+/* /coord/<slug> - coordinators (owner, 2026-11-19) */
+.co-news { background: #eef7ee; border-color: #b9dbb9; }
+.co-state { white-space: nowrap; font-weight: 600; }
+.co-todo { color: var(--muted); }
+.co-wait { color: #6b4a00; }
+.co-signed { color: var(--ok); }
+.co-mine td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+.ro-contact a { word-break: break-all; }
+.ro-table .ro-coord select { max-width: 11em; }

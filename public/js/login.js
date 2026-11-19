@@ -7,7 +7,11 @@ async function goHome() {
   const next = new URLSearchParams(location.search).get('next');
   if (next && next.startsWith('/') && !next.startsWith('//')) { location.href = next; return; }
   if (me.user.role === 'admin') location.href = '/admin';
-  else if (me.exhibitions.length === 1) location.href = `/manage/${encodeURIComponent(me.exhibitions[0].slug)}`;
+  // A coordinator of one exhibition goes to their artists (owner, 2026-11-19); a manager of one to its manage page.
+  else if (me.exhibitions.length === 1) {
+    const e = me.exhibitions[0];
+    location.href = `/${e.member_role === 'coordinator' ? 'coord' : 'manage'}/${encodeURIComponent(e.slug)}`;
+  }
   else location.href = '/admin';
 }
 

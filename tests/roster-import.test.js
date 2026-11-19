@@ -14,7 +14,7 @@ test('reads the first sheet of the template (header only)', async () => {
   assert.equal(rows.length, 1);
   assert.equal(rows[0][0], 'ชื่อ-นามสกุล (ภาษาหลัก) *');
   const h = findHeader(rows);
-  assert.deepEqual(Object.keys(h.map), ['name_th', 'name_en', 'academic_title_th', 'nationality', 'email', 'phone', 'affiliation', 'channel', 'roster', 'roster_note']);
+  assert.deepEqual(Object.keys(h.map), ['name_th', 'name_en', 'academic_title_th', 'nationality', 'email', 'phone', 'affiliation', 'channel', 'roster', 'roster_note', 'coordinator']);
 });
 
 test('reads a filled sheet and checks every row', async () => {
@@ -57,4 +57,10 @@ test('csv and helpers', () => {
   assert.deepEqual(readCsv('a;b\n1;2'), [['a', 'b'], ['1', '2']]);
   assert.equal(colIndex('AB12'), 27);
   assert.equal(unescapeXml('&lt;&amp;&#3585;&#x41;'), '<&กA');
+});
+
+test('coordinator column: name or email of a coordinator of the exhibition', () => {
+  const rows = [['ชื่อ', 'ผู้ประสานงาน / Coordinator'], ['A', 'อ.สมศรี  ใจดี'], ['B', 'COORD@x.org'], ['C', 'someone else'], ['D', '']];
+  const r = parseImport(rows, [], { ...deps, coordinators: [{ id: 7, name: 'อ.สมศรี ใจดี', email: 'coord@x.org' }] });
+  assert.deepEqual(r.rows.map((x) => [x.coordinator_id, x.errors.length]), [[7, 0], [7, 0], [null, 1], [null, 0]]);
 });

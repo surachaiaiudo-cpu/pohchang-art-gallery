@@ -4,7 +4,7 @@ import { requireManager, audit } from '../../../../_lib/exhibitions.js';
 import { normName } from '../../../../_lib/artist-match.js';
 import * as v from '../../../../_lib/validate.js';
 import { STAGE_KEYS, planNumbers } from '../../../../../public/js/roster-logic.js';
-import { ROSTER_ARTIST_TEXT, channelOf, rosterOf, parseImport, IMPORT_MAX_ROWS } from '../../../../_lib/roster.js';
+import { ROSTER_ARTIST_TEXT, channelOf, rosterOf, parseImport, IMPORT_MAX_ROWS, coordinatorsOf, coordinatorOf } from '../../../../_lib/roster.js';
 import { matchCountry } from '../../../../_lib/import-old.js';
 import { isCountryCode } from '../../../../../public/js/countries.js';
 
@@ -16,6 +16,7 @@ export const onRequestGet = handle(async (context) => {
   const { results } = await context.env.DB.prepare(
     `SELECT a.id, a.name_th, a.name_en, a.name_zh, a.academic_title_th, a.email, a.phone, a.nationality, a.affiliation,
             a.channel, a.roster, a.artist_no, a.withdrawn, a.roster_note, a.created_at,
+            a.coordinator_id, a.notified_at, a.accepted_at, a.accepted_by,
             (SELECT COUNT(*) FROM works w WHERE w.artist_id = a.id AND w.deleted_at IS NULL AND w.stage = 'selection') AS works_selection,
             (SELECT COUNT(*) FROM works w WHERE w.artist_id = a.id AND w.deleted_at IS NULL AND w.stage != 'selection') AS works_exhibit,
             (SELECT COUNT(*) FROM works w WHERE w.artist_id = a.id AND w.deleted_at IS NULL AND w.stage = 'selection'
@@ -41,7 +42,8 @@ export const onRequestGet = handle(async (context) => {
   for (const a of results || []) a.categories = byArtist.get(a.id) || [];
   const workStages = { exhibit: 0, selection: 0 };
   for (const r of stages.results || []) workStages[r.stage === 'selection' ? 'selection' : 'exhibit'] += r.n;
-  return json({ ok: true, artists: results || [], work_stages: workStages, submit_stage: ex.submit_stage || 'exhibit' });
+  const coordinators = await coordinatorsOf(context.env.DB, ex.id);
+  return json({ ok: true, artists: results || [], work_stages: workStages, submit_stage: ex.submit_stage || 'exhibit', coordinators });
 });
 
 // Sheet rows from the browser: at most IMPORT_MAX_ROWS + 10 rows of 30 cells, each cell text up to 600 characters.
@@ -77,16 +79,16 @@ export const onRequestPost = handle(async (context) => {
     const { results } = await db.prepare('SELECT id, name_th, name_en FROM artists WHERE exhibition_id = ?').bind(ex.id).all();
     let parsed;
     try {
-      parsed = parseImport(rows, results || [], { matchCountry: countryOf, normName });
+      parsed = parseImport(rows, results || [], { matchCountry: countryOf, normName, coordinators: await coordinatorsOf(db, ex.id) });
     } catch (err) { throw bad(err.message); }
     if (action === 'import_preview') return json({ ok: true, ...parsed });
     const force = new Set((Array.isArray(b.force_lines) ? b.force_lines : []).map(Number));
     const take = parsed.rows.filter((r) => !r.errors.length && (!r.duplicate || force.has(r.line)));
     const stmts = take.map((r) => db.prepare(
-      `INSERT INTO artists (exhibition_id, name_th, name_en, academic_title_th, email, phone, nationality, affiliation, channel, roster, roster_note)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO artists (exhibition_id, name_th, name_en, academic_title_th, email, phone, nationality, affiliation, channel, roster, roster_note, coordinator_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(ex.id, r.artist.name_th, r.artist.name_en, r.artist.academic_title_th, r.artist.email, r.artist.phone,
-      r.artist.nationality, r.artist.affiliation, r.channel, r.roster, r.roster_note));
+      r.artist.nationality, r.artist.affiliation, r.channel, r.roster, r.roster_note, r.coordinator_id || null));
     for (let i = 0; i < stmts.length; i += 100) await db.batch(stmts.slice(i, i + 100));
     await audit(db, ex.id, actorOf(user), 'roster.import', { added: take.length, rows: parsed.rows.length });
     return json({ ok: true, added: take.length, skipped: parsed.rows.length - take.length });
@@ -121,6 +123,7 @@ export const onRequestPost = handle(async (context) => {
     const set = {};
     if (b.channel !== undefined) set.channel = channelOf(b.channel);
     if (b.roster !== undefined) set.roster = rosterOf(b.roster);
+    if (b.coordinator_id !== undefined) set.coordinator_id = await coordinatorOf(db, ex.id, b.coordinator_id);
     if (!list.length || !Object.keys(set).length) return json({ ok: true, updated: 0 });
     const cols = Object.keys(set);
     const stmts = list.map((id) => db.prepare(

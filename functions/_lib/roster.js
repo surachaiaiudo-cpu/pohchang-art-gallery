@@ -1,4 +1,5 @@
 import * as v from './validate.js';
+import { bad } from './http.js';
 import { ROSTER_KEYS } from '../../public/js/roster-logic.js';
 
 // Artist fields an admin / exhibition manager may type for an artist added by hand (channels 1 and 3).
@@ -13,6 +14,25 @@ export const ROSTER_ARTIST_TEXT = {
 
 export const channelOf = (x) => v.int(x, { field: 'ช่องทาง', min: 0, max: 4 });
 export const rosterOf = (x) => v.oneOf(x, ROSTER_KEYS, { field: 'สถานะการคัดเลือก' });
+
+// Coordinators of an exhibition (ผู้ประสานงาน, set by the admin; owner 2026-11-19). Back office only (has email).
+export async function coordinatorsOf(db, exhibitionId) {
+  const { results } = await db.prepare(
+    `SELECT u.id, u.name, u.email FROM exhibition_members m JOIN users u ON u.id = m.user_id
+      WHERE m.exhibition_id = ? AND m.member_role = 'coordinator' AND u.active = 1 ORDER BY u.name`
+  ).bind(exhibitionId).all();
+  return results || [];
+}
+
+// null / '' = no coordinator; otherwise must be a coordinator of this exhibition. One per artist.
+export async function coordinatorOf(db, exhibitionId, value) {
+  if (value === null || value === '' || value === 0) return null;
+  const id = v.int(value, { field: 'ผู้ประสานงาน', min: 1 });
+  const ok = await db.prepare("SELECT 1 FROM exhibition_members WHERE exhibition_id = ? AND user_id = ? AND member_role = 'coordinator'")
+    .bind(exhibitionId, id).first();
+  if (!ok) throw bad('ผู้ใช้นี้ไม่ได้เป็นผู้ประสานงานของนิทรรศการนี้');
+  return id;
+}
 
 // ---------------------------------------------------------------- import from Excel (owner, 2026-11-17)
 // The browser reads the first sheet (public/js/xlsx-read.js) and sends its rows as strings; the server
@@ -31,7 +51,8 @@ const HEADERS = {
   affiliation: ['สังกัด', 'หน่วยงาน', 'สถาบัน', 'affiliation', 'institution', 'organization', 'organisation'],
   channel: ['ช่องทาง', 'channel'],
   roster: ['สถานะ', 'สถานะการคัดเลือก', 'status'],
-  roster_note: ['หมายเหตุ', 'note', 'notes', 'remark', 'remarks']
+  roster_note: ['หมายเหตุ', 'note', 'notes', 'remark', 'remarks'],
+  coordinator: ['ผู้ประสานงาน', 'coordinator', 'contactperson']
 };
 export const normHeader = (s) => String(s || '').toLowerCase().normalize('NFKC')
   .replace(/\(.*?\)/g, '').replace(/[\s.,:;'’"*_\-–—()[\]]/g, '');
@@ -81,7 +102,7 @@ export function parseRoster(text) {
 
 // rows: string[][] from the sheet; existing: artists already in the exhibition ({ id, name_th, name_en }).
 // -> { header: [...keys], rows: [{ line, artist, channel, roster, roster_note, errors: [], duplicate: null | {...} }] }
-export function parseImport(rows, existing, { matchCountry, normName }) {
+export function parseImport(rows, existing, { matchCountry, normName, coordinators = [] }) {
   const head = findHeader(rows);
   if (!head) throw new Error('ไม่พบหัวตาราง: ต้องมีคอลัมน์ "ชื่อ-นามสกุล" (หรือ Name) ใน 10 แถวแรก');
   const get = (r, k) => (head.map[k] === undefined ? '' : String(r[head.map[k]] ?? '').trim());
@@ -119,6 +140,14 @@ export function parseImport(rows, existing, { matchCountry, normName }) {
     const roster = parseRoster(get(r, 'roster'));
     if (roster === null) errors.push(`สถานะไม่ถูกต้อง (${get(r, 'roster')})`);
     const roster_note = fit('roster_note', 500, 'หมายเหตุ');
+    // Coordinator column: a coordinator's name or email (must be set up by the admin first).
+    const coordText = get(r, 'coordinator');
+    let coordinator_id = null;
+    if (coordText) {
+      const t = coordText.toLowerCase().replace(/\s+/g, ' ');
+      const c = coordinators.find((x) => x.email.toLowerCase() === t || String(x.name || '').toLowerCase().replace(/\s+/g, ' ') === t);
+      if (c) coordinator_id = c.id; else errors.push(`ไม่พบผู้ประสานงานชื่อ “${coordText}” (ต้องเป็นผู้ประสานงานของนิทรรศการนี้)`);
+    }
     const names = [artist.name_th, artist.name_en].map(normName).filter(Boolean);
     let duplicate = null;
     for (const n of names) {
@@ -128,7 +157,7 @@ export function parseImport(rows, existing, { matchCountry, normName }) {
       if (f) { duplicate = { where: 'file', line: f }; break; }
     }
     for (const n of names) if (!inFile.has(n)) inFile.set(n, i + 1);
-    out.push({ line: i + 1, artist, channel: channel ?? 0, roster: roster ?? '', roster_note, errors, duplicate });
+    out.push({ line: i + 1, artist, channel: channel ?? 0, roster: roster ?? '', roster_note, coordinator_id, errors, duplicate });
   }
   if (out.length > IMPORT_MAX_ROWS) throw new Error(`นำเข้าได้ครั้งละไม่เกิน ${IMPORT_MAX_ROWS} คน (ไฟล์นี้มี ${out.length})`);
   return { header: Object.keys(head.map), headerLine: head.index + 1, rows: out };

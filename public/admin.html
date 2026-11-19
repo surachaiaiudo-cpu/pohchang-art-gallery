@@ -100,6 +100,11 @@
               <div class="field"><label for="nu-role">บทบาท</label><select id="nu-role"><option value="staff">ผู้ดูแลนิทรรศการ</option><option value="admin">ผู้ดูแลหอศิลป์</option></select></div>
             </div>
             <div class="field"><span class="label">ดูแลนิทรรศการ</span><div class="row" id="nu-ex"></div></div>
+            <div class="grid-3">
+              <div class="field"><label for="nu-pw">รหัสผ่าน (ไม่บังคับ)</label><input id="nu-pw" type="text" autocomplete="new-password" spellcheck="false" maxlength="200">
+                <span class="hint">อย่างน้อย 10 ตัวอักษร · เว้นว่าง = ระบบสร้างรหัสชั่วคราวให้</span></div>
+              <div class="field"><span class="label">&nbsp;</span><label class="check"><input type="checkbox" id="nu-must" checked> ให้เปลี่ยนรหัสผ่านเมื่อเข้าระบบครั้งแรก</label></div>
+            </div>
             <button class="btn" type="submit">สร้างบัญชี</button> <span class="error-text" id="nu-err"></span>
           </form>
           <div id="nu-result" hidden style="margin-top:16px"></div>

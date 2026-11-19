@@ -80,7 +80,7 @@ public/
   flags/*.svg      242 flag images (flag-icons, MIT, licence included) + xr.svg (Kurdistan, drawn here)
   _redirects       /e/:slug, /e/:slug/work/:id, /e/:slug/submit, /manage/:slug, /review/:token rewrites
   _headers         CSS/JS revalidate every load; flags cached 7 days
-schema/0001..0017  SQL history (0001 creates everything; later files are also applied by migrate.js; 0006 lives only in migrate.js)
+schema/0001..0019  SQL history (0001 creates everything; later files are also applied by migrate.js; 0006 lives only in migrate.js)
 tests/*.test.js    node:test unit tests (`npm test`)
 ```
 
@@ -371,6 +371,32 @@ API `GET/POST /api/manage/:slug/roster` (actions add | set | number | clear_numb
 "ผ่าน n/m" are shown; status is set by hand or in bulk). Parts B–G (acceptance page, coordinators, badges + QR, Excel,
 new submission flow, catalogue/captions changes, round 2) wait — see the project doc.
 
+### 6.13 Coordinators (ผู้ประสานงาน) (owner, 2026-11-19; branch `coordinators`)
+Owner: every artist has one coordinator who contacts them and must see whether the artist has signed the acceptance on
+the website after the invitation was sent; coordinators have their own accounts, set by the admin; notices on the page only.
+Migration `0018_coordinators` (columns only): `exhibition_members.member_role` 'manager' (as before, default for old rows)
+| 'coordinator'; `artists.coordinator_id` (user id, one per artist), `notified_at` / `notified_by`, `accepted_at` /
+`accepted_by` ('' | self | coordinator | friend — filled by the acceptance page, part B, not built yet).
+- Access: `memberRole()` / `requireCoordinator()` in `functions/_lib/exhibitions.js`. **`canManage()` now needs
+  member_role 'manager'**, so coordinators never reach `/api/manage/*`; they get `/api/coord/:slug` (GET selected artists
+  with contact details + progress; POST `{ artist_id, notified }` = "แจ้งแล้ว" with date and who, or undo). Admins and
+  managers may use it too.
+- Admin: exhibition drawer has "ผู้ประสานงานของนิทรรศการนี้" (`coordinator_user_ids`; removing one clears their artists'
+  link). Manager memberships (`staff_user_ids`, user editor `exhibition_slugs`) only replace manager rows; a person ticked as
+  both becomes a manager. User list shows "ผู้ประสานงาน: …". Topbar shows "(ผู้ประสานงาน)"; login sends a coordinator of one
+  exhibition to `/coord/<slug>`; the staff home links coordinators to it.
+- Page `/coord/<slug>` "ศิลปินที่ฉันดูแล": artists with status ผ่าน (withdrawn struck through); filter mine / all / one
+  coordinator / none, state (ยังไม่แจ้ง / แจ้งแล้ว รอลงนาม / ลงนามแล้ว), search; stats; email/phone links; button "แจ้งแล้ว";
+  green notice "ลงนามตอบรับใหม่ n ท่าน ตั้งแต่เข้ามาครั้งก่อน" (last visit kept in localStorage `coord:seen:<slug>`).
+- Roster page: column "ผู้ประสานงาน" (select + progress), bulk set, summary table per coordinator (ดูแล / แจ้งแล้ว / ลงนามแล้ว /
+  ยังไม่แจ้ง), link "หน้าผู้ประสานงาน"; Excel import column "ผู้ประสานงาน / Coordinator" (name or email of a coordinator of
+  the exhibition; unknown = error row).
+- Admin may set a user's password (owner, 2026-11-19 "admin ตั้งรหัสบัญชีเข้าใช้ของผู้ดูแลศิลปินได้"): new-user form "รหัสผ่าน (ไม่บังคับ)" and user editor "หรือตั้งรหัสผ่านใหม่เอง" (≥10 characters, `v.password`), with "ให้เปลี่ยนรหัสผ่าน…" ticked by default (`must_change`); the typed password is never sent back; setting it signs the user out. Empty = temporary password as before.
+- **Admins can view passwords** (owner chose option 3 on 2026-11-19 after the risks were explained: recoverable copies, password reuse). Migration `0019_password_view`: `users.password_enc` = AES-GCM copy (`sealPassword()` with APP_ENCRYPTION_KEY; '' if the key is missing) written on create, reset, admin-set and the user's own change; the PBKDF2 hash still signs people in. `GET /api/admin/users/:id` returns it, every view audited (`user.view_password`). User editor: "ดูรหัสผ่าน". The change-password form tells users the admin can see it. Accounts from before have no copy until the password is set again.
+- Delete an account (owner, 2026-11-19 "ใช้วิธีลบบัญชีเลย"): user editor → "ลบบัญชีนี้" (type the email to confirm); `DELETE /api/admin/users/:id`, not yourself, not the last admin; removes sessions + memberships, sets their artists' coordinator to none (notified date stays).
+- Preview note: preview shares the production D1. Until this is merged, production code treats any membership as manager,
+  so do not create coordinators before merging.
+
 ## 7. API (all JSON; writes require same-origin)
 
 | Route | Who | Purpose |
@@ -381,8 +407,9 @@ new submission flow, catalogue/captions changes, round 2) wait — see the proje
 | `GET /api/config` | public | site name, Turnstile site key |
 | `GET /api/site`, `GET/PUT /api/admin/site` | public / admin | home hero text + footer details |
 | `POST /api/auth/login`, `logout`, `GET me`, `POST password` | users | session auth, forced first password change |
-| `/api/admin/users[/id]`, `/api/admin/exhibitions[/id]` | admin | users, create exhibition, slug/status/staff |
+| `/api/admin/users[/id]`, `/api/admin/exhibitions[/id]` | admin | users (incl. DELETE), create exhibition, slug/status/staff/coordinators |
 | `POST /api/admin/import` | admin | old-event import (6.8) |
+| `/api/coord/:slug` | coordinators, managers, admins | selected artists + "แจ้งแล้ว" |
 | `/api/manage/:slug` (+ `roster`, `roster/:id`, `works`, `works/:id`, `techniques`, `reviewers`, `reviewers/:id`, `results`, `storage`, `hero`, `upload-auth`) | staff of that exhibition | settings, screening, panel, results, Cloudinary |
 | `GET/POST /api/review/:token[/vote]` | reviewer link | review works, vote |
 | `GET /api/dev/placeholder` | dev only | fake image when `DEV_FAKE_STORAGE=1` |

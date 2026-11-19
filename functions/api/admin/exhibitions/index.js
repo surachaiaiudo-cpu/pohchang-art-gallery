@@ -21,12 +21,15 @@ export const onRequestGet = handle(async (context) => {
               (SELECT COUNT(*) FROM works w WHERE w.exhibition_id = e.id AND w.status = 'shown' AND w.deleted_at IS NULL) AS shown
          FROM exhibitions e ORDER BY e.created_at DESC`
     ),
-    db.prepare('SELECT m.exhibition_id, u.id, u.name, u.email FROM exhibition_members m JOIN users u ON u.id = m.user_id')
+    db.prepare('SELECT m.exhibition_id, m.member_role, u.id, u.name, u.email FROM exhibition_members m JOIN users u ON u.id = m.user_id')
   ]);
+  // staff = managers (ผู้ดูแลนิทรรศการ); coordinators (ผู้ประสานงาน, owner 2026-11-19) listed apart.
   const staff = new Map();
+  const coords = new Map();
   for (const m of members.results || []) {
-    if (!staff.has(m.exhibition_id)) staff.set(m.exhibition_id, []);
-    staff.get(m.exhibition_id).push({ id: m.id, name: m.name, email: m.email });
+    const map = m.member_role === 'coordinator' ? coords : staff;
+    if (!map.has(m.exhibition_id)) map.set(m.exhibition_id, []);
+    map.get(m.exhibition_id).push({ id: m.id, name: m.name, email: m.email });
   }
   return json({
     ok: true,
@@ -34,7 +37,8 @@ export const onRequestGet = handle(async (context) => {
       ...e,
       // Whether the submission form is actually accepting work right now (status, dates and storage).
       submission: submissionWindow({ ...e, cloudinary_upload_preset, cloudinary_api_secret_enc: has_secret ? 'x' : '' }),
-      staff: staff.get(e.id) || []
+      staff: staff.get(e.id) || [],
+      coordinators: coords.get(e.id) || []
     }))
   });
 });
