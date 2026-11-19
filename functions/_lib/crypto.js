@@ -76,3 +76,10 @@ export async function hmacSha1Hex(keyStr, message) {
 export async function sha1Hex(value) {
   return toHex(await crypto.subtle.digest('SHA-1', enc.encode(value)));
 }
+
+// Owner's choice (2026-11-19, option 3): admins can view users' passwords, so a copy is kept encrypted with
+// APP_ENCRYPTION_KEY next to the PBKDF2 hash (the hash is still what signs people in). '' when the key is missing,
+// so a missing key never blocks setting a password.
+export async function sealPassword(plain, secret) {
+  try { return await encryptSecret(plain, secret); } catch { return ''; }
+}

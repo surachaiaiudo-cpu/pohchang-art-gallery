@@ -1,6 +1,6 @@
 import { handle, json, readJson, bad } from '../../../_lib/http.js';
 import { requireAdmin, actorOf } from '../../../_lib/auth.js';
-import { hashPassword, randomToken } from '../../../_lib/crypto.js';
+import { hashPassword, randomToken, sealPassword } from '../../../_lib/crypto.js';
 import { audit } from '../../../_lib/exhibitions.js';
 import * as v from '../../../_lib/validate.js';
 
@@ -47,9 +47,9 @@ export const onRequestPost = handle(async (context) => {
   const mustChange = own && body.must_change === false ? 0 : 1;
   const h = await hashPassword(temp);
   const res = await db.prepare(
-    `INSERT INTO users (email, name, role, password_hash, password_salt, password_iters, must_change_password)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`
-  ).bind(email, name, role, h.hash, h.salt, h.iters, mustChange).run();
+    `INSERT INTO users (email, name, role, password_hash, password_salt, password_iters, must_change_password, password_enc)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+  ).bind(email, name, role, h.hash, h.salt, h.iters, mustChange, await sealPassword(temp, context.env.APP_ENCRYPTION_KEY)).run();
   const userId = res.meta.last_row_id;
 
   const slugs = Array.isArray(body.exhibition_slugs) ? body.exhibition_slugs.slice(0, 50) : [];

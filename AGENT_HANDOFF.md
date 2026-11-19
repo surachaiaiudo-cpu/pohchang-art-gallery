@@ -80,7 +80,7 @@ public/
   flags/*.svg      242 flag images (flag-icons, MIT, licence included) + xr.svg (Kurdistan, drawn here)
   _redirects       /e/:slug, /e/:slug/work/:id, /e/:slug/submit, /manage/:slug, /review/:token rewrites
   _headers         CSS/JS revalidate every load; flags cached 7 days
-schema/0001..0018  SQL history (0001 creates everything; later files are also applied by migrate.js; 0006 lives only in migrate.js)
+schema/0001..0019  SQL history (0001 creates everything; later files are also applied by migrate.js; 0006 lives only in migrate.js)
 tests/*.test.js    node:test unit tests (`npm test`)
 ```
 
@@ -392,6 +392,7 @@ Migration `0018_coordinators` (columns only): `exhibition_members.member_role` '
   ยังไม่แจ้ง), link "หน้าผู้ประสานงาน"; Excel import column "ผู้ประสานงาน / Coordinator" (name or email of a coordinator of
   the exhibition; unknown = error row).
 - Admin may set a user's password (owner, 2026-11-19 "admin ตั้งรหัสบัญชีเข้าใช้ของผู้ดูแลศิลปินได้"): new-user form "รหัสผ่าน (ไม่บังคับ)" and user editor "หรือตั้งรหัสผ่านใหม่เอง" (≥10 characters, `v.password`), with "ให้เปลี่ยนรหัสผ่าน…" ticked by default (`must_change`); the typed password is never sent back; setting it signs the user out. Empty = temporary password as before.
+- **Admins can view passwords** (owner chose option 3 on 2026-11-19 after the risks were explained: recoverable copies, password reuse). Migration `0019_password_view`: `users.password_enc` = AES-GCM copy (`sealPassword()` with APP_ENCRYPTION_KEY; '' if the key is missing) written on create, reset, admin-set and the user's own change; the PBKDF2 hash still signs people in. `GET /api/admin/users/:id` returns it, every view audited (`user.view_password`). User editor: "ดูรหัสผ่าน". The change-password form tells users the admin can see it. Accounts from before have no copy until the password is set again.
 - Delete an account (owner, 2026-11-19 "ใช้วิธีลบบัญชีเลย"): user editor → "ลบบัญชีนี้" (type the email to confirm); `DELETE /api/admin/users/:id`, not yourself, not the last admin; removes sessions + memberships, sets their artists' coordinator to none (notified date stays).
 - Preview note: preview shares the production D1. Until this is merged, production code treats any membership as manager,
   so do not create coordinators before merging.

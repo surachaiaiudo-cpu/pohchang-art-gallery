@@ -207,6 +207,14 @@ const STEPS = [
       // Last, because needed() looks for it.
       "ALTER TABLE exhibition_members ADD COLUMN member_role TEXT NOT NULL DEFAULT 'manager'"
     ]
+  },
+  {
+    // Admin can view passwords (owner's choice 2026-11-19, after the risks were explained): an AES-GCM copy.
+    name: '0019_password_view',
+    needed: async (db) => !(await db.prepare(
+      "SELECT 1 AS x FROM pragma_table_info('users') WHERE name = 'password_enc'"
+    ).first()),
+    sql: ["ALTER TABLE users ADD COLUMN password_enc TEXT NOT NULL DEFAULT ''"]
   }
 ];
 

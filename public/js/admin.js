@@ -129,6 +129,9 @@ function userEditor(u) {
       <div class="field"><span class="label">ดูแลนิทรรศการ</span>${exCheckboxes('ue-ex', sel)}</div>
       <label class="check"><input type="checkbox" id="ue-active" ${u.active ? 'checked' : ''}> เปิดใช้งานบัญชี</label>
       <label class="check"><input type="checkbox" id="ue-reset"> ออกรหัสผ่านชั่วคราวใหม่ (ลืมรหัสผ่าน)</label>
+      <div class="field"><span class="label">รหัสผ่านปัจจุบัน</span>
+        <div class="row"><span id="ue-pw-view" class="muted">ซ่อนอยู่</span><button class="btn btn-ghost btn-sm" type="button" id="ue-pw-show">ดูรหัสผ่าน</button></div>
+        <span class="hint">การดูรหัสผ่านทุกครั้งถูกบันทึกไว้ในประวัติการใช้งาน</span></div>
       <div class="field"><label for="ue-pw">หรือตั้งรหัสผ่านใหม่เอง</label><input id="ue-pw" type="text" autocomplete="new-password" spellcheck="false" maxlength="200" placeholder="อย่างน้อย 10 ตัวอักษร · เว้นว่าง = ไม่เปลี่ยน">
         <label class="check"><input type="checkbox" id="ue-must" checked> ให้เปลี่ยนรหัสผ่านเมื่อเข้าระบบครั้งถัดไป</label></div>
       <p><button class="btn" type="submit">บันทึก</button> <span class="error-text" id="ue-err"></span></p>
@@ -137,6 +140,22 @@ function userEditor(u) {
       <p class="small muted">ลบบัญชี: เข้าระบบไม่ได้อีก ถอดออกจากทุกนิทรรศการ และศิลปินที่บัญชีนี้เป็นผู้ประสานงานจะไม่มีผู้ประสานงาน (ประวัติ “แจ้งแล้ว” ยังอยู่) ย้อนกลับไม่ได้</p>
       <button class="btn btn-danger btn-sm" type="button" id="ue-delete">ลบบัญชีนี้</button>
     </form>`);
+  $('ue-pw-show').addEventListener('click', async () => {
+    if ($('ue-pw-show').dataset.open) {
+      $('ue-pw-view').textContent = 'ซ่อนอยู่'; $('ue-pw-view').className = 'muted';
+      $('ue-pw-show').textContent = 'ดูรหัสผ่าน'; delete $('ue-pw-show').dataset.open; return;
+    }
+    try {
+      const d = await api(`/api/admin/users/${u.id}`);
+      if (d.stored) {
+        $('ue-pw-view').textContent = d.password; $('ue-pw-view').className = '';
+        $('ue-pw-view').style.fontFamily = 'ui-monospace, monospace';
+        $('ue-pw-show').textContent = 'ซ่อน'; $('ue-pw-show').dataset.open = '1';
+      } else {
+        $('ue-pw-view').textContent = 'ไม่มีรหัสที่เก็บไว้ (ตั้งก่อนเปิดใช้ความสามารถนี้) — ตั้งรหัสใหม่ด้านล่างได้';
+      }
+    } catch (err) { $('ue-err').textContent = err.message; }
+  });
   $('ue-delete').addEventListener('click', async () => {
     const typed = prompt(`ลบบัญชี ${u.name} (${u.email}) ถาวร?\nพิมพ์อีเมลของบัญชีนี้เพื่อยืนยัน`);
     if (typed === null) return;
