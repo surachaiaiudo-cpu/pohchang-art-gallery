@@ -32,3 +32,5 @@ tr.im-skip td { background: #f6f3ee; color: var(--muted); }
 .co-mine td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
 .ro-contact a { word-break: break-all; }
 .ro-table .ro-coord select { max-width: 11em; }
+.co-sum th, .co-sum td { text-align: center; }
+.co-sum th:first-child, .co-sum td:first-child { text-align: left; }
