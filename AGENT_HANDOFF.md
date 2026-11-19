@@ -391,6 +391,7 @@ Migration `0018_coordinators` (columns only): `exhibition_members.member_role` '
 - Roster page: column "ผู้ประสานงาน" (select + progress), bulk set, summary table per coordinator (ดูแล / แจ้งแล้ว / ลงนามแล้ว /
   ยังไม่แจ้ง), link "หน้าผู้ประสานงาน"; Excel import column "ผู้ประสานงาน / Coordinator" (name or email of a coordinator of
   the exhibition; unknown = error row).
+- Delete an account (owner, 2026-11-19 "ใช้วิธีลบบัญชีเลย"): user editor → "ลบบัญชีนี้" (type the email to confirm); `DELETE /api/admin/users/:id`, not yourself, not the last admin; removes sessions + memberships, sets their artists' coordinator to none (notified date stays).
 - Preview note: preview shares the production D1. Until this is merged, production code treats any membership as manager,
   so do not create coordinators before merging.
 
@@ -404,7 +405,7 @@ Migration `0018_coordinators` (columns only): `exhibition_members.member_role` '
 | `GET /api/config` | public | site name, Turnstile site key |
 | `GET /api/site`, `GET/PUT /api/admin/site` | public / admin | home hero text + footer details |
 | `POST /api/auth/login`, `logout`, `GET me`, `POST password` | users | session auth, forced first password change |
-| `/api/admin/users[/id]`, `/api/admin/exhibitions[/id]` | admin | users, create exhibition, slug/status/staff |
+| `/api/admin/users[/id]`, `/api/admin/exhibitions[/id]` | admin | users (incl. DELETE), create exhibition, slug/status/staff/coordinators |
 | `POST /api/admin/import` | admin | old-event import (6.8) |
 | `/api/coord/:slug` | coordinators, managers, admins | selected artists + "แจ้งแล้ว" |
 | `/api/manage/:slug` (+ `roster`, `roster/:id`, `works`, `works/:id`, `techniques`, `reviewers`, `reviewers/:id`, `results`, `storage`, `hero`, `upload-auth`) | staff of that exhibition | settings, screening, panel, results, Cloudinary |

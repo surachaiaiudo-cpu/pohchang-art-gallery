@@ -131,7 +131,21 @@ function userEditor(u) {
       <label class="check"><input type="checkbox" id="ue-reset"> ออกรหัสผ่านชั่วคราวใหม่ (ลืมรหัสผ่าน)</label>
       <p><button class="btn" type="submit">บันทึก</button> <span class="error-text" id="ue-err"></span></p>
       <div id="ue-result"></div>
+      <hr>
+      <p class="small muted">ลบบัญชี: เข้าระบบไม่ได้อีก ถอดออกจากทุกนิทรรศการ และศิลปินที่บัญชีนี้เป็นผู้ประสานงานจะไม่มีผู้ประสานงาน (ประวัติ “แจ้งแล้ว” ยังอยู่) ย้อนกลับไม่ได้</p>
+      <button class="btn btn-danger btn-sm" type="button" id="ue-delete">ลบบัญชีนี้</button>
     </form>`);
+  $('ue-delete').addEventListener('click', async () => {
+    const typed = prompt(`ลบบัญชี ${u.name} (${u.email}) ถาวร?\nพิมพ์อีเมลของบัญชีนี้เพื่อยืนยัน`);
+    if (typed === null) return;
+    if (typed.trim().toLowerCase() !== u.email.toLowerCase()) { $('ue-err').textContent = 'อีเมลไม่ตรง ยังไม่ได้ลบ'; return; }
+    try {
+      const d = await api(`/api/admin/users/${u.id}`, { method: 'DELETE' });
+      toast(`ลบบัญชี ${u.name} แล้ว${d.artistsUnassigned ? ` · ศิลปิน ${d.artistsUnassigned} ท่านไม่มีผู้ประสานงานแล้ว` : ''}`, 'ok');
+      closeDrawer();
+      await load();
+    } catch (err) { $('ue-err').textContent = err.message; }
+  });
   $('u-form').addEventListener('submit', async (ev) => {
     ev.preventDefault();
     try {

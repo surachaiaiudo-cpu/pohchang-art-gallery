@@ -41,3 +41,27 @@ export const onRequestPut = handle(async (context) => {
   await audit(db, null, actorOf(admin), 'user.update', { id, role, active, reset: !!body.reset_password });
   return json({ ok: true, ...(temporaryPassword ? { temporaryPassword } : {}) });
 });
+
+// DELETE /api/admin/users/:id - delete an account (owner, 2026-11-19: e.g. a coordinator who leaves). Not yourself,
+// not the last admin. Their sessions and memberships go; artists they coordinated are left without a coordinator
+// (the "แจ้งแล้ว" date stays). The audit log keeps "user:<id>" as text.
+export const onRequestDelete = handle(async (context) => {
+  const admin = await requireAdmin(context);
+  const db = context.env.DB;
+  const id = v.int(context.params.id, { field: 'id', min: 1 });
+  if (id === admin.id) throw bad('ลบบัญชีของตัวเองไม่ได้');
+  const user = await db.prepare('SELECT id, email, name, role FROM users WHERE id = ?').bind(id).first();
+  if (!user) throw notFound('ไม่พบผู้ใช้');
+  if (user.role === 'admin') {
+    const n = await db.prepare("SELECT COUNT(*) AS n FROM users WHERE role = 'admin' AND active = 1 AND id != ?").bind(id).first();
+    if (!n.n) throw bad('ต้องมีผู้ดูแลหอศิลป์อย่างน้อย 1 บัญชี');
+  }
+  const res = await db.batch([
+    db.prepare('UPDATE artists SET coordinator_id = NULL WHERE coordinator_id = ?').bind(id),
+    db.prepare('DELETE FROM sessions WHERE user_id = ?').bind(id),
+    db.prepare('DELETE FROM exhibition_members WHERE user_id = ?').bind(id),
+    db.prepare('DELETE FROM users WHERE id = ?').bind(id)
+  ]);
+  await audit(db, null, actorOf(admin), 'user.delete', { id, email: user.email, name: user.name, artistsUnassigned: res[0].meta.changes || 0 });
+  return json({ ok: true, artistsUnassigned: res[0].meta.changes || 0 });
+});
