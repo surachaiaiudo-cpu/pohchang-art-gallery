@@ -25,7 +25,7 @@ export const onRequestGet = handle(async (context) => {
     ok: true,
     exhibition: { slug: ex.slug, title_th: ex.title_th },
     me: { id: user.id, name: user.name, role },
-    coordinators: (await coordinatorsOf(db, ex.id)).map((c) => ({ id: c.id, name: c.name })),
+    coordinators: (await coordinatorsOf(db, ex.id)).map((c) => ({ id: c.id, name: c.name, manager: c.manager })),
     artists: results || []
   });
 });

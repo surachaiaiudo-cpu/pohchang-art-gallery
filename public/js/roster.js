@@ -137,12 +137,12 @@ function progress(a) {
   return a.roster === 'selected' ? '<span class="small co-todo">ยังไม่แจ้ง</span>' : '';
 }
 function coordCell(a) {
-  if (!S.coords.length && !a.coordinator_id) return '<span class="small muted">— (admin ยังไม่เพิ่มผู้ประสานงาน)</span>';
+  if (!S.coords.length && !a.coordinator_id) return '<span class="small muted">— (ยังไม่มีผู้ประสานงาน)</span>';
   // A coordinator whose account was closed or who was taken off the exhibition still shows, so it is not lost silently.
   const gone = a.coordinator_id && !S.coords.some((c) => c.id === a.coordinator_id)
     ? `<option value="${a.coordinator_id}" selected>(บัญชีปิดใช้งาน / ไม่ได้เป็นผู้ประสานงานแล้ว)</option>` : '';
   return `<select data-f="coordinator_id" aria-label="ผู้ประสานงานของ ${esc(a.name_th)}"><option value="">— ไม่มี —</option>${gone}${S.coords
-    .map((c) => `<option value="${c.id}"${c.id === a.coordinator_id ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select><div>${progress(a)}</div>`;
+    .map((c) => `<option value="${c.id}"${c.id === a.coordinator_id ? ' selected' : ''}>${esc(c.name)}${c.manager ? ' (ผู้ดูแล)' : ''}</option>`).join('')}</select><div>${progress(a)}</div>`;
 }
 function coordSummary() {
   const sel = S.artists.filter((a) => a.roster === 'selected' && !a.withdrawn);
@@ -152,7 +152,7 @@ function coordSummary() {
   $('coord-sum').hidden = false;
   $('coord-sum').innerHTML = `<h2 style="margin-top:0">ผู้ประสานงาน (ศิลปินที่ผ่าน ไม่นับผู้ถอนตัว)</h2>
     <div class="table-wrap"><table><thead><tr><th scope="col">ผู้ประสานงาน</th><th scope="col">ดูแล</th><th scope="col">แจ้งแล้ว รอลงนาม</th><th scope="col">ลงนามแล้ว</th><th scope="col">ยังไม่แจ้ง</th></tr></thead><tbody>
-    ${S.coords.map((c) => line(c.name, sel.filter((a) => a.coordinator_id === c.id))).join('')}
+    ${S.coords.map((c) => line(c.name + (c.manager ? ' (ผู้ดูแล)' : ''), sel.filter((a) => a.coordinator_id === c.id))).join('')}
     ${none.length ? line('ยังไม่กำหนดผู้ประสานงาน', none) : ''}</tbody></table></div>`;
 }
 
@@ -429,7 +429,7 @@ function wireImport() {
     wireImport();
     await load();
     $('b-coord').innerHTML = `<option value="*">— ผู้ประสานงาน (ไม่เปลี่ยน) —</option><option value="">ไม่มีผู้ประสานงาน</option>${S.coords
-      .map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join('')}`;
+      .map((c) => `<option value="${c.id}">${esc(c.name)}${c.manager ? ' (ผู้ดูแล)' : ''}</option>`).join('')}`;
     $('b-coord').hidden = !S.coords.length;
   } catch (err) {
     if (err.message !== 'redirect') $('ex-sub').textContent = err.message;

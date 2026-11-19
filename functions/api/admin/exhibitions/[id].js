@@ -53,8 +53,11 @@ export const onRequestPut = handle(async (context) => {
       stmts.push(db.prepare(`INSERT INTO exhibition_members (exhibition_id, user_id, member_role) SELECT ?, id, 'coordinator' FROM users WHERE id = ?
                              ON CONFLICT (exhibition_id, user_id) DO NOTHING`).bind(id, uid));
     }
+  }
+  // Artists whose coordinator is no longer a member (coordinator or manager, owner 2026-11-20) lose the link.
+  if (Array.isArray(body.coordinator_user_ids) || Array.isArray(body.staff_user_ids)) {
     stmts.push(db.prepare(`UPDATE artists SET coordinator_id = NULL WHERE exhibition_id = ? AND coordinator_id IS NOT NULL
-                             AND coordinator_id NOT IN (SELECT user_id FROM exhibition_members WHERE exhibition_id = ? AND member_role = 'coordinator')`)
+                             AND coordinator_id NOT IN (SELECT user_id FROM exhibition_members WHERE exhibition_id = ?)`)
       .bind(id, id));
   }
   if (stmts.length) await db.batch(stmts);

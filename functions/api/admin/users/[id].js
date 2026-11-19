@@ -45,6 +45,11 @@ export const onRequestPut = handle(async (context) => {
         .bind(id, String(s)));
     }
   }
+  if (Array.isArray(body.exhibition_slugs)) {
+    // Artists this user coordinated in an exhibition they no longer belong to lose the link.
+    stmts.push(db.prepare(`UPDATE artists SET coordinator_id = NULL WHERE coordinator_id = ?
+                             AND exhibition_id NOT IN (SELECT exhibition_id FROM exhibition_members WHERE user_id = ?)`).bind(id, id));
+  }
   await db.batch(stmts);
   await audit(db, null, actorOf(admin), 'user.update', { id, role, active, reset: !!body.reset_password, setPassword: setOwn && !body.reset_password });
   return json({ ok: true, ...(temporaryPassword ? { temporaryPassword } : {}) });

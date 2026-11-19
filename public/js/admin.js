@@ -74,7 +74,7 @@ function exEditor(e) {
         ${staffUsers.map((u) => `<label class="check"><input type="checkbox" name="staff" value="${u.id}" ${staffIds.has(u.id) ? 'checked' : ''}> ${esc(u.name)} <span class="muted small">${esc(u.email)}</span></label>`).join('') || '<p class="muted">ยังไม่มีผู้ใช้ เพิ่มได้ที่แท็บผู้ใช้</p>'}
       </div>
       <div class="field"><span class="label">ผู้ประสานงานของนิทรรศการนี้</span>
-        <span class="hint">เห็นเฉพาะหน้า "ศิลปินที่ฉันดูแล" ของนิทรรศการนี้ ไม่เข้าหน้าจัดการ ผู้ดูแลนิทรรศการกำหนดศิลปินให้แต่ละคนในหน้า "รายชื่อศิลปิน" · ถ้าติ๊กเป็นทั้งผู้ดูแลและผู้ประสานงาน จะเป็นผู้ดูแล</span>
+        <span class="hint">เห็นเฉพาะหน้า "ศิลปินที่ฉันดูแล" ของนิทรรศการนี้ ไม่เข้าหน้าจัดการ ผู้ดูแลนิทรรศการกำหนดศิลปินให้แต่ละคนในหน้า "รายชื่อศิลปิน" · ผู้ดูแลนิทรรศการเป็นผู้ประสานงานของศิลปินได้อยู่แล้ว ไม่ต้องติ๊กซ้ำ (ถ้าติ๊กทั้งสองอย่าง จะเป็นผู้ดูแล)</span>
         ${coordUsers.map((u) => `<label class="check"><input type="checkbox" name="coord" value="${u.id}" ${coordIds.has(u.id) ? 'checked' : ''}> ${esc(u.name)} <span class="muted small">${esc(u.email)}</span></label>`).join('') || '<p class="muted">ยังไม่มีผู้ใช้ เพิ่มได้ที่แท็บผู้ใช้ (บทบาท "ผู้ดูแลนิทรรศการ" แล้วไม่ต้องเลือกนิทรรศการ)</p>'}
       </div>
       <button class="btn" type="submit">บันทึก</button> <span class="error-text" id="ee-err"></span>
@@ -204,7 +204,7 @@ async function main() {
     $('my-list').innerHTML = me.exhibitions.length
       ? me.exhibitions.map((e) => `<div class="card row" style="justify-content:space-between"><div><strong>${esc(e.title_th)}</strong> <span class="tag">${esc(STATUS_TH[e.status] || e.status)}</span>${e.member_role === 'coordinator' ? ' <span class="tag">ผู้ประสานงาน</span>' : ''}</div>${e.member_role === 'coordinator'
         ? `<a class="btn" href="/coord/${encodeURIComponent(e.slug)}">ศิลปินที่ฉันดูแล</a>`
-        : `<a class="btn" href="/manage/${encodeURIComponent(e.slug)}">จัดการ</a>`}</div>`).join('')
+        : `<div class="row"><a class="btn btn-ghost" href="/coord/${encodeURIComponent(e.slug)}">ศิลปินที่ฉันดูแล</a><a class="btn" href="/manage/${encodeURIComponent(e.slug)}">จัดการ</a></div>`}</div>`).join('')
       : '<p class="muted">ยังไม่ได้รับมอบหมายให้ดูแลนิทรรศการ กรุณาติดต่อผู้ดูแลหอศิลป์</p>';
     return;
   }

@@ -110,7 +110,7 @@ function wire() {
   const mine = S.coords.some((c) => c.id === S.me.id);
   $('f-who').innerHTML = (mine ? `<option value="${S.me.id}">ศิลปินที่ฉันดูแล</option>` : '')
     + '<option value="all">ศิลปินทั้งหมด</option>'
-    + S.coords.filter((c) => c.id !== S.me.id).map((c) => `<option value="${c.id}">ศิลปินของ ${esc(c.name)}</option>`).join('')
+    + S.coords.filter((c) => c.id !== S.me.id).map((c) => `<option value="${c.id}">ศิลปินของ ${esc(c.name)}${c.manager ? ' (ผู้ดูแล)' : ''}</option>`).join('')
     + '<option value="none">ยังไม่กำหนดผู้ประสานงาน</option>';
   $('f-who').value = mine ? String(S.me.id) : 'all';
   for (const id of ['f-who', 'f-state']) $(id).addEventListener('change', rows);

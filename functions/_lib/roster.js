@@ -15,22 +15,24 @@ export const ROSTER_ARTIST_TEXT = {
 export const channelOf = (x) => v.int(x, { field: 'ช่องทาง', min: 0, max: 4 });
 export const rosterOf = (x) => v.oneOf(x, ROSTER_KEYS, { field: 'สถานะการคัดเลือก' });
 
-// Coordinators of an exhibition (ผู้ประสานงาน, set by the admin; owner 2026-11-19). Back office only (has email).
+// Who can be an artist's coordinator: the exhibition's coordinators (ผู้ประสานงาน, set by the admin; owner 2026-11-19)
+// and its managers (ผู้ดูแลนิทรรศการ can coordinate artists too, owner 2026-11-20). Back office only (has email).
 export async function coordinatorsOf(db, exhibitionId) {
   const { results } = await db.prepare(
-    `SELECT u.id, u.name, u.email FROM exhibition_members m JOIN users u ON u.id = m.user_id
-      WHERE m.exhibition_id = ? AND m.member_role = 'coordinator' AND u.active = 1 ORDER BY u.name`
+    `SELECT u.id, u.name, u.email, m.member_role FROM exhibition_members m JOIN users u ON u.id = m.user_id
+      WHERE m.exhibition_id = ? AND m.member_role IN ('coordinator', 'manager') AND u.active = 1
+      ORDER BY m.member_role = 'manager', u.name`
   ).bind(exhibitionId).all();
-  return results || [];
+  return (results || []).map((r) => ({ id: r.id, name: r.name, email: r.email, manager: r.member_role === 'manager' }));
 }
 
-// null / '' = no coordinator; otherwise must be a coordinator of this exhibition. One per artist.
+// null / '' = no coordinator; otherwise a coordinator or manager of this exhibition. One per artist.
 export async function coordinatorOf(db, exhibitionId, value) {
   if (value === null || value === '' || value === 0) return null;
   const id = v.int(value, { field: 'ผู้ประสานงาน', min: 1 });
-  const ok = await db.prepare("SELECT 1 FROM exhibition_members WHERE exhibition_id = ? AND user_id = ? AND member_role = 'coordinator'")
+  const ok = await db.prepare("SELECT 1 FROM exhibition_members WHERE exhibition_id = ? AND user_id = ? AND member_role IN ('coordinator', 'manager')")
     .bind(exhibitionId, id).first();
-  if (!ok) throw bad('ผู้ใช้นี้ไม่ได้เป็นผู้ประสานงานของนิทรรศการนี้');
+  if (!ok) throw bad('ผู้ใช้นี้ไม่ได้เป็นผู้ประสานงานหรือผู้ดูแลของนิทรรศการนี้');
   return id;
 }
 
