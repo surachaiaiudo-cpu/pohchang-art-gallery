@@ -40,39 +40,37 @@ function stageCard() {
   $('stage-back').hidden = selection === 0;
 }
 
-// Sort (owner, 2026-11-19): by number (default), by artist name, or by technique then name. The technique
-// of an artist = the technique group of their first work (the exhibition's list order; not confirmed last).
+// Technique filter + sort (owner, 2026-11-19): the technique box filters (an artist with works in several
+// techniques shows under each); the sort box orders by number (default; no number = order added) or by name.
 const SORT_KEY = 'roster:sort';
+const NO_TECH = '__none__'; // not a technique name: names come from the exhibition's list
 const nameOf = (a) => String(a.name_th || a.name_en || '').replace(/\s+/g, ' ').trim();
 const byName = (a, b) => nameOf(a).localeCompare(nameOf(b), 'th', { sensitivity: 'base' }) || (a.id - b.id);
 const byNo = (a, b) => ((a.artist_no || 1e9) - (b.artist_no || 1e9)) || (a.id - b.id);
-function techRank(a) {
-  const names = (S.ex.techniques || []).map((t) => t.name);
-  if (!(a.techniques || []).length) return [names.length + 2, '']; // no works yet: last
-  const t = a.techniques.find(Boolean) || '';
-  if (!t) return [names.length + 1, '']; // technique not confirmed yet
-  const i = names.indexOf(t);
-  return [i >= 0 ? i : names.length, t];
-}
-function sorted(list) {
-  const how = $('f-sort').value;
-  if (how === 'name') return [...list].sort(byName);
-  if (how === 'technique') {
-    return [...list].sort((a, b) => {
-      const [ra, ta] = techRank(a);
-      const [rb, tb] = techRank(b);
-      return (ra - rb) || ta.localeCompare(tb, 'th') || byName(a, b);
-    });
-  }
-  return [...list].sort(byNo);
+const sorted = (list) => [...list].sort($('f-sort').value === 'name' ? byName : byNo);
+
+function techFilter() {
+  const box = $('f-tech');
+  const keep = box.value;
+  const count = (t) => S.artists.filter((a) => (a.techniques || []).includes(t)).length;
+  const listed = (S.ex.techniques || []).map((t) => t.name);
+  const used = [...new Set(S.artists.flatMap((a) => a.techniques || []).filter(Boolean))];
+  const names = [...listed, ...used.filter((t) => !listed.includes(t))];
+  const none = S.artists.filter((a) => (a.techniques || []).includes('')).length;
+  box.innerHTML = '<option value="">ทุกเทคนิค</option>'
+    + names.filter((t) => count(t)).map((t) => `<option value="${esc(t)}">${esc(t)} (${count(t)})</option>`).join('')
+    + (none ? `<option value="${NO_TECH}">ยังไม่ยืนยันเทคนิค (${none})</option>` : '');
+  box.value = [...box.options].some((o) => o.value === keep) ? keep : '';
 }
 
 function visible() {
   const ch = $('f-channel').value;
   const ro = $('f-roster').value;
+  const tech = $('f-tech').value;
   const q = $('f-q').value.trim().toLowerCase();
   return sorted(S.artists.filter((a) => {
     if (ch !== '' && String(a.channel) !== ch) return false;
+    if (tech && !(a.techniques || []).includes(tech === NO_TECH ? '' : tech)) return false;
     if (ro === 'withdrawn') { if (!a.withdrawn) return false; } else if (ro !== '*' && ro !== a.roster) return false;
     if (!q) return true;
     const hay = [a.name_th, a.name_en, a.name_zh, a.affiliation, countryName(a.nationality, 'th'), countryName(a.nationality, 'en'), formatNo(a.artist_no)]
@@ -107,7 +105,7 @@ function rows() {
   }).join('');
 }
 
-const render = () => { stats(); stageCard(); rows(); };
+const render = () => { stats(); stageCard(); techFilter(); rows(); };
 
 async function load() {
   const d = await api(`${M}/roster`);
@@ -157,7 +155,7 @@ function wire() {
   $('a-channel').innerHTML = opts(CHANNELS, 1);
   $('a-roster').innerHTML = opts(ROSTER, 'selected');
   $('a-nat').innerHTML = `<option value="">— ไม่ระบุ —</option>${countryOptions('th', '', esc)}`;
-  for (const id of ['f-channel', 'f-roster']) $(id).addEventListener('change', rows);
+  for (const id of ['f-channel', 'f-roster', 'f-tech']) $(id).addEventListener('change', rows);
   try { const saved = localStorage.getItem(SORT_KEY); if (saved && [...$('f-sort').options].some((o) => o.value === saved)) $('f-sort').value = saved; } catch { /* no storage */ }
   $('f-sort').addEventListener('change', () => {
     try { localStorage.setItem(SORT_KEY, $('f-sort').value); } catch { /* no storage */ }

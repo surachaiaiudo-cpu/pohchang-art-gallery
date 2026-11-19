@@ -7,7 +7,7 @@
   <title>รายชื่อศิลปิน</title>
   <link rel="stylesheet" href="/css/app.css?v=5">
   <link rel="stylesheet" href="/css/roster.css?v=2">
-  <script type="module" src="/js/roster.js?v=3"></script>
+  <script type="module" src="/js/roster.js?v=4"></script>
 </head>
 <body>
   <header class="topbar" id="topbar"></header>
@@ -36,11 +36,11 @@
         <div class="row">
           <label class="sr-only" for="f-channel">ช่องทาง</label><select id="f-channel" style="width:auto"></select>
           <label class="sr-only" for="f-roster">สถานะ</label><select id="f-roster" style="width:auto"></select>
+          <label class="sr-only" for="f-tech">เทคนิค</label><select id="f-tech" style="width:auto"></select>
           <label class="small" for="f-sort">เรียง</label>
           <select id="f-sort" style="width:auto">
-            <option value="no">ตามเลขที่ (ยังไม่มีเลข: ตามลำดับที่ส่ง)</option>
+            <option value="no">ตามเลขที่</option>
             <option value="name">ตามชื่อศิลปิน</option>
-            <option value="technique">ตามเทคนิค แล้วตามชื่อ</option>
           </select>
           <label class="sr-only" for="f-q">ค้นหา</label><input id="f-q" type="search" placeholder="ค้นหาชื่อ / ประเทศ / เลขที่" style="width:220px">
         </div>
