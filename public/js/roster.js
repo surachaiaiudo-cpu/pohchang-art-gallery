@@ -40,25 +40,52 @@ function stageCard() {
   $('stage-back').hidden = selection === 0;
 }
 
+// Sort (owner, 2026-11-19): by number (default), by artist name, or by technique then name. The technique
+// of an artist = the technique group of their first work (the exhibition's list order; not confirmed last).
+const SORT_KEY = 'roster:sort';
+const nameOf = (a) => String(a.name_th || a.name_en || '').replace(/\s+/g, ' ').trim();
+const byName = (a, b) => nameOf(a).localeCompare(nameOf(b), 'th', { sensitivity: 'base' }) || (a.id - b.id);
+const byNo = (a, b) => ((a.artist_no || 1e9) - (b.artist_no || 1e9)) || (a.id - b.id);
+function techRank(a) {
+  const names = (S.ex.techniques || []).map((t) => t.name);
+  if (!(a.techniques || []).length) return [names.length + 2, '']; // no works yet: last
+  const t = a.techniques.find(Boolean) || '';
+  if (!t) return [names.length + 1, '']; // technique not confirmed yet
+  const i = names.indexOf(t);
+  return [i >= 0 ? i : names.length, t];
+}
+function sorted(list) {
+  const how = $('f-sort').value;
+  if (how === 'name') return [...list].sort(byName);
+  if (how === 'technique') {
+    return [...list].sort((a, b) => {
+      const [ra, ta] = techRank(a);
+      const [rb, tb] = techRank(b);
+      return (ra - rb) || ta.localeCompare(tb, 'th') || byName(a, b);
+    });
+  }
+  return [...list].sort(byNo);
+}
+
 function visible() {
   const ch = $('f-channel').value;
   const ro = $('f-roster').value;
   const q = $('f-q').value.trim().toLowerCase();
-  return S.artists.filter((a) => {
+  return sorted(S.artists.filter((a) => {
     if (ch !== '' && String(a.channel) !== ch) return false;
     if (ro === 'withdrawn') { if (!a.withdrawn) return false; } else if (ro !== '*' && ro !== a.roster) return false;
     if (!q) return true;
     const hay = [a.name_th, a.name_en, a.name_zh, a.affiliation, countryName(a.nationality, 'th'), countryName(a.nationality, 'en'), formatNo(a.artist_no)]
       .join(' ').toLowerCase();
     return hay.includes(q);
-  });
+  }));
 }
 
 function rows() {
   const list = visible();
   $('sel-count').textContent = S.sel.size ? `(เลือก ${S.sel.size})` : '';
   $('sel-all').checked = list.length > 0 && list.every((a) => S.sel.has(a.id));
-  if (!list.length) { $('rows').innerHTML = '<tr><td colspan="9" class="muted">ไม่มีศิลปินตามเงื่อนไขนี้</td></tr>'; return; }
+  if (!list.length) { $('rows').innerHTML = '<tr><td colspan="10" class="muted">ไม่มีศิลปินตามเงื่อนไขนี้</td></tr>'; return; }
   $('rows').innerHTML = list.map((a) => {
     const works = [
       a.works_selection ? `<span class="tag tag-sel" title="ผลงานรอบคัดเลือก (ไม่เผยแพร่)">รอบคัดเลือก ${a.works_selection}</span>` : '',
@@ -71,6 +98,7 @@ function rows() {
       <td class="ro-name"><b>${esc(fullName(a))}</b><span class="small muted">${flagImg(a.nationality, {}, esc)}${esc(countryName(a.nationality, 'th') || 'ไม่ระบุประเทศ')}${a.affiliation ? ` · ${esc(a.affiliation)}` : ''}</span></td>
       <td><select data-f="channel" aria-label="ช่องทาง">${opts(CHANNELS, a.channel)}</select></td>
       <td><select data-f="roster" aria-label="สถานะการคัดเลือก">${opts(ROSTER, a.roster)}</select></td>
+      <td class="small">${(a.techniques || []).length ? (a.techniques).map((t) => (t ? esc(t) : '<span class="muted">ยังไม่ยืนยัน</span>')).join('<br>') : '<span class="muted">—</span>'}</td>
       <td class="ro-works">${works}</td>
       <td><input type="checkbox" data-f="withdrawn" aria-label="ถอนตัว"${a.withdrawn ? ' checked' : ''}></td>
       <td class="ro-note"><input type="text" maxlength="500" data-f="roster_note" value="${esc(a.roster_note || '')}" aria-label="หมายเหตุ" placeholder="${a.withdrawn ? 'เหตุผลที่ถอนตัว' : ''}"></td>
@@ -130,6 +158,11 @@ function wire() {
   $('a-roster').innerHTML = opts(ROSTER, 'selected');
   $('a-nat').innerHTML = `<option value="">— ไม่ระบุ —</option>${countryOptions('th', '', esc)}`;
   for (const id of ['f-channel', 'f-roster']) $(id).addEventListener('change', rows);
+  try { const saved = localStorage.getItem(SORT_KEY); if (saved && [...$('f-sort').options].some((o) => o.value === saved)) $('f-sort').value = saved; } catch { /* no storage */ }
+  $('f-sort').addEventListener('change', () => {
+    try { localStorage.setItem(SORT_KEY, $('f-sort').value); } catch { /* no storage */ }
+    rows();
+  });
   $('f-q').addEventListener('input', rows);
 
   $('rows').addEventListener('change', (e) => {

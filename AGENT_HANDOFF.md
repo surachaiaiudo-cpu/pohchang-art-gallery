@@ -350,7 +350,10 @@ This is part A of the build ("do it, leave the rest for later", owner 2026-11-17
 Page `/manage/<slug>/roster` (link "รายชื่อศิลปิน / เลขที่"): stats, stage card (form stage select; "mark all current
 works as selection" and back, confirmed by typing the slug), filters, bulk channel/status, per-row channel/status/number/
 withdrawn/note (saved on change), delete (only artists with no works), add an artist by hand (duplicate-name warning, any
-th/en name against any). **Import from Excel (owner, 2026-11-17):** card "นำเข้ารายชื่อจาก Excel" on the roster page. Template
+th/en name against any). **Sort (owner, 2026-11-19):** by number (default; no number = order added), by artist name, or by technique then name
+(technique = technique group of the artist's first work, in the exhibition's list order; not confirmed, then no works, last);
+choice remembered per browser (`roster:sort`). Column "เทคนิค" lists every technique group of the artist's works.
+**Import from Excel (owner, 2026-11-17):** card "นำเข้ารายชื่อจาก Excel" on the roster page. Template
 `public/templates/roster-template.xlsx` (sheet 1 = list with dropdowns for channel/status, sheet 2 = how to fill + examples;
 channel and status per row, owner's choice). The browser reads the first sheet of .xlsx/.csv with no library
 (`public/js/xlsx-read.js`: zip via DecompressionStream, XML by regex; tested on the template and `tests/fixtures/roster-import.xlsx`)
