@@ -138,7 +138,10 @@ function progress(a) {
 }
 function coordCell(a) {
   if (!S.coords.length && !a.coordinator_id) return '<span class="small muted">— (admin ยังไม่เพิ่มผู้ประสานงาน)</span>';
-  return `<select data-f="coordinator_id" aria-label="ผู้ประสานงานของ ${esc(a.name_th)}"><option value="">— ไม่มี —</option>${S.coords
+  // A coordinator whose account was closed or who was taken off the exhibition still shows, so it is not lost silently.
+  const gone = a.coordinator_id && !S.coords.some((c) => c.id === a.coordinator_id)
+    ? `<option value="${a.coordinator_id}" selected>(บัญชีปิดใช้งาน / ไม่ได้เป็นผู้ประสานงานแล้ว)</option>` : '';
+  return `<select data-f="coordinator_id" aria-label="ผู้ประสานงานของ ${esc(a.name_th)}"><option value="">— ไม่มี —</option>${gone}${S.coords
     .map((c) => `<option value="${c.id}"${c.id === a.coordinator_id ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select><div>${progress(a)}</div>`;
 }
 function coordSummary() {
