@@ -144,16 +144,30 @@ function coordCell(a) {
   return `<select data-f="coordinator_id" aria-label="ผู้ประสานงานของ ${esc(a.name_th)}"><option value="">— ไม่มี —</option>${gone}${S.coords
     .map((c) => `<option value="${c.id}"${c.id === a.coordinator_id ? ' selected' : ''}>${esc(c.name)}${c.manager ? ' (ผู้ดูแล)' : ''}</option>`).join('')}</select><div>${progress(a)}</div>`;
 }
+// Summary per coordinator (owner, 2026-11-20): every artist they look after — total, ผ่าน / ไม่ผ่าน / รอพิจารณา,
+// withdrawn apart (so the four add up to the total) — then, for passed artists, notified / signed / not notified.
 function coordSummary() {
-  const sel = S.artists.filter((a) => a.roster === 'selected' && !a.withdrawn);
-  if (!S.coords.length || !sel.length) { $('coord-sum').hidden = true; return; }
-  const line = (name, list) => `<tr><td>${esc(name)}</td><td>${list.length}</td><td>${list.filter((a) => a.notified_at && !a.accepted_at).length}</td><td>${list.filter((a) => a.accepted_at).length}</td><td>${list.filter((a) => !a.notified_at && !a.accepted_at).length}</td></tr>`;
-  const none = sel.filter((a) => !a.coordinator_id);
+  if (!S.coords.length || !S.artists.some((a) => a.coordinator_id)) { $('coord-sum').hidden = true; return; }
+  const cnt = (list, f) => list.filter(f).length;
+  const line = (name, list) => {
+    const live = list.filter((a) => !a.withdrawn);
+    const pass = live.filter((a) => a.roster === 'selected');
+    return `<tr><td>${esc(name)}</td><td><b>${list.length}</b></td>
+      <td>${pass.length}</td><td>${cnt(live, (a) => a.roster === 'not_selected')}</td><td>${cnt(live, (a) => !a.roster)}</td><td>${cnt(list, (a) => a.withdrawn)}</td>
+      <td>${cnt(pass, (a) => !a.notified_at && !a.accepted_at)}</td><td>${cnt(pass, (a) => a.notified_at && !a.accepted_at)}</td><td>${cnt(pass, (a) => a.accepted_at)}</td></tr>`;
+  };
+  const none = S.artists.filter((a) => !a.coordinator_id);
   $('coord-sum').hidden = false;
-  $('coord-sum').innerHTML = `<h2 style="margin-top:0">ผู้ประสานงาน (ศิลปินที่ผ่าน ไม่นับผู้ถอนตัว)</h2>
-    <div class="table-wrap"><table><thead><tr><th scope="col">ผู้ประสานงาน</th><th scope="col">ดูแล</th><th scope="col">แจ้งแล้ว รอลงนาม</th><th scope="col">ลงนามแล้ว</th><th scope="col">ยังไม่แจ้ง</th></tr></thead><tbody>
-    ${S.coords.map((c) => line(c.name + (c.manager ? ' (ผู้ดูแล)' : ''), sel.filter((a) => a.coordinator_id === c.id))).join('')}
-    ${none.length ? line('ยังไม่กำหนดผู้ประสานงาน', none) : ''}</tbody></table></div>`;
+  $('coord-sum').innerHTML = `<h2 style="margin-top:0">ผู้ประสานงาน</h2>
+    <div class="table-wrap"><table class="co-sum"><thead>
+      <tr><th scope="col" rowspan="2">ผู้ประสานงาน</th><th scope="col" rowspan="2">ดูแลทั้งหมด</th><th scope="colgroup" colspan="4">ผลการคัดเลือก</th><th scope="colgroup" colspan="3">ศิลปินที่ผ่าน: การแจ้ง / ลงนาม</th></tr>
+      <tr><th scope="col">ผ่าน</th><th scope="col">ไม่ผ่าน</th><th scope="col">รอพิจารณา</th><th scope="col">ถอนตัว</th><th scope="col">ยังไม่แจ้ง</th><th scope="col">แจ้งแล้ว รอลงนาม</th><th scope="col">ลงนามแล้ว</th></tr>
+    </thead><tbody>
+    ${S.coords.map((c) => line(c.name + (c.manager ? ' (ผู้ดูแล)' : ''), S.artists.filter((a) => a.coordinator_id === c.id))).join('')}
+    ${S.artists.filter((a) => a.coordinator_id && !S.coords.some((c) => c.id === a.coordinator_id)).length
+      ? line('(บัญชีปิดใช้งาน / ออกจากนิทรรศการแล้ว)', S.artists.filter((a) => a.coordinator_id && !S.coords.some((c) => c.id === a.coordinator_id))) : ''}
+    ${none.length ? line('ยังไม่กำหนดผู้ประสานงาน', none) : ''}</tbody></table></div>
+    <p class="hint" style="margin-bottom:0">ผ่าน + ไม่ผ่าน + รอพิจารณา + ถอนตัว = ดูแลทั้งหมด · การแจ้ง / ลงนาม นับเฉพาะศิลปินที่ผ่านและไม่ถอนตัว</p>`;
 }
 
 const render = () => { stats(); stageCard(); coordSummary(); catFilter(); views(); rows(); };
