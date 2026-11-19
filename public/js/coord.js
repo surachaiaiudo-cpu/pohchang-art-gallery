@@ -9,7 +9,16 @@ import { formatNo } from './roster-logic.js';
 const slug = slugFromPath(1);
 const A = `/api/coord/${encodeURIComponent(slug)}`;
 const $ = (id) => document.getElementById(id);
-const S = { me: null, ex: null, artists: [], coords: [] };
+const S = { me: null, ex: null, artists: [], coords: [], view: 'all' };
+// Results, as on the roster page (owner 2026-11-20: coordinators see every status).
+const VIEWS = [
+  { key: 'all', label: 'ทั้งหมด', test: () => true },
+  { key: 'selected', label: 'ผ่าน', test: (a) => a.roster === 'selected' },
+  { key: 'pending', label: 'ยังไม่พิจารณา', test: (a) => !a.roster },
+  { key: 'not_selected', label: 'ไม่ผ่าน', test: (a) => a.roster === 'not_selected' }
+];
+const RESULT = { selected: '<span class="co-state co-signed">ผ่าน</span>', not_selected: '<span class="co-state co-todo">ไม่ผ่าน</span>', '': '<span class="co-state co-wait">ยังไม่พิจารณา</span>' };
+const VIEW_KEY = `coord:view:${slug}`;
 const SEEN_KEY = `coord:seen:${slug}`;
 
 // D1 datetime('now') is UTC "YYYY-MM-DD HH:MM:SS".
@@ -19,6 +28,7 @@ const daysAgo = (d) => Math.max(0, Math.floor((Date.now() - d.getTime()) / 86400
 const ACCEPTED_BY = { self: 'ศิลปินกรอกเอง', coordinator: 'ผู้ประสานงานกรอกให้', friend: 'ผู้อื่นกรอกให้' };
 
 function stateOf(a) {
+  if (a.roster !== 'selected') return 'na';
   if (a.accepted_at) return 'signed';
   return a.notified_at ? 'waiting' : 'todo';
 }
@@ -37,13 +47,16 @@ function news() {
   try { localStorage.setItem(SEEN_KEY, String(Date.now())); } catch { /* no storage */ }
 }
 
+const whoOk = (a, who) => who === 'all' || (who === 'none' ? !a.coordinator_id : String(a.coordinator_id) === who);
 function stats() {
   const who = $('f-who').value;
-  const list = S.artists.filter((a) => !a.withdrawn && (who === 'all' || (who === 'none' ? !a.coordinator_id : String(a.coordinator_id) === who)));
+  const all = S.artists.filter((a) => !a.withdrawn && whoOk(a, who));
+  const list = all.filter((a) => a.roster === 'selected');
   const n = (st) => list.filter((a) => stateOf(a) === st).length;
   const box = (v, t) => `<div class="stat"><b>${v}</b><span>${esc(t)}</span></div>`;
-  $('stats').innerHTML = box(list.length, who === String(S.me.id) ? 'ศิลปินที่ฉันดูแล' : 'ศิลปินในมุมมองนี้')
-    + box(n('todo'), 'ยังไม่แจ้ง') + box(n('waiting'), 'แจ้งแล้ว รอลงนาม') + box(n('signed'), 'ลงนามตอบรับแล้ว');
+  $('stats').innerHTML = box(all.length, who === String(S.me.id) ? 'ศิลปินที่ฉันดูแล (ไม่นับผู้ถอนตัว)' : 'ศิลปินในมุมมองนี้ (ไม่นับผู้ถอนตัว)')
+    + box(list.length, 'ผ่าน') + box(n('todo'), 'ผ่าน · ยังไม่แจ้ง') + box(n('waiting'), 'ผ่าน · แจ้งแล้ว รอลงนาม') + box(n('signed'), 'ผ่าน · ลงนามแล้ว');
+  $('views').innerHTML = VIEWS.map((v) => `<button type="button" role="tab" data-view="${v.key}" aria-selected="${v.key === S.view}">${esc(v.label)} (${S.artists.filter((a) => whoOk(a, who) && v.test(a)).length})</button>`).join('');
 }
 
 function rows() {
@@ -51,24 +64,25 @@ function rows() {
   const st = $('f-state').value;
   const q = $('f-q').value.trim().toLowerCase();
   const list = S.artists.filter((a) => {
-    if (who !== 'all' && (who === 'none' ? a.coordinator_id : String(a.coordinator_id) !== who)) return false;
+    if (!whoOk(a, who)) return false;
+    if (!VIEWS.find((v) => v.key === S.view).test(a)) return false;
     if (st && stateOf(a) !== st) return false;
     if (!q) return true;
     return [a.name_th, a.name_en, a.affiliation, countryName(a.nationality, 'th'), countryName(a.nationality, 'en'), formatNo(a.artist_no)]
       .join(' ').toLowerCase().includes(q);
   });
   stats();
-  if (!list.length) { $('rows').innerHTML = '<tr><td colspan="6" class="muted">ไม่มีศิลปินตามเงื่อนไขนี้</td></tr>'; return; }
+  if (!list.length) { $('rows').innerHTML = '<tr><td colspan="7" class="muted">ไม่มีศิลปินตามเงื่อนไขนี้</td></tr>'; return; }
   $('rows').innerHTML = list.map((a) => {
     const s = stateOf(a);
     const n = when(a.notified_at);
     const acc = when(a.accepted_at);
-    const state = s === 'signed'
+    const state = s === 'na' ? '<span class="small muted">— (แจ้งได้เมื่อผ่าน)</span>' : s === 'signed'
       ? `<span class="co-state co-signed">✓ ลงนามแล้ว</span><div class="small muted">${fmt(acc)}${a.accepted_by ? ` · ${esc(ACCEPTED_BY[a.accepted_by] || a.accepted_by)}` : ''}</div>`
       : s === 'waiting'
         ? `<span class="co-state co-wait">แจ้งแล้ว รอลงนาม</span><div class="small muted">แจ้งเมื่อ ${fmt(n)} (${daysAgo(n)} วันก่อน)${a.notified_by_name ? ` · ${esc(a.notified_by_name)}` : ''}</div>`
         : '<span class="co-state co-todo">ยังไม่แจ้ง</span>';
-    const btn = s === 'signed' ? ''
+    const btn = s === 'signed' || s === 'na' ? ''
       : s === 'waiting'
         ? `<button class="btn btn-ghost btn-sm" type="button" data-notify="0">ยกเลิก “แจ้งแล้ว”</button>`
         : `<button class="btn btn-sm" type="button" data-notify="1">แจ้งแล้ว</button>`;
@@ -77,6 +91,7 @@ function rows() {
       <td class="ro-name"><b>${esc(a.name_th)}</b>${a.name_en && a.name_en !== a.name_th ? `<span class="small">${esc(a.name_en)}</span>` : ''}<span class="small muted">${flagImg(a.nationality, {}, esc)}${esc(countryName(a.nationality, 'th') || 'ไม่ระบุประเทศ')}${a.affiliation ? ` · ${esc(a.affiliation)}` : ''}</span>${a.withdrawn ? `<span class="small">ถอนตัว${a.roster_note ? `: ${esc(a.roster_note)}` : ''}</span>` : ''}</td>
       <td class="small ro-contact">${a.email ? `<a href="mailto:${esc(a.email)}">${esc(a.email)}</a>` : ''}${a.phone ? `<div><a href="tel:${esc(a.phone.replace(/[^\d+]/g, ''))}">${esc(a.phone)}</a></div>` : ''}${!a.email && !a.phone ? '<span class="muted">—</span>' : ''}</td>
       <td class="small">${a.coordinator_id ? esc(coordName(a.coordinator_id) || '—') + (a.coordinator_id === S.me.id ? ' <span class="tag">ฉัน</span>' : '') : '<span class="muted">ยังไม่กำหนด</span>'}</td>
+      <td>${RESULT[a.roster] || RESULT['']}</td>
       <td>${state}</td>
       <td>${a.withdrawn ? '' : btn}</td>
     </tr>`;
@@ -99,6 +114,14 @@ function wire() {
     + '<option value="none">ยังไม่กำหนดผู้ประสานงาน</option>';
   $('f-who').value = mine ? String(S.me.id) : 'all';
   for (const id of ['f-who', 'f-state']) $(id).addEventListener('change', rows);
+  try { const v = localStorage.getItem(VIEW_KEY); if (VIEWS.some((x) => x.key === v)) S.view = v; } catch { /* no storage */ }
+  $('views').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-view]');
+    if (!b) return;
+    S.view = b.dataset.view;
+    try { localStorage.setItem(VIEW_KEY, S.view); } catch { /* no storage */ }
+    rows();
+  });
   $('f-q').addEventListener('input', rows);
   $('rows').addEventListener('click', async (e) => {
     const b = e.target.closest('[data-notify]');

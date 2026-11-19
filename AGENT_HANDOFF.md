@@ -385,7 +385,7 @@ Migration `0018_coordinators` (columns only): `exhibition_members.member_role` '
   link). Manager memberships (`staff_user_ids`, user editor `exhibition_slugs`) only replace manager rows; a person ticked as
   both becomes a manager. User list shows "ผู้ประสานงาน: …". Topbar shows "(ผู้ประสานงาน)"; login sends a coordinator of one
   exhibition to `/coord/<slug>`; the staff home links coordinators to it.
-- Page `/coord/<slug>` "ศิลปินที่ฉันดูแล": artists with status ผ่าน (withdrawn struck through); filter mine / all / one
+- Page `/coord/<slug>` "ศิลปินที่ฉันดูแล": **every artist, all results** (owner 2026-11-20 "ให้ผู้ดูแลเห็นสถานะทุกอย่าง"; tabs ทั้งหมด / ผ่าน / ยังไม่พิจารณา / ไม่ผ่าน, column ผลการคัดเลือก; "แจ้งแล้ว" and the notified/signed state only for ผ่าน; withdrawn struck through); filter mine / all / one
   coordinator / none, state (ยังไม่แจ้ง / แจ้งแล้ว รอลงนาม / ลงนามแล้ว), search; stats; email/phone links; button "แจ้งแล้ว";
   green notice "ลงนามตอบรับใหม่ n ท่าน ตั้งแต่เข้ามาครั้งก่อน" (last visit kept in localStorage `coord:seen:<slug>`).
 - Roster page: column "ผู้ประสานงาน" (select + progress), bulk set, summary table per coordinator (ดูแล / แจ้งแล้ว / ลงนามแล้ว /
