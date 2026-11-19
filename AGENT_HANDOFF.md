@@ -377,7 +377,7 @@ the website after the invitation was sent; coordinators have their own accounts,
 Migration `0018_coordinators` (columns only): `exhibition_members.member_role` 'manager' (as before, default for old rows)
 | 'coordinator'; `artists.coordinator_id` (user id, one per artist), `notified_at` / `notified_by`, `accepted_at` /
 `accepted_by` ('' | self | coordinator | friend — filled by the acceptance page, part B, not built yet).
-- **Managers can coordinate artists too** (owner 2026-11-20): `coordinatorsOf()` / `coordinatorOf()` accept members with role coordinator or manager (labelled "(ผู้ดูแล)"); artists keep their link while the person is any member; the staff home shows managers both "ศิลปินที่ฉันดูแล" and "จัดการ".
+- **Managers can coordinate artists too** (owner 2026-11-20): `coordinatorsOf()` / `coordinatorOf()` accept members with role coordinator or manager (labelled "(ผู้ดูแล)"; in the admin drawer a ticked manager's coordinator box is ticked and locked with "เป็นผู้ดูแลอยู่แล้ว จึงเป็นผู้ประสานงานด้วย" — the owner could not see both roles before); artists keep their link while the person is any member; the staff home shows managers both "ศิลปินที่ฉันดูแล" and "จัดการ".
 - Access: `memberRole()` / `requireCoordinator()` in `functions/_lib/exhibitions.js`. **`canManage()` now needs
   member_role 'manager'**, so coordinators never reach `/api/manage/*`; they get `/api/coord/:slug` (GET selected artists
   with contact details + progress; POST `{ artist_id, notified }` = "แจ้งแล้ว" with date and who, or undo). Admins and

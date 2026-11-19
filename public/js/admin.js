@@ -74,11 +74,20 @@ function exEditor(e) {
         ${staffUsers.map((u) => `<label class="check"><input type="checkbox" name="staff" value="${u.id}" ${staffIds.has(u.id) ? 'checked' : ''}> ${esc(u.name)} <span class="muted small">${esc(u.email)}</span></label>`).join('') || '<p class="muted">ยังไม่มีผู้ใช้ เพิ่มได้ที่แท็บผู้ใช้</p>'}
       </div>
       <div class="field"><span class="label">ผู้ประสานงานของนิทรรศการนี้</span>
-        <span class="hint">เห็นเฉพาะหน้า "ศิลปินที่ฉันดูแล" ของนิทรรศการนี้ ไม่เข้าหน้าจัดการ ผู้ดูแลนิทรรศการกำหนดศิลปินให้แต่ละคนในหน้า "รายชื่อศิลปิน" · ผู้ดูแลนิทรรศการเป็นผู้ประสานงานของศิลปินได้อยู่แล้ว ไม่ต้องติ๊กซ้ำ (ถ้าติ๊กทั้งสองอย่าง จะเป็นผู้ดูแล)</span>
-        ${coordUsers.map((u) => `<label class="check"><input type="checkbox" name="coord" value="${u.id}" ${coordIds.has(u.id) ? 'checked' : ''}> ${esc(u.name)} <span class="muted small">${esc(u.email)}</span></label>`).join('') || '<p class="muted">ยังไม่มีผู้ใช้ เพิ่มได้ที่แท็บผู้ใช้ (บทบาท "ผู้ดูแลนิทรรศการ" แล้วไม่ต้องเลือกนิทรรศการ)</p>'}
+        <span class="hint">เห็นเฉพาะหน้า "ศิลปินที่ฉันดูแล" ของนิทรรศการนี้ ไม่เข้าหน้าจัดการ ผู้ดูแลนิทรรศการกำหนดศิลปินให้แต่ละคนในหน้า "รายชื่อศิลปิน" · ผู้ดูแลนิทรรศการเป็นผู้ประสานงานด้วยโดยอัตโนมัติ (ติ๊กให้แล้ว) — ทำได้ทั้งสองอย่าง</span>
+        ${coordUsers.map((u) => `<label class="check"><input type="checkbox" name="coord" value="${u.id}" ${coordIds.has(u.id) || staffIds.has(u.id) ? 'checked' : ''}${staffIds.has(u.id) ? ' disabled' : ''}> ${esc(u.name)} <span class="muted small">${esc(u.email)}</span><span class="small muted" data-both="${u.id}"${staffIds.has(u.id) ? '' : ' hidden'}> — เป็นผู้ดูแลอยู่แล้ว จึงเป็นผู้ประสานงานด้วย</span></label>`).join('') || '<p class="muted">ยังไม่มีผู้ใช้ เพิ่มได้ที่แท็บผู้ใช้ (บทบาท "ผู้ดูแลนิทรรศการ" แล้วไม่ต้องเลือกนิทรรศการ)</p>'}
       </div>
       <button class="btn" type="submit">บันทึก</button> <span class="error-text" id="ee-err"></span>
     </form>`);
+  // Both roles (owner 2026-11-20): ticking a manager ticks and locks their coordinator box, since a manager
+  // coordinates artists too; unticking the manager gives the coordinator box back.
+  document.querySelectorAll('input[name="staff"]').forEach((box) => box.addEventListener('change', () => {
+    const c = document.querySelector(`input[name="coord"][value="${box.value}"]`);
+    const note = document.querySelector(`[data-both="${box.value}"]`);
+    if (!c) return;
+    if (box.checked) { c.dataset.was = c.checked ? '1' : ''; c.checked = true; c.disabled = true; } else { c.disabled = false; c.checked = c.dataset.was === '1'; }
+    if (note) note.hidden = !box.checked;
+  }));
   $('ex-form').addEventListener('submit', async (ev) => {
     ev.preventDefault();
     try {
@@ -90,7 +99,7 @@ function exEditor(e) {
           on_view: $('ee-on_view').checked, accepting: $('ee-accepting').checked,
           card_style: $('ee-card').value,
           staff_user_ids: [...document.querySelectorAll('input[name="staff"]:checked')].map((x) => Number(x.value)),
-          coordinator_user_ids: [...document.querySelectorAll('input[name="coord"]:checked')].map((x) => Number(x.value))
+          coordinator_user_ids: [...document.querySelectorAll('input[name="coord"]:checked:not(:disabled)')].map((x) => Number(x.value))
         }
       });
       toast('บันทึกแล้ว', 'ok');
