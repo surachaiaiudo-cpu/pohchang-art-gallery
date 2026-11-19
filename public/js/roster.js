@@ -23,9 +23,10 @@ function stats() {
   const box = (n, t) => `<div class="stat"><b>${n}</b><span>${esc(t)}</span></div>`;
   $('stats').innerHTML = [
     box(S.artists.length, 'ศิลปินทั้งหมดในรายชื่อ'),
-    box(live.filter((a) => a.roster === 'candidate').length, 'รอผลคัดเลือก'),
-    box(sel.length, 'ได้รับคัดเลือก'),
-    box(`${sel.length - thai} / ${thai}`, 'ได้รับคัดเลือก: ต่างประเทศ / ไทย'),
+    box(live.filter((a) => !a.roster).length, 'ยังไม่ระบุสถานะ'),
+    box(sel.length, 'ผ่าน'),
+    box(live.filter((a) => a.roster === 'not_selected').length, 'ไม่ผ่าน'),
+    box(`${sel.length - thai} / ${thai}`, 'ผ่าน: ต่างประเทศ / ไทย'),
     box(S.artists.filter((a) => a.artist_no).length, 'มีเลขที่แล้ว'),
     box(S.artists.filter((a) => a.withdrawn).length, 'ถอนตัว')
   ].join('');
@@ -201,11 +202,11 @@ function wire() {
 
   $('number').addEventListener('click', async () => {
     const todo = S.artists.filter((a) => a.roster === 'selected' && !a.withdrawn && !a.artist_no).length;
-    if (!todo) { toast('ไม่มีศิลปินที่ได้รับคัดเลือกและยังไม่มีเลขที่', 'error'); return; }
+    if (!todo) { toast('ไม่มีศิลปินที่ผ่านและยังไม่มีเลขที่', 'error'); return; }
     const has = S.artists.some((a) => a.artist_no);
     const msg = has
       ? `มีศิลปินที่มีเลขที่แล้ว เลขใหม่ ${todo} ท่านจะต่อท้ายเลขสุดท้าย (ไม่เรียงปนกับเลขเดิม)\nดำเนินการต่อ?`
-      : `ให้เลขที่ 3 หลักกับศิลปินที่ได้รับคัดเลือก ${todo} ท่าน?\nเลขที่ให้แล้วจะไม่เปลี่ยนเอง`;
+      : `ให้เลขที่ 3 หลักกับศิลปินที่ผ่าน ${todo} ท่าน?\nเลขที่ให้แล้วจะไม่เปลี่ยนเอง`;
     if (!confirm(msg)) return;
     try {
       const r = await api(`${M}/roster`, { method: 'POST', body: { action: 'number' } });

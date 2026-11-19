@@ -28,7 +28,7 @@ test('only selected, not withdrawn, without a number; existing numbers stay and 
   const list = [
     A(1, 'Kept', 'TH', { artist_no: 7 }),
     A(2, 'Out', 'TH', { withdrawn: 1 }),
-    A(3, 'Wait', 'TH', { roster: 'candidate' }),
+    A(3, 'Wait', 'TH', { roster: '' }),
     A(4, 'New', 'GB'),
     A(5, 'Gone', 'TH', { withdrawn: 1, artist_no: 3 })
   ];
@@ -54,6 +54,6 @@ test('formatNo pads to three digits', () => {
 
 test('keys', () => {
   assert.deepEqual(CHANNEL_KEYS, [0, 1, 2, 3, 4]);
-  assert.deepEqual(ROSTER_KEYS, ['', 'candidate', 'selected', 'not_selected']);
+  assert.deepEqual(ROSTER_KEYS, ['', 'selected', 'not_selected']);
   assert.deepEqual(STAGE_KEYS, ['exhibit', 'selection']);
 });

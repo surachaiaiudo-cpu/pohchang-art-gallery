@@ -48,8 +48,8 @@ test('no name column is an error', () => {
 
 test('channel and status words', () => {
   assert.deepEqual(['1 เชิญโดยตรง', '2', 'MOU', 'สมัครเอง', '', '10', 'xyz'].map(parseChannel), [1, 2, 3, 4, 0, null, null]);
-  assert.deepEqual(['ได้รับคัดเลือก', 'รอผลคัดเลือก', 'ไม่ผ่านการคัดเลือก', '', 'Selected', '??'].map(parseRoster),
-    ['selected', 'candidate', 'not_selected', '', 'selected', null]);
+  assert.deepEqual(['ผ่าน', 'ไม่ผ่าน', 'ได้รับคัดเลือก', 'รอผลคัดเลือก', 'ไม่ผ่านการคัดเลือก', '', 'Selected', 'Not pass', '??'].map(parseRoster),
+    ['selected', 'not_selected', 'selected', '', 'not_selected', '', 'selected', 'not_selected', null]);
 });
 
 test('csv and helpers', () => {

@@ -73,9 +73,9 @@ export function parseChannel(text) {
 export function parseRoster(text) {
   const t = String(text || '').trim().toLowerCase();
   if (!t) return '';
-  if (/ไม่ผ่าน|ไม่ได้รับ|not/.test(t)) return 'not_selected';
-  if (/รอ|candidate|pending|wait/.test(t)) return 'candidate';
-  if (/ได้รับ|คัดเลือก|ผ่าน|selected|accept|pass/.test(t)) return 'selected';
+  if (/ไม่ผ่าน|ไม่ได้รับ|not|fail/.test(t)) return 'not_selected';
+  if (/รอ|ยังไม่|pending|wait/.test(t)) return ''; // not decided yet
+  if (/ผ่าน|ได้รับ|คัดเลือก|selected|accept|pass/.test(t)) return 'selected';
   return null;
 }
 
