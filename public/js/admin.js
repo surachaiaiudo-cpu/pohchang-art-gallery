@@ -129,6 +129,8 @@ function userEditor(u) {
       <div class="field"><span class="label">ดูแลนิทรรศการ</span>${exCheckboxes('ue-ex', sel)}</div>
       <label class="check"><input type="checkbox" id="ue-active" ${u.active ? 'checked' : ''}> เปิดใช้งานบัญชี</label>
       <label class="check"><input type="checkbox" id="ue-reset"> ออกรหัสผ่านชั่วคราวใหม่ (ลืมรหัสผ่าน)</label>
+      <div class="field"><label for="ue-pw">หรือตั้งรหัสผ่านใหม่เอง</label><input id="ue-pw" type="text" autocomplete="new-password" spellcheck="false" maxlength="200" placeholder="อย่างน้อย 10 ตัวอักษร · เว้นว่าง = ไม่เปลี่ยน">
+        <label class="check"><input type="checkbox" id="ue-must" checked> ให้เปลี่ยนรหัสผ่านเมื่อเข้าระบบครั้งถัดไป</label></div>
       <p><button class="btn" type="submit">บันทึก</button> <span class="error-text" id="ue-err"></span></p>
       <div id="ue-result"></div>
       <hr>
@@ -154,10 +156,11 @@ function userEditor(u) {
         body: {
           name: $('ue-name').value, role: $('ue-role').value, active: $('ue-active').checked,
           reset_password: $('ue-reset').checked,
+          set_password: $('ue-pw').value, must_change: $('ue-must').checked,
           exhibition_slugs: [...document.querySelectorAll('input[name="ue-ex"]:checked')].map((x) => x.value)
         }
       });
-      toast('บันทึกแล้ว', 'ok');
+      toast($('ue-pw').value && !$('ue-reset').checked ? 'บันทึกแล้ว · ตั้งรหัสผ่านใหม่แล้ว' : 'บันทึกแล้ว', 'ok');
       if (d.temporaryPassword) $('ue-result').innerHTML = tempPasswordHtml(u.name, d.temporaryPassword);
       else closeDrawer();
       await load();
@@ -293,11 +296,13 @@ $('new-user').addEventListener('submit', async (e) => {
       method: 'POST',
       body: {
         name: $('nu-name').value, email: $('nu-email').value, role: $('nu-role').value,
-        exhibition_slugs: [...document.querySelectorAll('input[name="nu-ex"]:checked')].map((x) => x.value)
+        exhibition_slugs: [...document.querySelectorAll('input[name="nu-ex"]:checked')].map((x) => x.value),
+        password: $('nu-pw').value, must_change: $('nu-must').checked
       }
     });
     $('nu-result').hidden = false;
-    $('nu-result').innerHTML = tempPasswordHtml(d.user.name, d.temporaryPassword);
+    $('nu-result').innerHTML = d.temporaryPassword ? tempPasswordHtml(d.user.name, d.temporaryPassword)
+      : `<div class="card"><strong>สร้างบัญชี ${esc(d.user.name)} แล้ว</strong> ด้วยรหัสผ่านที่ตั้งไว้${d.mustChange ? ' · ต้องเปลี่ยนรหัสเมื่อเข้าระบบครั้งแรก' : ''}</div>`;
     e.target.reset();
     await load();
   } catch (err) { $('nu-err').textContent = err.message; }

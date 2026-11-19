@@ -391,6 +391,7 @@ Migration `0018_coordinators` (columns only): `exhibition_members.member_role` '
 - Roster page: column "ผู้ประสานงาน" (select + progress), bulk set, summary table per coordinator (ดูแล / แจ้งแล้ว / ลงนามแล้ว /
   ยังไม่แจ้ง), link "หน้าผู้ประสานงาน"; Excel import column "ผู้ประสานงาน / Coordinator" (name or email of a coordinator of
   the exhibition; unknown = error row).
+- Admin may set a user's password (owner, 2026-11-19 "admin ตั้งรหัสบัญชีเข้าใช้ของผู้ดูแลศิลปินได้"): new-user form "รหัสผ่าน (ไม่บังคับ)" and user editor "หรือตั้งรหัสผ่านใหม่เอง" (≥10 characters, `v.password`), with "ให้เปลี่ยนรหัสผ่าน…" ticked by default (`must_change`); the typed password is never sent back; setting it signs the user out. Empty = temporary password as before.
 - Delete an account (owner, 2026-11-19 "ใช้วิธีลบบัญชีเลย"): user editor → "ลบบัญชีนี้" (type the email to confirm); `DELETE /api/admin/users/:id`, not yourself, not the last admin; removes sessions + memberships, sets their artists' coordinator to none (notified date stays).
 - Preview note: preview shares the production D1. Until this is merged, production code treats any membership as manager,
   so do not create coordinators before merging.

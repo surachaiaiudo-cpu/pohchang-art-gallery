@@ -29,7 +29,9 @@ export const onRequestGet = handle(async (context) => {
   return json({ ok: true, users: (users.results || []).map((u) => ({ ...u, exhibitions: byUser.get(u.id) || [], coordinating: coordBy.get(u.id) || [] })) });
 });
 
-// POST /api/admin/users { email, name, role, exhibition_slugs? } -> returns a one-time temporary password
+// POST /api/admin/users { email, name, role, exhibition_slugs?, password?, must_change? }
+// -> a one-time temporary password, or the admin's own password (owner 2026-11-19: admin may set the password,
+//    e.g. for coordinators); must_change (default true) makes the user replace it at first sign-in.
 export const onRequestPost = handle(async (context) => {
   const admin = await requireAdmin(context);
   const db = context.env.DB;
@@ -40,12 +42,14 @@ export const onRequestPost = handle(async (context) => {
   const exists = await db.prepare('SELECT 1 FROM users WHERE email = ?').bind(email).first();
   if (exists) throw bad('มีผู้ใช้อีเมลนี้แล้ว');
 
-  const temp = tempPassword();
+  const own = typeof body.password === 'string' && body.password !== '';
+  const temp = own ? v.password(body.password) : tempPassword();
+  const mustChange = own && body.must_change === false ? 0 : 1;
   const h = await hashPassword(temp);
   const res = await db.prepare(
     `INSERT INTO users (email, name, role, password_hash, password_salt, password_iters, must_change_password)
-     VALUES (?, ?, ?, ?, ?, ?, 1)`
-  ).bind(email, name, role, h.hash, h.salt, h.iters).run();
+     VALUES (?, ?, ?, ?, ?, ?, ?)`
+  ).bind(email, name, role, h.hash, h.salt, h.iters, mustChange).run();
   const userId = res.meta.last_row_id;
 
   const slugs = Array.isArray(body.exhibition_slugs) ? body.exhibition_slugs.slice(0, 50) : [];
@@ -55,6 +59,7 @@ export const onRequestPost = handle(async (context) => {
     ).bind(userId, String(s)));
     await db.batch(stmts);
   }
-  await audit(db, null, actorOf(admin), 'user.create', { email, role });
-  return json({ ok: true, user: { id: userId, email, name, role }, temporaryPassword: temp }, { status: 201 });
+  await audit(db, null, actorOf(admin), 'user.create', { email, role, ownPassword: own, mustChange: !!mustChange });
+  // The admin typed the password: it is not sent back.
+  return json({ ok: true, user: { id: userId, email, name, role }, ...(own ? { passwordSet: true, mustChange: !!mustChange } : { temporaryPassword: temp }) }, { status: 201 });
 });

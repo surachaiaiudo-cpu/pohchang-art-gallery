@@ -5,7 +5,8 @@ import { audit } from '../../../_lib/exhibitions.js';
 import { tempPassword } from './index.js';
 import * as v from '../../../_lib/validate.js';
 
-// PUT /api/admin/users/:id { name?, role?, active?, reset_password?, exhibition_slugs? }
+// PUT /api/admin/users/:id { name?, role?, active?, reset_password?, set_password?, must_change?, exhibition_slugs? }
+// set_password: the admin sets the password (owner 2026-11-19); must_change (default true) = replace at next sign-in.
 export const onRequestPut = handle(async (context) => {
   const admin = await requireAdmin(context);
   const db = context.env.DB;
@@ -27,7 +28,14 @@ export const onRequestPut = handle(async (context) => {
     stmts.push(db.prepare('UPDATE users SET password_hash = ?, password_salt = ?, password_iters = ?, must_change_password = 1 WHERE id = ?')
       .bind(h.hash, h.salt, h.iters, id));
   }
-  if (body.reset_password || !active) stmts.push(db.prepare('DELETE FROM sessions WHERE user_id = ?').bind(id));
+  const setOwn = typeof body.set_password === 'string' && body.set_password !== '';
+  if (setOwn && !body.reset_password) {
+    const pw = v.password(body.set_password);
+    const h = await hashPassword(pw);
+    stmts.push(db.prepare('UPDATE users SET password_hash = ?, password_salt = ?, password_iters = ?, must_change_password = ? WHERE id = ?')
+      .bind(h.hash, h.salt, h.iters, body.must_change === false ? 0 : 1, id));
+  }
+  if (body.reset_password || setOwn || !active) stmts.push(db.prepare('DELETE FROM sessions WHERE user_id = ?').bind(id));
   if (Array.isArray(body.exhibition_slugs)) {
     // Manager memberships only; coordinator memberships are set in the exhibition editor.
     stmts.push(db.prepare("DELETE FROM exhibition_members WHERE user_id = ? AND member_role = 'manager'").bind(id));
@@ -38,7 +46,7 @@ export const onRequestPut = handle(async (context) => {
     }
   }
   await db.batch(stmts);
-  await audit(db, null, actorOf(admin), 'user.update', { id, role, active, reset: !!body.reset_password });
+  await audit(db, null, actorOf(admin), 'user.update', { id, role, active, reset: !!body.reset_password, setPassword: setOwn && !body.reset_password });
   return json({ ok: true, ...(temporaryPassword ? { temporaryPassword } : {}) });
 });
 
