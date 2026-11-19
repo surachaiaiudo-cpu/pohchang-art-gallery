@@ -61,7 +61,9 @@ async function uploadFor(kind, file, onProgress) {
 
 function statusTag(w) {
   const t = { submitted: 'รอคัดกรอง', shown: 'จัดแสดง', rejected: 'ไม่ผ่าน' }[w.status];
-  return `<span class="tag tag-${w.status}">${t}</span>`;
+  // Selection-round works are never public (owner, 2026-11-14): "shown" only sends them to the panel.
+  const stage = w.stage === 'selection' ? ' <span class="tag tag-needs" title="ผลงานรอบคัดเลือก เห็นเฉพาะผู้ดูแลและผู้ทรงคุณวุฒิ">รอบคัดเลือก · ไม่เผยแพร่</span>' : '';
+  return `<span class="tag tag-${w.status}">${w.stage === 'selection' && w.status === 'shown' ? 'ส่งผู้ทรงฯ' : t}</span>${stage}`;
 }
 function reviewTag(w) {
   if (w.status !== 'shown') return '';
@@ -82,6 +84,7 @@ async function loadOverview() {
   $('view-public').href = `/e/${encodeURIComponent(S.ex.slug)}`;
   $('captions-link').href = `/manage/${encodeURIComponent(S.ex.slug)}/captions`;
   $('report-link').href = `/manage/${encodeURIComponent(S.ex.slug)}/report`;
+  $('roster-link').href = `/manage/${encodeURIComponent(S.ex.slug)}/roster`;
   const quota = S.ex.storage_quota_bytes || 1;
   $('stats').innerHTML = `
     <div class="stat"><b>${d.counts.submitted}</b><span>รอคัดกรอง</span></div>

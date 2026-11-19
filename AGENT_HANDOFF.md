@@ -80,7 +80,7 @@ public/
   flags/*.svg      242 flag images (flag-icons, MIT, licence included) + xr.svg (Kurdistan, drawn here)
   _redirects       /e/:slug, /e/:slug/work/:id, /e/:slug/submit, /manage/:slug, /review/:token rewrites
   _headers         CSS/JS revalidate every load; flags cached 7 days
-schema/0001..0007  SQL history (0001 creates everything; later files are also applied by migrate.js; 0006 lives only in migrate.js)
+schema/0001..0017  SQL history (0001 creates everything; later files are also applied by migrate.js; 0006 lives only in migrate.js)
 tests/*.test.js    node:test unit tests (`npm test`)
 ```
 
@@ -331,6 +331,41 @@ zoomed to the column width (`zoom`), reset to 1 for print. Print button waits fo
 Options in localStorage `report:<slug>`. **Emails/phones are never in the report.** Logic: `public/js/report-data.js`
 (tests/report.test.js).
 
+### 6.12 Artist roster, artist numbers, selection-round works (owner's workshop process, 2026-11-14/17; branch `roster`)
+The owner's 8-step workshop process (selection → invitation → acceptance → attendance → workshop → works → exhibition →
+academic review) is planned in the claude.ai project doc `claude/workshop-process-2026-11-14.md` (all decisions so far).
+This is part A of the build ("do it, leave the rest for later", owner 2026-11-17). Migration `0017_roster` (columns only):
+- `artists.channel` 0 not set | 1 invited directly (e.g. National Artist) | 2 committee picks samples → expert panel |
+  3 MOU partner | 4 self-applied → expert panel (opens after round 1; same panel, 3 of 5).
+- `artists.roster` '' | candidate | selected | not_selected; `withdrawn` (0/1) + `roster_note`.
+- `artists.artist_no` = **เลขที่ศิลปิน**, 3 digits, unique per exhibition (checked in code). "รันเลขที่" (`planNumbers()`
+  in `public/js/roster-logic.js`, tested): selected, not withdrawn, no number yet; **foreign first, by country (English
+  name A–Z), then English name A–Z; Thai last by English name** (Thai name if no English); unknown nationality between.
+  Given numbers never change; a withdrawn artist keeps theirs; later ones continue after the highest. Admin-only
+  "ล้างเลขที่ทั้งหมด". Number editable per row (duplicate refused).
+- `works.stage` 'exhibit' | **'selection' = selection-round samples, never public** (filtered in `PUBLIC_WORK_SQL`,
+  `/api/exhibitions` samples/counts/cover, prev/next). The panel still sees them (status shown). Manage cards show
+  "รอบคัดเลือก · ไม่เผยแพร่" and "ส่งผู้ทรงฯ" instead of "จัดแสดง".
+- `exhibitions.submit_stage`: stage given to works sent through the public form (for channel 4 later).
+Page `/manage/<slug>/roster` (link "รายชื่อศิลปิน / เลขที่"): stats, stage card (form stage select; "mark all current
+works as selection" and back, confirmed by typing the slug), filters, bulk channel/status, per-row channel/status/number/
+withdrawn/note (saved on change), delete (only artists with no works), add an artist by hand (duplicate-name warning, any
+th/en name against any). **Import from Excel (owner, 2026-11-17):** card "นำเข้ารายชื่อจาก Excel" on the roster page. Template
+`public/templates/roster-template.xlsx` (sheet 1 = list with dropdowns for channel/status, sheet 2 = how to fill + examples;
+channel and status per row, owner's choice). The browser reads the first sheet of .xlsx/.csv with no library
+(`public/js/xlsx-read.js`: zip via DecompressionStream, XML by regex; tested on the template and `tests/fixtures/roster-import.xlsx`)
+and posts the rows; the server finds the header (first of 10 rows with a name column; th/en spellings, "ไทย / English" headers,
+`parseImport()` in `functions/_lib/roster.js`), maps countries with the importer's `matchCountry()` (+ 2-letter codes), and
+returns a preview: ready / duplicate name (in the list or earlier in the file; skipped unless "เพิ่มอยู่ดี" is ticked) / error
+(no name, unknown country, bad email, channel or status) — errors are never saved. Max 1000 rows; request body up to 1.5 MB
+(`readJson(request, { max })`). Note: NFKC splits Thai ำ, so header spellings are normalised like the cells.
+API `GET/POST /api/manage/:slug/roster` (actions add | set | number | clear_numbers | stage_all | import_preview | import),
+`PUT/DELETE /api/manage/:slug/roster/:id`; all audited (no email/phone in the audit detail).
+**Not done on purpose (owner decides):** marking the 20th's 321 works as selection, setting channel 2 / statuses for its
+111 artists (round-1 voting still running), how an artist "passes" when several sample works are voted (per-row counts
+"ผ่าน n/m" are shown; status is set by hand or in bulk). Parts B–G (acceptance page, coordinators, badges + QR, Excel,
+new submission flow, catalogue/captions changes, round 2) wait — see the project doc.
+
 ## 7. API (all JSON; writes require same-origin)
 
 | Route | Who | Purpose |
@@ -343,7 +378,7 @@ Options in localStorage `report:<slug>`. **Emails/phones are never in the report
 | `POST /api/auth/login`, `logout`, `GET me`, `POST password` | users | session auth, forced first password change |
 | `/api/admin/users[/id]`, `/api/admin/exhibitions[/id]` | admin | users, create exhibition, slug/status/staff |
 | `POST /api/admin/import` | admin | old-event import (6.8) |
-| `/api/manage/:slug` (+ `works`, `works/:id`, `techniques`, `reviewers`, `reviewers/:id`, `results`, `storage`, `hero`, `upload-auth`) | staff of that exhibition | settings, screening, panel, results, Cloudinary |
+| `/api/manage/:slug` (+ `roster`, `roster/:id`, `works`, `works/:id`, `techniques`, `reviewers`, `reviewers/:id`, `results`, `storage`, `hero`, `upload-auth`) | staff of that exhibition | settings, screening, panel, results, Cloudinary |
 | `GET/POST /api/review/:token[/vote]` | reviewer link | review works, vote |
 | `GET /api/dev/placeholder` | dev only | fake image when `DEV_FAKE_STORAGE=1` |
 

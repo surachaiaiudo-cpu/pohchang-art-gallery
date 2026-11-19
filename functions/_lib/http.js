@@ -33,11 +33,12 @@ export function errorResponse(err) {
 
 const MAX_BODY = 256 * 1024;
 
-export async function readJson(request) {
+// max: a larger limit for the few routes that take a whole list (roster import from Excel).
+export async function readJson(request, { max = MAX_BODY } = {}) {
   const len = Number(request.headers.get('Content-Length') || 0);
-  if (len > MAX_BODY) throw bad('ข้อมูลมีขนาดใหญ่เกินไป');
+  if (len > max) throw bad('ข้อมูลมีขนาดใหญ่เกินไป');
   const text = await request.text();
-  if (text.length > MAX_BODY) throw bad('ข้อมูลมีขนาดใหญ่เกินไป');
+  if (text.length > max) throw bad('ข้อมูลมีขนาดใหญ่เกินไป');
   if (!text) return {};
   try {
     const v = JSON.parse(text);
