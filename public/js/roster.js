@@ -40,25 +40,51 @@ function stageCard() {
   $('stage-back').hidden = selection === 0;
 }
 
+// Work-group filter + sort (owner, 2026-11-19): the "กลุ่มงาน" box filters by the categories of the artist's
+// works (an artist with works in several groups shows under each); the sort box orders by number (default;
+// no number = order added) or by name.
+const SORT_KEY = 'roster:sort';
+const NO_CAT = '__none__'; // not a group name: names come from the exhibition's list
+const nameOf = (a) => String(a.name_th || a.name_en || '').replace(/\s+/g, ' ').trim();
+const byName = (a, b) => nameOf(a).localeCompare(nameOf(b), 'th', { sensitivity: 'base' }) || (a.id - b.id);
+const byNo = (a, b) => ((a.artist_no || 1e9) - (b.artist_no || 1e9)) || (a.id - b.id);
+const sorted = (list) => [...list].sort($('f-sort').value === 'name' ? byName : byNo);
+
+function catFilter() {
+  const box = $('f-cat');
+  const keep = box.value;
+  const count = (c) => S.artists.filter((a) => (a.categories || []).includes(c)).length;
+  const listed = (S.ex.categories || []).map((c) => c.name);
+  const used = [...new Set(S.artists.flatMap((a) => a.categories || []).filter(Boolean))];
+  const names = [...listed, ...used.filter((c) => !listed.includes(c))];
+  const none = count('');
+  box.innerHTML = '<option value="">ทุกกลุ่มงาน</option>'
+    + names.filter((c) => count(c)).map((c) => `<option value="${esc(c)}">${esc(c)} (${count(c)})</option>`).join('')
+    + (none ? `<option value="${NO_CAT}">ไม่ระบุกลุ่มงาน (${none})</option>` : '');
+  box.value = [...box.options].some((o) => o.value === keep) ? keep : '';
+}
+
 function visible() {
   const ch = $('f-channel').value;
   const ro = $('f-roster').value;
+  const cat = $('f-cat').value;
   const q = $('f-q').value.trim().toLowerCase();
-  return S.artists.filter((a) => {
+  return sorted(S.artists.filter((a) => {
     if (ch !== '' && String(a.channel) !== ch) return false;
+    if (cat && !(a.categories || []).includes(cat === NO_CAT ? '' : cat)) return false;
     if (ro === 'withdrawn') { if (!a.withdrawn) return false; } else if (ro !== '*' && ro !== a.roster) return false;
     if (!q) return true;
     const hay = [a.name_th, a.name_en, a.name_zh, a.affiliation, countryName(a.nationality, 'th'), countryName(a.nationality, 'en'), formatNo(a.artist_no)]
       .join(' ').toLowerCase();
     return hay.includes(q);
-  });
+  }));
 }
 
 function rows() {
   const list = visible();
   $('sel-count').textContent = S.sel.size ? `(เลือก ${S.sel.size})` : '';
   $('sel-all').checked = list.length > 0 && list.every((a) => S.sel.has(a.id));
-  if (!list.length) { $('rows').innerHTML = '<tr><td colspan="9" class="muted">ไม่มีศิลปินตามเงื่อนไขนี้</td></tr>'; return; }
+  if (!list.length) { $('rows').innerHTML = '<tr><td colspan="10" class="muted">ไม่มีศิลปินตามเงื่อนไขนี้</td></tr>'; return; }
   $('rows').innerHTML = list.map((a) => {
     const works = [
       a.works_selection ? `<span class="tag tag-sel" title="ผลงานรอบคัดเลือก (ไม่เผยแพร่)">รอบคัดเลือก ${a.works_selection}</span>` : '',
@@ -71,6 +97,7 @@ function rows() {
       <td class="ro-name"><b>${esc(fullName(a))}</b><span class="small muted">${flagImg(a.nationality, {}, esc)}${esc(countryName(a.nationality, 'th') || 'ไม่ระบุประเทศ')}${a.affiliation ? ` · ${esc(a.affiliation)}` : ''}</span></td>
       <td><select data-f="channel" aria-label="ช่องทาง">${opts(CHANNELS, a.channel)}</select></td>
       <td><select data-f="roster" aria-label="สถานะการคัดเลือก">${opts(ROSTER, a.roster)}</select></td>
+      <td class="small">${(a.categories || []).length ? a.categories.map((c) => (c ? esc(c) : '<span class="muted">ไม่ระบุ</span>')).join('<br>') : '<span class="muted">—</span>'}</td>
       <td class="ro-works">${works}</td>
       <td><input type="checkbox" data-f="withdrawn" aria-label="ถอนตัว"${a.withdrawn ? ' checked' : ''}></td>
       <td class="ro-note"><input type="text" maxlength="500" data-f="roster_note" value="${esc(a.roster_note || '')}" aria-label="หมายเหตุ" placeholder="${a.withdrawn ? 'เหตุผลที่ถอนตัว' : ''}"></td>
@@ -79,7 +106,7 @@ function rows() {
   }).join('');
 }
 
-const render = () => { stats(); stageCard(); rows(); };
+const render = () => { stats(); stageCard(); catFilter(); rows(); };
 
 async function load() {
   const d = await api(`${M}/roster`);
@@ -129,7 +156,12 @@ function wire() {
   $('a-channel').innerHTML = opts(CHANNELS, 1);
   $('a-roster').innerHTML = opts(ROSTER, 'selected');
   $('a-nat').innerHTML = `<option value="">— ไม่ระบุ —</option>${countryOptions('th', '', esc)}`;
-  for (const id of ['f-channel', 'f-roster']) $(id).addEventListener('change', rows);
+  for (const id of ['f-channel', 'f-roster', 'f-cat']) $(id).addEventListener('change', rows);
+  try { const saved = localStorage.getItem(SORT_KEY); if (saved && [...$('f-sort').options].some((o) => o.value === saved)) $('f-sort').value = saved; } catch { /* no storage */ }
+  $('f-sort').addEventListener('change', () => {
+    try { localStorage.setItem(SORT_KEY, $('f-sort').value); } catch { /* no storage */ }
+    rows();
+  });
   $('f-q').addEventListener('input', rows);
 
   $('rows').addEventListener('change', (e) => {

@@ -28,6 +28,17 @@ export const onRequestGet = handle(async (context) => {
   const stages = await context.env.DB.prepare(
     'SELECT stage, COUNT(*) AS n FROM works WHERE exhibition_id = ? AND deleted_at IS NULL GROUP BY stage'
   ).bind(ex.id).all();
+  // Work groups (categories, กลุ่มงาน) of each artist's works, in the order the works were sent (column + filter).
+  const cats = await context.env.DB.prepare(
+    `SELECT artist_id, category, MIN(display_order) AS o, MIN(id) AS i FROM works
+      WHERE exhibition_id = ? AND deleted_at IS NULL GROUP BY artist_id, category ORDER BY artist_id, o, i`
+  ).bind(ex.id).all();
+  const byArtist = new Map();
+  for (const r of cats.results || []) {
+    if (!byArtist.has(r.artist_id)) byArtist.set(r.artist_id, []);
+    byArtist.get(r.artist_id).push(r.category || '');
+  }
+  for (const a of results || []) a.categories = byArtist.get(a.id) || [];
   const workStages = { exhibit: 0, selection: 0 };
   for (const r of stages.results || []) workStages[r.stage === 'selection' ? 'selection' : 'exhibit'] += r.n;
   return json({ ok: true, artists: results || [], work_stages: workStages, submit_stage: ex.submit_stage || 'exhibit' });
