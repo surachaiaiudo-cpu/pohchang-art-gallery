@@ -23,7 +23,7 @@ function stats() {
   const box = (n, t) => `<div class="stat"><b>${n}</b><span>${esc(t)}</span></div>`;
   $('stats').innerHTML = [
     box(S.artists.length, 'ศิลปินทั้งหมดในรายชื่อ'),
-    box(live.filter((a) => !a.roster).length, 'ยังไม่ระบุสถานะ'),
+    box(live.filter((a) => !a.roster).length, 'ยังไม่พิจารณา'),
     box(sel.length, 'ผ่าน'),
     box(live.filter((a) => a.roster === 'not_selected').length, 'ไม่ผ่าน'),
     box(`${sel.length - thai} / ${thai}`, 'ผ่าน: ต่างประเทศ / ไทย'),
@@ -97,7 +97,8 @@ function rows() {
       <td class="ro-no"><input type="text" inputmode="numeric" maxlength="3" data-f="artist_no" value="${esc(formatNo(a.artist_no))}" aria-label="เลขที่ศิลปิน ${esc(a.name_th)}" placeholder="—"></td>
       <td class="ro-name"><b>${esc(fullName(a))}</b><span class="small muted">${flagImg(a.nationality, {}, esc)}${esc(countryName(a.nationality, 'th') || 'ไม่ระบุประเทศ')}${a.affiliation ? ` · ${esc(a.affiliation)}` : ''}</span></td>
       <td><select data-f="channel" aria-label="ช่องทาง">${opts(CHANNELS, a.channel)}</select></td>
-      <td><select data-f="roster" aria-label="สถานะการคัดเลือก">${opts(ROSTER, a.roster)}</select></td>
+      <td class="ro-pass"><label class="check"><input type="checkbox" data-pass="selected" aria-label="ผ่าน ${esc(a.name_th)}"${a.roster === 'selected' ? ' checked' : ''}> ผ่าน</label>
+        <label class="check"><input type="checkbox" data-pass="not_selected" aria-label="ไม่ผ่าน ${esc(a.name_th)}"${a.roster === 'not_selected' ? ' checked' : ''}> ไม่ผ่าน</label></td>
       <td class="small">${(a.categories || []).length ? a.categories.map((c) => (c ? esc(c) : '<span class="muted">ไม่ระบุ</span>')).join('<br>') : '<span class="muted">—</span>'}</td>
       <td class="ro-works">${works}</td>
       <td><input type="checkbox" data-f="withdrawn" aria-label="ถอนตัว"${a.withdrawn ? ' checked' : ''}></td>
@@ -172,6 +173,11 @@ function wire() {
     if (e.target.matches('[data-sel]')) {
       if (e.target.checked) S.sel.add(a.id); else S.sel.delete(a.id);
       $('sel-count').textContent = S.sel.size ? `(เลือก ${S.sel.size})` : '';
+      return;
+    }
+    // Pass / not pass ticks (owner, 2026-11-19): one at a time; neither ticked = not considered yet.
+    if (e.target.dataset.pass) {
+      saveField(a, 'roster', { value: e.target.checked ? e.target.dataset.pass : '' });
       return;
     }
     if (e.target.dataset.f) saveField(a, e.target.dataset.f, e.target);

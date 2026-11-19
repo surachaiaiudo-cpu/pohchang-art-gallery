@@ -12,10 +12,10 @@ export const CHANNELS = [
 ];
 export const CHANNEL_KEYS = CHANNELS.map((c) => c.key);
 
-// Selection status: pass / not pass (owner, 2026-11-19); '' = not decided yet. Keys kept from part A so the
+// Selection status: pass / not pass (owner, 2026-11-19); '' = not considered yet (neither box ticked). Keys kept from part A so the
 // statuses already set stay. Later steps (acceptance, attendance) keep their own columns.
 export const ROSTER = [
-  { key: '', label: 'ยังไม่ระบุ' },
+  { key: '', label: 'ยังไม่พิจารณา' },
   { key: 'selected', label: 'ผ่าน' },
   { key: 'not_selected', label: 'ไม่ผ่าน' }
 ];
