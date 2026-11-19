@@ -350,10 +350,11 @@ This is part A of the build ("do it, leave the rest for later", owner 2026-11-17
 Page `/manage/<slug>/roster` (link "รายชื่อศิลปิน / เลขที่"): stats, stage card (form stage select; "mark all current
 works as selection" and back, confirmed by typing the slug), filters, bulk channel/status, per-row channel/status/number/
 withdrawn/note (saved on change), delete (only artists with no works), add an artist by hand (duplicate-name warning, any
-th/en name against any). **Technique filter + sort (owner, 2026-11-19, separate boxes as the owner chose):** box "เทคนิค" filters (the exhibition's
-list, then other groups in use, then "ยังไม่ยืนยันเทคนิค"; only techniques in use, with counts; an artist with works in several techniques appears
-under each); box "เรียง" = by number (default; no number = order added) or by artist name, remembered per browser
-(`roster:sort`). Column "เทคนิค" lists the technique groups of the artist's works (API `techniques` per artist).
+th/en name against any). **Work-group filter + sort (owner, 2026-11-19; first asked for technique, then "เปลี่ยนจากเทคนิคเป็นกลุ่มงาน"):** box
+"กลุ่มงาน" filters by the categories of the artist's works (the exhibition's list, then other groups in use, then
+"ไม่ระบุกลุ่มงาน"; only groups in use, with counts; an artist with works in several groups appears under each); box "เรียง"
+= by number (default; no number = order added) or by artist name, remembered per browser (`roster:sort`). Column
+"กลุ่มงาน" lists the groups of the artist's works (API `categories` per artist).
 **Import from Excel (owner, 2026-11-17):** card "นำเข้ารายชื่อจาก Excel" on the roster page. Template
 `public/templates/roster-template.xlsx` (sheet 1 = list with dropdowns for channel/status, sheet 2 = how to fill + examples;
 channel and status per row, owner's choice). The browser reads the first sheet of .xlsx/.csv with no library

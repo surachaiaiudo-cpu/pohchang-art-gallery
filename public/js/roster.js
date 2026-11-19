@@ -40,37 +40,38 @@ function stageCard() {
   $('stage-back').hidden = selection === 0;
 }
 
-// Technique filter + sort (owner, 2026-11-19): the technique box filters (an artist with works in several
-// techniques shows under each); the sort box orders by number (default; no number = order added) or by name.
+// Work-group filter + sort (owner, 2026-11-19): the "กลุ่มงาน" box filters by the categories of the artist's
+// works (an artist with works in several groups shows under each); the sort box orders by number (default;
+// no number = order added) or by name.
 const SORT_KEY = 'roster:sort';
-const NO_TECH = '__none__'; // not a technique name: names come from the exhibition's list
+const NO_CAT = '__none__'; // not a group name: names come from the exhibition's list
 const nameOf = (a) => String(a.name_th || a.name_en || '').replace(/\s+/g, ' ').trim();
 const byName = (a, b) => nameOf(a).localeCompare(nameOf(b), 'th', { sensitivity: 'base' }) || (a.id - b.id);
 const byNo = (a, b) => ((a.artist_no || 1e9) - (b.artist_no || 1e9)) || (a.id - b.id);
 const sorted = (list) => [...list].sort($('f-sort').value === 'name' ? byName : byNo);
 
-function techFilter() {
-  const box = $('f-tech');
+function catFilter() {
+  const box = $('f-cat');
   const keep = box.value;
-  const count = (t) => S.artists.filter((a) => (a.techniques || []).includes(t)).length;
-  const listed = (S.ex.techniques || []).map((t) => t.name);
-  const used = [...new Set(S.artists.flatMap((a) => a.techniques || []).filter(Boolean))];
-  const names = [...listed, ...used.filter((t) => !listed.includes(t))];
-  const none = S.artists.filter((a) => (a.techniques || []).includes('')).length;
-  box.innerHTML = '<option value="">ทุกเทคนิค</option>'
-    + names.filter((t) => count(t)).map((t) => `<option value="${esc(t)}">${esc(t)} (${count(t)})</option>`).join('')
-    + (none ? `<option value="${NO_TECH}">ยังไม่ยืนยันเทคนิค (${none})</option>` : '');
+  const count = (c) => S.artists.filter((a) => (a.categories || []).includes(c)).length;
+  const listed = (S.ex.categories || []).map((c) => c.name);
+  const used = [...new Set(S.artists.flatMap((a) => a.categories || []).filter(Boolean))];
+  const names = [...listed, ...used.filter((c) => !listed.includes(c))];
+  const none = count('');
+  box.innerHTML = '<option value="">ทุกกลุ่มงาน</option>'
+    + names.filter((c) => count(c)).map((c) => `<option value="${esc(c)}">${esc(c)} (${count(c)})</option>`).join('')
+    + (none ? `<option value="${NO_CAT}">ไม่ระบุกลุ่มงาน (${none})</option>` : '');
   box.value = [...box.options].some((o) => o.value === keep) ? keep : '';
 }
 
 function visible() {
   const ch = $('f-channel').value;
   const ro = $('f-roster').value;
-  const tech = $('f-tech').value;
+  const cat = $('f-cat').value;
   const q = $('f-q').value.trim().toLowerCase();
   return sorted(S.artists.filter((a) => {
     if (ch !== '' && String(a.channel) !== ch) return false;
-    if (tech && !(a.techniques || []).includes(tech === NO_TECH ? '' : tech)) return false;
+    if (cat && !(a.categories || []).includes(cat === NO_CAT ? '' : cat)) return false;
     if (ro === 'withdrawn') { if (!a.withdrawn) return false; } else if (ro !== '*' && ro !== a.roster) return false;
     if (!q) return true;
     const hay = [a.name_th, a.name_en, a.name_zh, a.affiliation, countryName(a.nationality, 'th'), countryName(a.nationality, 'en'), formatNo(a.artist_no)]
@@ -96,7 +97,7 @@ function rows() {
       <td class="ro-name"><b>${esc(fullName(a))}</b><span class="small muted">${flagImg(a.nationality, {}, esc)}${esc(countryName(a.nationality, 'th') || 'ไม่ระบุประเทศ')}${a.affiliation ? ` · ${esc(a.affiliation)}` : ''}</span></td>
       <td><select data-f="channel" aria-label="ช่องทาง">${opts(CHANNELS, a.channel)}</select></td>
       <td><select data-f="roster" aria-label="สถานะการคัดเลือก">${opts(ROSTER, a.roster)}</select></td>
-      <td class="small">${(a.techniques || []).length ? (a.techniques).map((t) => (t ? esc(t) : '<span class="muted">ยังไม่ยืนยัน</span>')).join('<br>') : '<span class="muted">—</span>'}</td>
+      <td class="small">${(a.categories || []).length ? a.categories.map((c) => (c ? esc(c) : '<span class="muted">ไม่ระบุ</span>')).join('<br>') : '<span class="muted">—</span>'}</td>
       <td class="ro-works">${works}</td>
       <td><input type="checkbox" data-f="withdrawn" aria-label="ถอนตัว"${a.withdrawn ? ' checked' : ''}></td>
       <td class="ro-note"><input type="text" maxlength="500" data-f="roster_note" value="${esc(a.roster_note || '')}" aria-label="หมายเหตุ" placeholder="${a.withdrawn ? 'เหตุผลที่ถอนตัว' : ''}"></td>
@@ -105,7 +106,7 @@ function rows() {
   }).join('');
 }
 
-const render = () => { stats(); stageCard(); techFilter(); rows(); };
+const render = () => { stats(); stageCard(); catFilter(); rows(); };
 
 async function load() {
   const d = await api(`${M}/roster`);
@@ -155,7 +156,7 @@ function wire() {
   $('a-channel').innerHTML = opts(CHANNELS, 1);
   $('a-roster').innerHTML = opts(ROSTER, 'selected');
   $('a-nat').innerHTML = `<option value="">— ไม่ระบุ —</option>${countryOptions('th', '', esc)}`;
-  for (const id of ['f-channel', 'f-roster', 'f-tech']) $(id).addEventListener('change', rows);
+  for (const id of ['f-channel', 'f-roster', 'f-cat']) $(id).addEventListener('change', rows);
   try { const saved = localStorage.getItem(SORT_KEY); if (saved && [...$('f-sort').options].some((o) => o.value === saved)) $('f-sort').value = saved; } catch { /* no storage */ }
   $('f-sort').addEventListener('change', () => {
     try { localStorage.setItem(SORT_KEY, $('f-sort').value); } catch { /* no storage */ }
