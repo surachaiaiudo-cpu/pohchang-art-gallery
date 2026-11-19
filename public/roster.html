@@ -7,7 +7,7 @@
   <title>รายชื่อศิลปิน</title>
   <link rel="stylesheet" href="/css/app.css?v=5">
   <link rel="stylesheet" href="/css/roster.css?v=3">
-  <script type="module" src="/js/roster.js?v=7"></script>
+  <script type="module" src="/js/roster.js?v=8"></script>
 </head>
 <body>
   <header class="topbar" id="topbar"></header>
@@ -35,7 +35,6 @@
       <div class="row" style="justify-content:space-between">
         <div class="row">
           <label class="sr-only" for="f-channel">ช่องทาง</label><select id="f-channel" style="width:auto"></select>
-          <label class="sr-only" for="f-roster">สถานะ</label><select id="f-roster" style="width:auto"></select>
           <label class="sr-only" for="f-cat">กลุ่มงาน</label><select id="f-cat" style="width:auto"></select>
           <label class="small" for="f-sort">เรียง</label>
           <select id="f-sort" style="width:auto">
@@ -52,6 +51,8 @@
       <p class="hint" style="margin-bottom:0">รันเลขที่: ให้เลข 3 หลักกับศิลปินที่ “ผ่าน” และยังไม่มีเลข — ต่างประเทศก่อน เรียงตามประเทศ (ชื่ออังกฤษ A–Z) แล้วตามชื่อภาษาอังกฤษ ศิลปินไทยอยู่ท้าย เรียงตามชื่อภาษาอังกฤษ · เลขที่ให้ไปแล้วไม่เปลี่ยน ผู้ถอนตัวคงเลขเดิม · แก้เลขเองได้ในตาราง</p>
     </section>
 
+    <div class="tabs" role="tablist" aria-label="ผลการคัดเลือก" id="views"></div>
+
     <section class="card row" id="bulk" style="justify-content:space-between">
       <label class="check"><input type="checkbox" id="sel-all"> เลือกทั้งหมดที่แสดง <span class="muted" id="sel-count"></span></label>
       <div class="row">
@@ -61,7 +62,7 @@
       </div>
     </section>
 
-    <div class="table-wrap">
+    <div class="table-wrap" id="ro-panel" role="tabpanel">
       <table class="ro-table">
         <thead><tr>
           <th scope="col"><span class="sr-only">เลือก</span></th>

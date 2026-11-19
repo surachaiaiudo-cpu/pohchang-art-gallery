@@ -9,7 +9,18 @@ import { readSpreadsheet } from './xlsx-read.js';
 const slug = slugFromPath(1);
 const M = `/api/manage/${encodeURIComponent(slug)}`;
 const $ = (id) => document.getElementById(id);
-const S = { me: null, ex: null, artists: [], stages: { exhibit: 0, selection: 0 }, submitStage: 'exhibit', sel: new Set(), im: null };
+const S = { me: null, ex: null, artists: [], stages: { exhibit: 0, selection: 0 }, submitStage: 'exhibit', sel: new Set(), im: null, view: null };
+
+// Separate tables by result (owner, 2026-11-19): ยังไม่พิจารณา / ผ่าน / ไม่ผ่าน / ทั้งหมด. Ticking moves the artist to
+// the other table; withdrawn artists stay in their result's table (struck through). Last view remembered.
+const VIEWS = [
+  { key: 'pending', label: 'ยังไม่พิจารณา', test: (a) => !a.roster },
+  { key: 'selected', label: 'ผ่าน', test: (a) => a.roster === 'selected' },
+  { key: 'not_selected', label: 'ไม่ผ่าน', test: (a) => a.roster === 'not_selected' },
+  { key: 'all', label: 'ทั้งหมด', test: () => true }
+];
+const VIEW_KEY = 'roster:view';
+const viewOf = (key) => VIEWS.find((v) => v.key === key) || VIEWS[3];
 
 const opts = (list, value, first) => (first ? `<option value="">${esc(first)}</option>` : '')
   + list.map((x) => `<option value="${esc(String(x.key))}"${String(x.key) === String(value) ? ' selected' : ''}>${esc(x.label)}</option>`).join('');
@@ -24,7 +35,7 @@ function stats() {
   $('stats').innerHTML = [
     box(S.artists.length, 'ศิลปินทั้งหมดในรายชื่อ'),
     box(live.filter((a) => !a.roster).length, 'ยังไม่พิจารณา'),
-    box(sel.length, 'ผ่าน'),
+    box(sel.length, 'ผ่าน (ไม่นับผู้ถอนตัว)'),
     box(live.filter((a) => a.roster === 'not_selected').length, 'ไม่ผ่าน'),
     box(`${sel.length - thai} / ${thai}`, 'ผ่าน: ต่างประเทศ / ไทย'),
     box(S.artists.filter((a) => a.artist_no).length, 'มีเลขที่แล้ว'),
@@ -67,13 +78,12 @@ function catFilter() {
 
 function visible() {
   const ch = $('f-channel').value;
-  const ro = $('f-roster').value;
   const cat = $('f-cat').value;
   const q = $('f-q').value.trim().toLowerCase();
   return sorted(S.artists.filter((a) => {
     if (ch !== '' && String(a.channel) !== ch) return false;
     if (cat && !(a.categories || []).includes(cat === NO_CAT ? '' : cat)) return false;
-    if (ro === 'withdrawn') { if (!a.withdrawn) return false; } else if (ro !== '*' && ro !== a.roster) return false;
+    if (!viewOf(S.view).test(a)) return false;
     if (!q) return true;
     const hay = [a.name_th, a.name_en, a.name_zh, a.affiliation, countryName(a.nationality, 'th'), countryName(a.nationality, 'en'), formatNo(a.artist_no)]
       .join(' ').toLowerCase();
@@ -108,7 +118,16 @@ function rows() {
   }).join('');
 }
 
-const render = () => { stats(); stageCard(); catFilter(); rows(); };
+function views() {
+  if (!S.view) {
+    let saved = null;
+    try { saved = localStorage.getItem(VIEW_KEY); } catch { /* no storage */ }
+    S.view = VIEWS.some((v) => v.key === saved) ? saved : (S.artists.some((a) => !a.roster) ? 'pending' : 'selected');
+  }
+  $('views').innerHTML = VIEWS.map((v) => `<button type="button" role="tab" data-view="${v.key}" aria-controls="ro-panel" aria-selected="${v.key === S.view}">${esc(v.label)} (${S.artists.filter(v.test).length})</button>`).join('');
+}
+
+const render = () => { stats(); stageCard(); catFilter(); views(); rows(); };
 
 async function load() {
   const d = await api(`${M}/roster`);
@@ -140,6 +159,7 @@ async function saveField(a, field, input) {
   try {
     await api(`${M}/roster/${a.id}`, { method: 'PUT', body: { [field]: value } });
     Object.assign(a, { [field]: field === 'withdrawn' ? (value ? 1 : 0) : value });
+    if (field === 'roster' && !viewOf(S.view).test(a)) toast(`ย้าย ${a.name_th} ไปตาราง “${viewOf(value || 'pending').label}” แล้ว`);
     if (field === 'withdrawn' || field === 'roster' || field === 'artist_no') render();
     else stats();
   } catch (err) {
@@ -151,14 +171,20 @@ async function saveField(a, field, input) {
 function wire() {
   $('f-channel').innerHTML = `<option value="">ทุกช่องทาง</option>${opts(CHANNELS, '')}`;
   $('f-channel').value = '';
-  $('f-roster').innerHTML = `<option value="*">ทุกสถานะ</option>${opts(ROSTER, '*')}<option value="withdrawn">ถอนตัว</option>`;
-  $('f-roster').value = '*';
+  $('views').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-view]');
+    if (!b) return;
+    S.view = b.dataset.view;
+    try { localStorage.setItem(VIEW_KEY, S.view); } catch { /* no storage */ }
+    views();
+    rows();
+  });
   $('b-channel').innerHTML = opts(CHANNELS, '', '— ช่องทาง (ไม่เปลี่ยน) —');
   $('b-roster').innerHTML = `<option value="*">— สถานะ (ไม่เปลี่ยน) —</option>${opts(ROSTER, '*')}`;
   $('a-channel').innerHTML = opts(CHANNELS, 1);
   $('a-roster').innerHTML = opts(ROSTER, 'selected');
   $('a-nat').innerHTML = `<option value="">— ไม่ระบุ —</option>${countryOptions('th', '', esc)}`;
-  for (const id of ['f-channel', 'f-roster', 'f-cat']) $(id).addEventListener('change', rows);
+  for (const id of ['f-channel', 'f-cat']) $(id).addEventListener('change', rows);
   try { const saved = localStorage.getItem(SORT_KEY); if (saved && [...$('f-sort').options].some((o) => o.value === saved)) $('f-sort').value = saved; } catch { /* no storage */ }
   $('f-sort').addEventListener('change', () => {
     try { localStorage.setItem(SORT_KEY, $('f-sort').value); } catch { /* no storage */ }
