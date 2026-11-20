@@ -17,7 +17,8 @@ let ex = null;
 let artist = null;
 let ticket = '';
 let useTurnstile = false;
-let photo = { busy: false, file: null };
+// Two uploads: the artist's photo and the catalogue artwork.
+const up = { photo: { busy: false, file: null }, wimg: { busy: false, file: null } };
 let exSeq = 0;
 
 // ---------------------------------------------------------------- anti-spam ticket (as on the submission form)
@@ -75,8 +76,15 @@ function exRow(year = '', detail = '') {
     </div>`;
 }
 
-function resetPhoto() {
-  photo = { busy: false, file: null };
+function resetDrop(key) {
+  up[key] = { busy: false, file: null };
+  if (key === 'wimg') {
+    const kept = !!(artist && artist.has_work_image);
+    $('wimg').classList.remove('has-image');
+    $('wimg').innerHTML = `${icons.upload}<span class="drop-text">${esc(t(kept ? 'acWorkOnFile' : 'tapPhoto'))}</span>`;
+    $('wimg-req').hidden = kept;
+    return;
+  }
   const has = !!(artist && artist.photo);
   $('photo').classList.toggle('has-image', has);
   $('photo').innerHTML = has
@@ -105,16 +113,17 @@ async function openArtist(id) {
   $('type-other-wrap').hidden = true;
   $('followers-agree-wrap').hidden = true;
   $('form-error').textContent = '';
-  resetPhoto();
+  resetDrop('photo');
+  resetDrop('wimg');
   $('find').hidden = true;
   $('form').hidden = false;
   window.scrollTo(0, 0);
 }
 
-let pickTarget = false;
-function openPicker() {
-  if (photo.busy) return;
-  pickTarget = true;
+let pickTarget = null;
+function openPicker(drop) {
+  if (up[drop.id].busy) return;
+  pickTarget = drop;
   $('picker').value = '';
   $('picker').click();
 }
@@ -127,28 +136,28 @@ const pixelsOf = (file) => new Promise((resolve) => {
   img.src = url;
 });
 
-async function handleFile(file) {
+async function handleFile(drop, file) {
+  const key = drop.id;
   const problem = imageProblem(file);
   if (problem) { toast(t({ noFile: 'errNoFile', type: 'errFileType', big: 'errFileBig' }[problem]), 'error'); return; }
   const px = await pixelsOf(file);
   if (px && px < MIN_PIXELS) { toast(t('acPhotoSmall', { mp: (px / 1e6).toFixed(1) }), 'error'); return; }
   try { await ensureTicket(); } catch (e) { toast(localError(e.message), 'error'); return; }
-  const drop = $('photo');
   const preview = URL.createObjectURL(file);
-  photo = { busy: true, file: null };
+  up[key] = { busy: true, file: null };
   drop.classList.add('has-image');
   drop.innerHTML = `<img src="${preview}" alt="${esc(t('chosenImage'))}"><div class="progress" aria-label="${esc(t('progress'))}"><span></span></div><span class="drop-text">${esc(t('preparing'))}</span>`;
   const bar = drop.querySelector('.progress > span');
   const label = drop.querySelector('.drop-text');
   try {
-    const { upload } = await api(`${base}/upload-auth`, { method: 'POST', body: { ticket } });
+    const { upload } = await api(`${base}/upload-auth`, { method: 'POST', body: { ticket, kind: drop.dataset.kind } });
     const fitted = await fitForUpload(file, upload.maxBytes, upload.maxPixels);
     label.textContent = fitted.resized ? t('uploadingResized', { w: fitted.width, h: fitted.height }) : t('uploading');
     const res = await uploadImage(fitted.file, upload, (p) => { bar.style.width = `${p}%`; });
-    photo = { busy: false, file: res };
+    up[key] = { busy: false, file: res };
     label.textContent = t('uploaded');
   } catch (e) {
-    resetPhoto();
+    resetDrop(key);
     toast(localError(e.message), 'error');
     if (e.data && e.data.ticketExpired) ticket = '';
   }
@@ -171,7 +180,9 @@ function collect() {
     filled_by: checked('filled_by') || 'self',
     signed_name: val('signed_name'),
     agree_accept: $('agree_accept').checked,
-    photo_file: photo.file || undefined
+    photo_file: up.photo.file || undefined,
+    work: { title: val('w_title'), technique: val('w_technique'), dimensions: val('w_dimensions'), year: val('w_year'), concept: val('w_concept') },
+    work_file: up.wimg.file || undefined
   };
 }
 
@@ -181,8 +192,15 @@ function validate(d) {
   if (!d.nationality) return ['nationality', t('acErrNat')];
   if (!d.email && !artist.email_hint) return ['email', t('acErrEmail')];
   if (d.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) return ['email', t('errEmail')];
-  if (photo.busy) return ['photo', t('uploading')];
+  if (up.photo.busy) return ['photo', t('uploading')];
   if (!d.photo_file && !artist.photo) return ['photo', t('acErrPhoto')];
+  const wk = d.work;
+  if (!wk.title) return ['w_title', t('acErrWork')];
+  if (!wk.technique) return ['w_technique', t('acErrWork')];
+  if (!wk.dimensions) return ['w_dimensions', t('acErrWork')];
+  if (!wk.year) return ['w_year', t('acErrWork')];
+  if (up.wimg.busy) return ['wimg', t('uploading')];
+  if (!d.work_file && !artist.has_work_image) return ['wimg', t('acErrWorkImage')];
   if (!d.types.length) return ['types', t('acErrTypes')];
   if (d.types.includes('mixed_other') && !d.type_other) return ['type_other', t('acErrTypeOther')];
   if (!d.peer_review) return ['peer', t('acErrPeer')];
@@ -240,9 +258,11 @@ $('another').addEventListener('click', backToFind);
 $('add-ex').addEventListener('click', () => {
   if (document.querySelectorAll('.ac-ex').length < 10) $('exhibitions').insertAdjacentHTML('beforeend', exRow());
 });
-$('photo').addEventListener('click', openPicker);
-$('photo').addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPicker(); } });
-$('picker').addEventListener('change', (e) => { const f = e.target.files[0]; if (pickTarget && f) handleFile(f); pickTarget = false; });
+for (const id of ['photo', 'wimg']) {
+  $(id).addEventListener('click', () => openPicker($(id)));
+  $(id).addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPicker($(id)); } });
+}
+$('picker').addEventListener('change', (e) => { const f = e.target.files[0]; if (pickTarget && f) handleFile(pickTarget, f); pickTarget = null; });
 $('types').addEventListener('change', () => {
   $('type-other-wrap').hidden = !document.querySelector('input[name="types"][value="mixed_other"]').checked;
 });

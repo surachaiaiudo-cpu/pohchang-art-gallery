@@ -417,7 +417,12 @@ signature = typed name + tick; English first, also Thai and Chinese; open until 
   (first time) and `accepted_by` = filled_by.
 - Back office: roster page card (switch, closing date, link + copy, signed count), "แบบตอบรับ" dialog
   (`js/acceptance-view.js`, API `/api/coord/:slug/acceptance/:id`, any admin/manager/coordinator) with "ศิลปินแก้ข้อมูล";
-  coordinator page shows the link and the dialog. The 7 notes (dates, fees, airports) are 20th-specific text in i18n.js.
+  coordinator page shows the link and the dialog.
+- Catalogue artwork (owner 2026-11-20): one earlier artwork per artist, required — title, technique, size, year, optional
+  concept, image ≥ 5 MP (Cloudinary folder `work`). Kept in `acceptances.data.work` (with image_url / file id / px), not
+  as a `works` row, so it never reaches reviewers or public pages; the catalogue step (part F) reads it from there.
+  Signing again without a new image keeps the earlier one. Selection-round works are not offered (they are never public).
+  The 7 notes (dates, fees, airports) are 20th-specific text in i18n.js.
 
 ## 7. API (all JSON; writes require same-origin)
 

@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="/css/themes.css?v=7">
   <link rel="stylesheet" href="/css/base.css?v=12">
   <link rel="stylesheet" href="/css/accept.css?v=1">
-  <script type="module" src="/js/accept.js?v=1"></script>
+  <script type="module" src="/js/accept.js?v=2"></script>
 </head>
 <body>
   <header class="site-head">
@@ -69,7 +69,7 @@
         <div class="field"><label for="contact_address" data-i18n="acAddress"></label><textarea id="contact_address" maxlength="600" rows="3"></textarea><span class="hint" data-i18n="acAddressHint"></span></div>
         <div class="field">
           <span class="label-text" id="photo-label"><span data-i18n="acPhoto"></span> <span class="req" id="photo-req">*</span></span>
-          <div class="drop" id="photo" tabindex="0" role="button" aria-labelledby="photo-label"><span class="drop-text" data-i18n="tapPhoto"></span></div>
+          <div class="drop" id="photo" data-kind="artist" tabindex="0" role="button" aria-labelledby="photo-label"><span class="drop-text" data-i18n="tapPhoto"></span></div>
           <span class="hint" data-i18n="acPhotoHint"></span>
         </div>
       </fieldset>
@@ -80,8 +80,25 @@
         <button type="button" class="add-work" id="add-ex" data-i18n="acAddEx">+ Add an exhibition</button>
       </fieldset>
 
+      <fieldset id="work">
+        <legend><span class="step-no">3</span><span data-i18n="acWork">Artwork for the catalogue</span></legend>
+        <p class="hint" data-i18n="acWorkHint"></p>
+        <div class="grid-2">
+          <div class="field"><label for="w_title"><span data-i18n="acWorkTitle"></span> <span class="req">*</span></label><input type="text" id="w_title" maxlength="300"></div>
+          <div class="field"><label for="w_technique"><span data-i18n="acWorkTechnique"></span> <span class="req">*</span></label><input type="text" id="w_technique" maxlength="300"></div>
+          <div class="field"><label for="w_dimensions"><span data-i18n="acWorkSize"></span> <span class="req">*</span></label><input type="text" id="w_dimensions" maxlength="120" data-i18n-ph="acWorkSizePh"></div>
+          <div class="field"><label for="w_year"><span data-i18n="acWorkYear"></span> <span class="req">*</span></label><input type="text" id="w_year" maxlength="20" inputmode="numeric"></div>
+        </div>
+        <div class="field"><label for="w_concept" data-i18n="acWorkConcept"></label><textarea id="w_concept" maxlength="2000" rows="3"></textarea></div>
+        <div class="field">
+          <span class="label-text" id="wimg-label"><span data-i18n="acWorkImage"></span> <span class="req" id="wimg-req">*</span></span>
+          <div class="drop" id="wimg" data-kind="work" tabindex="0" role="button" aria-labelledby="wimg-label"><span class="drop-text" data-i18n="tapPhoto"></span></div>
+          <span class="hint" data-i18n="acPhotoHint"></span>
+        </div>
+      </fieldset>
+
       <fieldset>
-        <legend><span class="step-no">3</span><span data-i18n="acTypes">Type of your artworks</span></legend>
+        <legend><span class="step-no">4</span><span data-i18n="acTypes">Type of your artworks</span></legend>
         <p class="hint" data-i18n="acTypesHint"></p>
         <div class="chips ac-types" id="types">
           <label class="chip"><input type="checkbox" name="types" value="painting"><span data-i18n="acTypePainting"></span></label>
@@ -111,7 +128,7 @@
       </fieldset>
 
       <fieldset>
-        <legend><span class="step-no">4</span><span data-i18n="acNotes">Please note</span></legend>
+        <legend><span class="step-no">5</span><span data-i18n="acNotes">Please note</span></legend>
         <ol class="ac-notes">
           <li data-i18n="acNote1"></li><li data-i18n="acNote2"></li><li data-i18n="acNote3"></li><li data-i18n="acNote4"></li>
           <li><span data-i18n="acNote5"></span>
@@ -126,7 +143,7 @@
       </fieldset>
 
       <fieldset>
-        <legend><span class="step-no">5</span><span data-i18n="acSignSection">Sign and confirm</span></legend>
+        <legend><span class="step-no">6</span><span data-i18n="acSignSection">Sign and confirm</span></legend>
         <div class="field"><span class="label-text" data-i18n="acFilledBy"></span>
           <div class="chips" role="radiogroup">
             <label class="chip"><input type="radio" name="filled_by" value="self" checked><span data-i18n="acBySelf"></span></label>

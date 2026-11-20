@@ -72,7 +72,18 @@ export function parseReply(b, onFile = {}) {
   };
   const followers = b.followers === '' || b.followers === undefined || b.followers === null ? 0 : v.int(b.followers, { field: 'Followers', min: 0, max: 10 });
   if (followers > 0 && b.followers_agree !== true) throw bad('กรุณายืนยันค่าใช้จ่ายของผู้ติดตาม (followers fee)');
+  // One earlier artwork for the catalogue (owner 2026-11-20), next to the work made at the workshop. The image is
+  // added by the endpoint (new upload, or the one from an earlier reply).
+  const w = b.work && typeof b.work === 'object' ? b.work : {};
+  const work = {
+    title: v.text(w.title, { field: 'Artwork title', max: 300, required: true }),
+    technique: v.text(w.technique, { field: 'Artwork technique', max: 300, required: true }),
+    dimensions: v.text(w.dimensions, { field: 'Artwork size', max: 120, required: true }),
+    year: v.text(w.year, { field: 'Artwork year', max: 20, required: true }),
+    concept: v.text(w.concept, { field: 'Artwork concept', max: 2000, multiline: true })
+  };
   const data = {
+    work,
     title: v.oneOf(b.title, ['', ...TITLES], { field: 'Title', fallback: '' }),
     edu_institution: v.text(b.edu_institution, { field: 'Institution', max: 300 }),
     edu_field: v.text(b.edu_field, { field: 'Field of study', max: 300 }),

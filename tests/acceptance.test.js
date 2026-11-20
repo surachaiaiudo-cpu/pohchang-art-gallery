@@ -7,7 +7,8 @@ const good = {
   types: ['painting', 'bogus'], peer_review: 'yes', agree_conditions: true, agree_accept: true,
   signed_name: 'Somchai Jaidee', filled_by: 'coordinator',
   exhibitions: [{ year: '2025', detail: 'Solo, Bangkok' }, { year: '', detail: '' }],
-  food: { halal: true, allergy: 'peanuts' }, followers: '0', contact_address: 'Faculty of Fine Arts\nBangkok'
+  food: { halal: true, allergy: 'peanuts' },
+  work: { title: 'River', technique: 'Acrylic on canvas', dimensions: '80 × 100 cm', year: '2024' }, followers: '0', contact_address: 'Faculty of Fine Arts\nBangkok'
 };
 
 test('window: switch, then open until the end of the closing day in Bangkok', () => {
@@ -35,6 +36,9 @@ test('reply form: required answers, cleaned lists', () => {
   assert.equal(r.data.contact_address, 'Faculty of Fine Arts\nBangkok');
   assert.equal(r.core.nationality, 'TH');
   assert.equal(r.filledBy, 'coordinator');
+  assert.deepEqual(r.data.work, { title: 'River', technique: 'Acrylic on canvas', dimensions: '80 × 100 cm', year: '2024', concept: '' });
+  assert.throws(() => parseReply({ ...good, work: { ...good.work, year: '' } }, { email: 'x@y.com' }));
+  assert.throws(() => parseReply({ ...good, work: undefined }, { email: 'x@y.com' }));
   assert.throws(() => parseReply(good, {}), /อีเมล/);                        // no email on file and none typed
   assert.throws(() => parseReply({ ...good, peer_review: '' }, { email: 'x@y.com' }));
   assert.throws(() => parseReply({ ...good, types: [] }, { email: 'x@y.com' }));

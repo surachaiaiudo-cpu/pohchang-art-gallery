@@ -24,13 +24,14 @@ export const onRequestGet = handle(async ({ env, params }) => {
   const win = acceptWindow(ex);
   if (!win.open) throw new HttpError(409, win.reason);
   const a = await signable(env.DB, ex, params.id);
-  const done = await env.DB.prepare('SELECT updated_at FROM acceptances WHERE artist_id = ?').bind(a.id).first();
+  const done = await env.DB.prepare('SELECT updated_at, data FROM acceptances WHERE artist_id = ?').bind(a.id).first();
   return json({
     ok: true,
     artist: {
       id: a.id, name_th: a.name_th, name_en: a.name_en, nationality: a.nationality, affiliation: a.affiliation,
       photo: a.avatar_url || '', email_hint: maskEmail(a.email), phone_hint: maskPhone(a.phone),
-      signed_at: done ? done.updated_at : ''
+      signed_at: done ? done.updated_at : '',
+      has_work_image: !!(done && (parseJson(done.data, {}).work || {}).image_url)
     }
   });
 });
@@ -54,16 +55,36 @@ export const onRequestPost = handle(async ({ request, env, params }) => {
       await deleteFile(ex, env, photo.fileId);
       throw bad('รูปศิลปินต้องมีความละเอียดอย่างน้อย 5 ล้านพิกเซล (Photo must be at least 5 megapixels)', { photoSmall: true });
     }
-    if (ex.storage_bytes + photo.size > ex.storage_quota_bytes) {
-      await deleteFile(ex, env, photo.fileId);
-      throw new HttpError(507, 'พื้นที่เก็บรูปของนิทรรศการนี้เต็มแล้ว กรุณาติดต่อผู้จัด');
-    }
   } else if (!a.avatar_url) {
     throw bad('กรุณาแนบรูปศิลปิน (Please attach your photo)');
   }
 
+  const prev = await db.prepare('SELECT data, before, changes, times FROM acceptances WHERE artist_id = ?').bind(a.id).first();
+  // Catalogue artwork image: a new upload, else the one sent with an earlier reply.
+  let workFile = null;
+  if (b.work_file && b.work_file.public_id) {
+    workFile = await verifyUploadedFile(ex, env, b.work_file, 'work');
+    if (workFile.width && workFile.height && workFile.width * workFile.height < MIN_PHOTO_PIXELS) {
+      await deleteFile(ex, env, workFile.fileId);
+      if (photo) await deleteFile(ex, env, photo.fileId);
+      throw bad('รูปผลงานต้องมีความละเอียดอย่างน้อย 5 ล้านพิกเซล (Artwork image must be at least 5 megapixels)');
+    }
+    data.work = { ...data.work, image_url: workFile.url, image_file_id: workFile.fileId, width: workFile.width, height: workFile.height };
+  } else {
+    const old = parseJson(prev && prev.data, {}).work;
+    if (!old || !old.image_url) {
+      if (photo) await deleteFile(ex, env, photo.fileId);
+      throw bad('กรุณาแนบรูปผลงาน (Please attach the artwork image)');
+    }
+    data.work = { ...data.work, image_url: old.image_url, image_file_id: old.image_file_id, width: old.width, height: old.height };
+  }
+  const added = (photo ? photo.size : 0) + (workFile ? workFile.size : 0);
+  if (added && ex.storage_bytes + added > ex.storage_quota_bytes) {
+    if (photo) await deleteFile(ex, env, photo.fileId);
+    if (workFile) await deleteFile(ex, env, workFile.fileId);
+    throw new HttpError(507, 'พื้นที่เก็บรูปของนิทรรศการนี้เต็มแล้ว กรุณาติดต่อผู้จัด');
+  }
   const { next, changes } = coreUpdate(a, core, photo ? photo.url : '');
-  const prev = await db.prepare('SELECT before, changes, times FROM acceptances WHERE artist_id = ?').bind(a.id).first();
   const at = new Date().toISOString().slice(0, 19).replace('T', ' ');
   // Never show the private values in the change list; the staff page reads the current ones from the artist.
   const hide = (k, s) => (k === 'avatar_url' ? (s ? 'รูป' : '') : s);
@@ -85,7 +106,7 @@ export const onRequestPost = handle(async ({ request, env, params }) => {
               filled_by = excluded.filled_by, times = acceptances.times + 1, updated_at = datetime('now')`
     ).bind(a.id, ex.id, JSON.stringify(data), before, JSON.stringify(log), signedName, filledBy)
   ];
-  if (photo) stmts.push(db.prepare('UPDATE exhibitions SET storage_bytes = storage_bytes + ? WHERE id = ?').bind(photo.size, ex.id));
+  if (added) stmts.push(db.prepare('UPDATE exhibitions SET storage_bytes = storage_bytes + ? WHERE id = ?').bind(added, ex.id));
   await db.batch(stmts);
   await audit(db, ex.id, 'public', 'acceptance', { artistId: a.id, times: (prev ? prev.times : 0) + 1, changed: changes.map((c) => c.field) });
   return json({ ok: true, name: next.name_en || next.name_th, again: !!prev }, { status: 201 });

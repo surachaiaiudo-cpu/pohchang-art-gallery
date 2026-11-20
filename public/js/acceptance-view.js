@@ -42,6 +42,9 @@ function body(a, r) {
       ${row('อีเมล', a.email ? `<a href="mailto:${esc(a.email)}">${esc(a.email)}</a>` : '')}
       ${row('โทรศัพท์', esc(a.phone))}
       ${row('สถานที่ติดต่อ', d.contact_address ? esc(d.contact_address).replace(/\n/g, '<br>') : '')}
+      ${row('ผลงานสำหรับสูจิบัตร', d.work ? `${d.work.image_url ? `<a href="${esc(d.work.image_url)}" target="_blank" rel="noopener"><img src="${esc(d.work.image_url)}" alt="" class="ac-photo"></a><br>` : ''}
+        <b>${esc(d.work.title)}</b>, ${esc(d.work.year)}<br>${esc(d.work.technique)} · ${esc(d.work.dimensions)}${d.work.width ? ` <span class="small muted">(${Number(d.work.width)}×${Number(d.work.height)} px)</span>` : ''}
+        ${d.work.concept ? `<div class="small">${esc(d.work.concept).replace(/\n/g, '<br>')}</div>` : ''}` : '')}
       ${row('นิทรรศการที่สำคัญ', exh ? `<ul>${exh}</ul>` : '')}
       ${row('ประเภทผลงาน', esc((d.types || []).map((x) => TYPE[x] || x).join(', ') + (d.type_other ? ` (${d.type_other})` : '')))}
       ${row('Peer review', d.peer_review === 'yes' ? '<b>YES</b> ต้องการ' : d.peer_review === 'no' ? 'NO ไม่ต้องการ' : '')}

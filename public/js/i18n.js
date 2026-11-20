@@ -257,7 +257,19 @@ const D = {
     acErrFollowers: 'กรุณายืนยันค่าใช้จ่ายของผู้ติดตาม',
     acErrName: 'กรุณากรอกชื่อภาษาอังกฤษ',
     acErrNat: 'กรุณาเลือกสัญชาติ',
-    acOptional: 'ไม่บังคับ'
+    acOptional: 'ไม่บังคับ',
+    acWork: 'ผลงานสำหรับสูจิบัตร',
+    acWorkHint: 'ผลงานที่ท่านเคยสร้างสรรค์ 1 ชิ้น จะตีพิมพ์ในสูจิบัตรคู่กับผลงานที่สร้างในโครงการ',
+    acWorkTitle: 'ชื่อผลงาน',
+    acWorkTechnique: 'เทคนิค / วัสดุ',
+    acWorkSize: 'ขนาด',
+    acWorkSizePh: 'เช่น 80 × 100 ซม.',
+    acWorkYear: 'ปีที่สร้าง',
+    acWorkConcept: 'แนวคิดโดยย่อ (ไม่บังคับ)',
+    acWorkImage: 'รูปผลงาน',
+    acWorkOnFile: 'มีรูปผลงานจากการตอบรับครั้งก่อนแล้ว แตะเพื่อเปลี่ยน (ไม่บังคับ)',
+    acErrWork: 'กรุณากรอกชื่อ เทคนิค ขนาด และปีของผลงาน',
+    acErrWorkImage: 'กรุณาแนบรูปผลงาน'
   },
   en: {
     siteName: 'Online Art Gallery', skip: 'Skip to content', skipWorks: 'Skip to the works', loading: 'Loading…', language: 'Language',
@@ -459,7 +471,19 @@ const D = {
     acErrFollowers: 'Please confirm the followers’ fee.',
     acErrName: 'Please enter your name in English.',
     acErrNat: 'Please choose your nationality.',
-    acOptional: 'optional'
+    acOptional: 'optional',
+    acWork: 'Artwork for the catalogue',
+    acWorkHint: 'One artwork you have made before. It will be printed in the catalogue together with the work you create at the workshop.',
+    acWorkTitle: 'Title',
+    acWorkTechnique: 'Technique / medium',
+    acWorkSize: 'Size',
+    acWorkSizePh: 'e.g. 80 × 100 cm',
+    acWorkYear: 'Year',
+    acWorkConcept: 'Short concept (optional)',
+    acWorkImage: 'Artwork image',
+    acWorkOnFile: 'The image from your earlier reply will be kept. Tap to replace it (optional).',
+    acErrWork: 'Please fill in the artwork title, technique, size and year.',
+    acErrWorkImage: 'Please attach the artwork image.'
   },
   zh: {
     siteName: '线上美术馆', skip: '跳到正文', skipWorks: '跳到作品', loading: '加载中…', language: '语言',
@@ -661,7 +685,19 @@ const D = {
     acErrFollowers: '请确认随行人员费用。',
     acErrName: '请填写英文姓名。',
     acErrNat: '请选择国籍。',
-    acOptional: '可选'
+    acOptional: '可选',
+    acWork: '画册作品',
+    acWorkHint: '一件您以往创作的作品，将与您在工作坊创作的作品一同刊登在画册中。',
+    acWorkTitle: '作品名称',
+    acWorkTechnique: '技法 / 材料',
+    acWorkSize: '尺寸',
+    acWorkSizePh: '例如 80 × 100 厘米',
+    acWorkYear: '创作年份',
+    acWorkConcept: '创作理念简述（可选）',
+    acWorkImage: '作品图片',
+    acWorkOnFile: '将保留上次回复的图片，点击可更换（可选）。',
+    acErrWork: '请填写作品名称、技法、尺寸和年份。',
+    acErrWorkImage: '请上传作品图片。'
   }
 };
 
