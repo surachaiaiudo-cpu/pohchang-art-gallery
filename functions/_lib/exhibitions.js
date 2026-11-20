@@ -86,6 +86,27 @@ export function submissionWindow(ex, at = Date.now()) {
   return { open: true, phase: 'open', reason: '' };
 }
 
+// Kind of event (owner, 2026-11-20): an exhibition to view, or a workshop (artists selected and invited, then their
+// works exhibited). A workshop that is open but not yet on view goes in the home page section "เวิร์กช็อป / กิจกรรม".
+export const KINDS = ['exhibition', 'workshop'];
+
+// Where a workshop stands, for the label on its home page card. Worked out from settings that already exist:
+//   call      the open call (application) is open now
+//   during    today is within the workshop days
+//   after     the workshop days are over, works not on view yet
+//   signing   the acceptance page is open (the link itself is never public: coordinators send it, owner 2026-11-20)
+//   selecting anything before that
+// Days are Bangkok days (UTC+7).
+export function workshopPhase(ex, at = Date.now()) {
+  if (submissionWindow(ex, at).open) return 'call';
+  const day = new Date(at + 7 * 3600000).toISOString().slice(0, 10);
+  const from = ex.workshop_starts_on || '', to = ex.workshop_ends_on || from;
+  if (from && day >= from && day <= to) return 'during';
+  if (to && day > to) return 'after';
+  if (ex.accept_open && (!ex.accept_closes_on || day <= ex.accept_closes_on)) return 'signing';
+  return 'selecting';
+}
+
 export function parseOverrides(ex) {
   try {
     const o = JSON.parse(ex.theme_overrides || '{}');
@@ -130,7 +151,11 @@ export function publicExhibition(ex) {
     review_panel_size: ex.review_panel_size,
     categories: parseCategories(ex.categories),
     techniques: parseTechniques(ex.techniques),
-    submission: submissionWindow(ex)
+    submission: submissionWindow(ex),
+    kind: KINDS.includes(ex.kind) ? ex.kind : 'exhibition',
+    workshop_starts_on: ex.workshop_starts_on || '',
+    workshop_ends_on: ex.workshop_ends_on || '',
+    workshop_phase: ex.kind === 'workshop' ? workshopPhase(ex) : ''
   };
 }
 

@@ -97,6 +97,10 @@ html:not([data-design="pohchang"]) .pc-only { display: none !important; }
 [data-design="pohchang"] .call-b { border-top: 0; border-bottom: 4px solid var(--pc-lacquer); }
 [data-design="pohchang"] .call-b img { box-shadow: 10px 10px 0 var(--pc-gold); border: 3px solid var(--pc-lacquer); }
 [data-design="pohchang"] .call-b-left { align-self: flex-start; background: var(--pc-lacquer); color: var(--pc-gold); font-family: var(--pc-head); font-weight: 400; padding: 6px 20px; line-height: 1.35; margin-top: 12px; }
+[data-design="pohchang"] .ws-b .calls-b-head { background: var(--pc-lacquer); }
+[data-design="pohchang"] .ws-b .calls-b-head .rooms-b-title { color: var(--pc-gold); }
+[data-design="pohchang"] .ws-b-phase { border-radius: 0; border-width: 2px; }
+[data-design="pohchang"] .ws-b-blank { border: 3px solid var(--pc-lacquer); box-shadow: 10px 10px 0 var(--pc-gold); background: var(--pc-khoi); color: var(--pc-lacquer); font-family: var(--pc-head); }
 [data-design="pohchang"] .lobby-b .call-b .btn { border-radius: 0; font-weight: 700; box-shadow: 6px 6px 0 var(--pc-lacquer); }
 
 /* ---------- How a work reaches the wall ---------- */

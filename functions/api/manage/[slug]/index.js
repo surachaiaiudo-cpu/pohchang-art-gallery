@@ -1,6 +1,6 @@
 import { handle, json, readJson, bad } from '../../../_lib/http.js';
 import { actorOf } from '../../../_lib/auth.js';
-import { requireManager, hasStorage, audit, parseOverrides, submissionWindow } from '../../../_lib/exhibitions.js';
+import { requireManager, hasStorage, audit, parseOverrides, submissionWindow, KINDS } from '../../../_lib/exhibitions.js';
 import { PRESETS, HEADING_FONTS, ORNAMENTS, CARD_STYLES } from '../../../_lib/themes.js';
 import { recompute, reviewOpen } from '../../../_lib/review.js';
 import * as v from '../../../_lib/validate.js';
@@ -74,6 +74,9 @@ export const onRequestPut = handle(async (context) => {
   if (b.accept_open !== undefined) set.accept_open = b.accept_open ? 1 : 0;
   if (b.accept_closes_on !== undefined) set.accept_closes_on = v.dateOnly(b.accept_closes_on, { field: 'วันปิดรับการลงนามตอบรับ' });
   if (b.submit_stage !== undefined) set.submit_stage = v.oneOf(b.submit_stage, STAGE_KEYS, { field: 'ประเภทผลงานที่รับผ่านฟอร์ม' });
+  if (b.kind !== undefined) set.kind = v.oneOf(b.kind, KINDS, { field: 'ประเภทงาน' });
+  if (b.workshop_starts_on !== undefined) set.workshop_starts_on = v.dateOnly(b.workshop_starts_on, { field: 'วันเริ่มเวิร์กช็อป' });
+  if (b.workshop_ends_on !== undefined) set.workshop_ends_on = v.dateOnly(b.workshop_ends_on, { field: 'วันสิ้นสุดเวิร์กช็อป' });
   if (b.starts_on !== undefined) set.starts_on = v.dateOnly(b.starts_on, { field: 'วันเริ่มนิทรรศการ' });
   if (b.ends_on !== undefined) set.ends_on = v.dateOnly(b.ends_on, { field: 'วันสิ้นสุดนิทรรศการ' });
   if (b.submission_opens_at !== undefined) set.submission_opens_at = v.dateTime(b.submission_opens_at, { field: 'วันเปิดรับผลงาน' });
@@ -104,6 +107,9 @@ export const onRequestPut = handle(async (context) => {
   const opens = set.submission_opens_at !== undefined ? set.submission_opens_at : ex.submission_opens_at;
   const closes = set.submission_closes_at !== undefined ? set.submission_closes_at : ex.submission_closes_at;
   if (opens && closes && Date.parse(opens) >= Date.parse(closes)) throw bad('วันปิดรับต้องอยู่หลังวันเปิดรับ');
+  const wsFrom = set.workshop_starts_on !== undefined ? set.workshop_starts_on : ex.workshop_starts_on;
+  const wsTo = set.workshop_ends_on !== undefined ? set.workshop_ends_on : ex.workshop_ends_on;
+  if (wsFrom && wsTo && wsTo < wsFrom) throw bad('วันสิ้นสุดเวิร์กช็อปต้องไม่ก่อนวันเริ่ม');
 
   const keys = Object.keys(set);
   if (!keys.length) return json({ ok: true });

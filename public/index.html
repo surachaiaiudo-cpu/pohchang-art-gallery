@@ -8,9 +8,9 @@
   <meta name="description" content="นิทรรศการศิลปะออนไลน์ ที่กำลังจัดแสดงและนิทรรศการที่ผ่านมา">
   <link rel="stylesheet" href="/css/themes.css?v=7">
   <link rel="stylesheet" href="/css/base.css?v=12">
-  <link rel="stylesheet" href="/css/lobby.css?v=6">
-  <link rel="stylesheet" href="/css/lobby-pohchang.css?v=4">
-  <script type="module" src="/js/lobby.js?v=13"></script>
+  <link rel="stylesheet" href="/css/lobby.css?v=7">
+  <link rel="stylesheet" href="/css/lobby-pohchang.css?v=5">
+  <script type="module" src="/js/lobby.js?v=14"></script>
 </head>
 <body class="lobby-b">
   <a class="sr-only" href="#main" data-i18n="skip">ข้ามไปเนื้อหา</a>
@@ -25,6 +25,7 @@
       <a class="pc-brand pc-only" href="/"><span class="pc-seal" id="pc-seal" aria-hidden="true"></span><span class="pc-brand-text"><b id="pc-brand-name">หอศิลป์ออนไลน์</b><small id="pc-brand-org"></small></span></a>
       <nav class="wall-nav" aria-label="เมนูหลัก" data-i18n-aria="mainMenu">
         <a href="#now" id="nav-now" data-i18n="navNow">กำลังจัดแสดง</a>
+        <a href="#ws" id="nav-ws" data-i18n="navWs" hidden>เวิร์กช็อป / กิจกรรม</a>
         <a href="#call" id="nav-call" data-i18n="navCall" hidden>เปิดรับผลงาน</a>
         <a href="#past" id="nav-past" data-i18n="navPast" hidden>นิทรรศการที่ผ่านมา</a>
         <a href="/login" data-i18n="navStaff">สำหรับผู้จัด</a>
@@ -61,6 +62,15 @@
     <section id="now" class="rooms-b" aria-labelledby="now-title" hidden>
       <h2 class="wrap rooms-b-title" id="now-title" data-i18n="navNow">กำลังจัดแสดง</h2>
       <div id="now-list"></div>
+    </section>
+    <!-- Workshops / events (owner, 2026-11-20): workshops not on view yet, with their poster and where they stand.
+         Selection-round works are never shown here. -->
+    <section id="ws" class="calls-b ws-b" aria-labelledby="ws-title" hidden>
+      <div class="calls-b-head"><div class="wrap">
+        <h2 class="rooms-b-title" id="ws-title" data-i18n="navWs">เวิร์กช็อป / กิจกรรม</h2>
+        <p class="calls-lead" data-i18n="wsLead">งานที่คัดเลือกศิลปินเข้าร่วม ผลงานจะขึ้นจัดแสดงเมื่อถึงวันเปิดนิทรรศการ</p>
+      </div></div>
+      <div id="ws-list"></div>
     </section>
     <section id="call" class="calls-b" aria-labelledby="call-title" hidden>
       <div class="calls-b-head"><div class="wrap">
