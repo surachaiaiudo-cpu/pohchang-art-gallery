@@ -252,6 +252,22 @@ const STEPS = [
       // Last, because needed() looks for it.
       "ALTER TABLE exhibitions ADD COLUMN kind TEXT NOT NULL DEFAULT 'exhibition'"
     ]
+  },
+  {
+    // Owner's choice 2026-11-20: exhibitions that already use the workshop tools (artist numbers / channels / withdrawn,
+    // coordinators, acceptance replies) become workshops once, so their roster button does not disappear.
+    // A separate step with a marker row, because 0021 may already have run from the preview (shared D1).
+    name: '0022_kind_workshops',
+    needed: async (db) => !(await db.prepare(
+      "SELECT 1 AS x FROM site_settings WHERE key = 'migration:0022_kind_workshops'"
+    ).first()),
+    sql: [
+      `UPDATE exhibitions SET kind = 'workshop' WHERE kind = 'exhibition' AND (
+         id IN (SELECT exhibition_id FROM artists WHERE channel > 0 OR artist_no IS NOT NULL OR withdrawn = 1 OR coordinator_id IS NOT NULL)
+         OR id IN (SELECT exhibition_id FROM exhibition_members WHERE member_role = 'coordinator')
+         OR id IN (SELECT exhibition_id FROM acceptances))`,
+      "INSERT OR IGNORE INTO site_settings (key, value) VALUES ('migration:0022_kind_workshops', '{}')"
+    ]
   }
 ];
 

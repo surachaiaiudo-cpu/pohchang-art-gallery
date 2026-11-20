@@ -278,7 +278,7 @@ the settings — owner: the admin uploads it) or a plain block, **never selectio
 and a label from `workshopPhase()` (exhibitions.js): call (application open → "สมัครเข้าร่วม" button) > during > after >
 signing (acceptance page open; **the acceptance link is never shown on the home page — coordinators send it**, owner
 2026-11-20) > selecting. Switching on "จัดแสดง" moves it to "กำลังจัดแสดง" (later: automatically on the opening day,
-part F). Archived workshops show a "เวิร์กช็อป" tag in "นิทรรศการที่ผ่านมา". Tests: `tests/workshop-phase.test.js`.
+part F). Migration `0022_kind_workshops` (once, marker row) set kind = workshop for exhibitions already using roster / coordinators / acceptance (owner 2026-11-20). Archived workshops show a "เวิร์กช็อป" tag in "นิทรรศการที่ผ่านมา". Tests: `tests/workshop-phase.test.js`.
 lobby.css v=7, lobby-pohchang.css v=5, lobby.js v=14, manage.js v=5. For an ordinary exhibition (kind `exhibition`) the workshop-only tools are hidden, data kept (owner 2026-11-20): manage page "รายชื่อศิลปิน / เลขที่" button, admin drawer coordinator box (with a hint), staff home "ศิลปินที่ฉันดูแล" for managers. Direct URLs still work.
 
 ### 6.8 Importing old events
