@@ -409,7 +409,7 @@ signature = typed name + tick; English first, also Thai and Chinese; open until 
   reply, `changes` = [{field, from, to, at}], `signed_name`, `filled_by`, `times`).
 - `functions/_lib/acceptance.js`: window, validation (`parseReply`), `coreUpdate` (blank email / phone / native name = keep),
   masking. Signable = `roster='selected' AND withdrawn=0`. The page works for a draft exhibition while the switch is on.
-- Public: `/accept/<slug>` (`accept.html`, `js/accept.js`, `css/accept.css`, i18n keys `ac*`); API `/api/x/:slug/accept`
+- Public (first version, see the next point): `/accept/<slug>` (`accept.html`, `js/accept.js`, `css/accept.css`, i18n keys `ac*`); API `/api/x/:slug/accept`
   (`?q=` name search, ≤8, rate-limited), `/ticket` (Turnstile, ticket scoped `<slug>#accept`), `/upload-auth` (artist
   photo), `/:id` GET (prefill; email/phone only masked; a previous reply is never returned) and POST (sign; again until
   closing = replaces the reply, `times`+1). Photo required if none on file; ≥5 MP checked in the browser and the server.
@@ -418,6 +418,10 @@ signature = typed name + tick; English first, also Thai and Chinese; open until 
 - Back office: roster page card (switch, closing date, link + copy, signed count), "แบบตอบรับ" dialog
   (`js/acceptance-view.js`, API `/api/coord/:slug/acceptance/:id`, any admin/manager/coordinator) with "ศิลปินแก้ข้อมูล";
   coordinator page shows the link and the dialog.
+- Number and name only (owner 2026-11-20, later): numbers are given (roster button) **before** the invitation letter;
+  search by number ("015", "15") or name; the form shows only number + name (name editable) and the artist records
+  everything else (email required; nationality, photo chosen by the artist; blank phone / affiliation keep staff data).
+  Nothing else of the artist record is returned publicly (no masked email/phone, no photo).
 - Catalogue artwork (owner 2026-11-20): one earlier artwork per artist, required — title, technique, size, year, optional
   concept, image ≥ 5 MP (Cloudinary folder `work`). Kept in `acceptances.data.work` (with image_url / file id / px), not
   as a `works` row, so it never reaches reviewers or public pages; the catalogue step (part F) reads it from there.

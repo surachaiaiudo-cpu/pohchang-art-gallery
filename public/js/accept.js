@@ -2,7 +2,7 @@
 import { api, esc, applyTheme, toast, icons, slugFromPath } from './core.js';
 import { imageProblem, uploadImage, fitForUpload } from './upload.js';
 import { t, pick, fmtDate, applyStatic, mountSwitcher, localError, locale } from './i18n.js';
-import { countryOptions, countryName } from './countries.js';
+import { countryOptions } from './countries.js';
 
 applyStatic();
 mountSwitcher(document.getElementById('lang'));
@@ -12,6 +12,7 @@ const base = `/api/x/${encodeURIComponent(slug)}/accept`;
 const $ = (id) => document.getElementById(id);
 const checked = (name) => (document.querySelector(`input[name="${name}"]:checked`) || {}).value || '';
 const MIN_PIXELS = 5e6;
+const fmtNo = (n) => (n ? String(n).padStart(3, '0') : '');
 
 let ex = null;
 let artist = null;
@@ -51,14 +52,13 @@ let searchSeq = 0;
 async function search() {
   const q = $('q').value.trim();
   const seq = ++searchSeq;
-  if (q.length < 2) { $('results').innerHTML = ''; return; }
+  if (q.length < 2 && !/^\d$/.test(q)) { $('results').innerHTML = ''; return; }
   try {
     const d = await api(`${base}?q=${encodeURIComponent(q)}`);
     if (seq !== searchSeq) return;
     $('results').innerHTML = d.results.length
       ? d.results.map((a) => `<li><button type="button" class="ac-hit" data-id="${Number(a.id)}">
-          <span><strong>${esc(a.name_en || a.name_th)}</strong>${a.name_en && a.name_th && a.name_th !== a.name_en ? ` <span class="muted">${esc(a.name_th)}</span>` : ''}
-          <span class="small muted">${esc(countryName(a.nationality, locale))}</span>
+          <span>${a.artist_no ? `<span class="ac-no">${esc(fmtNo(a.artist_no))}</span>` : ''}<strong>${esc(a.name_en || a.name_th)}</strong>${a.name_en && a.name_th && a.name_th !== a.name_en ? ` <span class="muted">${esc(a.name_th)}</span>` : ''}
           ${a.signed ? `<span class="ac-tag">✓ ${esc(t('acSignedTag'))}</span>` : ''}</span>
           <span class="btn btn-sm">${esc(t('acPick'))}</span></button></li>`).join('')
       : `<li class="muted">${esc(t('acNoMatch'))}</li>`;
@@ -85,11 +85,10 @@ function resetDrop(key) {
     $('wimg-req').hidden = kept;
     return;
   }
-  const has = !!(artist && artist.photo);
-  $('photo').classList.toggle('has-image', has);
-  $('photo').innerHTML = has
-    ? `<img src="${esc(artist.photo)}" alt=""><span class="drop-text">${esc(t('acPhotoOnFile'))}</span>`
-    : `${icons.upload}<span class="drop-text">${esc(t('tapPhoto'))}</span>`;
+  // The photo is never shown here (anyone can find the name); signing again may keep the one sent before.
+  const has = !!(artist && artist.has_photo);
+  $('photo').classList.remove('has-image');
+  $('photo').innerHTML = `${icons.upload}<span class="drop-text">${esc(t(has ? 'acPhotoOnFile' : 'tapPhoto'))}</span>`;
   $('photo-req').hidden = has;
 }
 
@@ -99,16 +98,13 @@ async function openArtist(id) {
     artist = d.artist;
   } catch (e) { toast(localError(e.message), 'error'); return; }
   $('form').reset();
+  $('who-no').textContent = fmtNo(artist.artist_no);
+  $('who-no').hidden = !artist.artist_no;
   $('who').textContent = artist.name_en || artist.name_th;
   $('again').hidden = !artist.signed_at;
   if (artist.signed_at) $('again').textContent = t('acAgain', { d: fmtDate(`${artist.signed_at.replace(' ', 'T')}Z`) });
   $('name_en').value = artist.name_en || '';
   $('name_th').value = artist.name_th && artist.name_th !== artist.name_en ? artist.name_th : '';
-  $('nationality').value = artist.nationality || '';
-  $('affiliation').value = artist.affiliation || '';
-  $('email-hint').textContent = artist.email_hint ? t('acKeep', { v: artist.email_hint }) : '';
-  $('phone-hint').textContent = artist.phone_hint ? t('acKeep', { v: artist.phone_hint }) : '';
-  $('email-req').hidden = !!artist.email_hint;
   $('exhibitions').innerHTML = exRow() + exRow() + exRow();
   $('type-other-wrap').hidden = true;
   $('followers-agree-wrap').hidden = true;
@@ -190,10 +186,10 @@ function collect() {
 function validate(d) {
   if (!d.name_en) return ['name_en', t('acErrName')];
   if (!d.nationality) return ['nationality', t('acErrNat')];
-  if (!d.email && !artist.email_hint) return ['email', t('acErrEmail')];
+  if (!d.email) return ['email', t('acErrEmail')];
   if (d.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) return ['email', t('errEmail')];
   if (up.photo.busy) return ['photo', t('uploading')];
-  if (!d.photo_file && !artist.photo) return ['photo', t('acErrPhoto')];
+  if (!d.photo_file && !artist.has_photo) return ['photo', t('acErrPhoto')];
   const wk = d.work;
   if (!wk.title) return ['w_title', t('acErrWork')];
   if (!wk.technique) return ['w_technique', t('acErrWork')];
