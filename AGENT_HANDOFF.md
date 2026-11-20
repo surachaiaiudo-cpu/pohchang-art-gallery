@@ -279,7 +279,7 @@ and a label from `workshopPhase()` (exhibitions.js): call (application open → 
 signing (acceptance page open; **the acceptance link is never shown on the home page — coordinators send it**, owner
 2026-11-20) > selecting. Switching on "จัดแสดง" moves it to "กำลังจัดแสดง" (later: automatically on the opening day,
 part F). Archived workshops show a "เวิร์กช็อป" tag in "นิทรรศการที่ผ่านมา". Tests: `tests/workshop-phase.test.js`.
-lobby.css v=7, lobby-pohchang.css v=5, lobby.js v=14, manage.js v=4.
+lobby.css v=7, lobby-pohchang.css v=5, lobby.js v=14, manage.js v=5. For an ordinary exhibition (kind `exhibition`) the workshop-only tools are hidden, data kept (owner 2026-11-20): manage page "รายชื่อศิลปิน / เลขที่" button, admin drawer coordinator box (with a hint), staff home "ศิลปินที่ฉันดูแล" for managers. Direct URLs still work.
 
 ### 6.8 Importing old events
 `/admin` → "นำเข้างานจากระบบเดิม": preview (`step: preview`), then create a DRAFT exhibition and import in chunks of

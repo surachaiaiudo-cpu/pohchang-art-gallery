@@ -85,6 +85,9 @@ async function loadOverview() {
   $('captions-link').href = `/manage/${encodeURIComponent(S.ex.slug)}/captions`;
   $('report-link').href = `/manage/${encodeURIComponent(S.ex.slug)}/report`;
   $('roster-link').href = `/manage/${encodeURIComponent(S.ex.slug)}/roster`;
+  // Workshop-only tools (roster, numbers, coordinators, acceptance) are hidden for an ordinary exhibition (owner,
+  // 2026-11-20); nothing is deleted, and they come back when the kind is set to workshop again.
+  $('roster-link').hidden = S.ex.kind !== 'workshop';
   const quota = S.ex.storage_quota_bytes || 1;
   $('stats').innerHTML = `
     <div class="stat"><b>${d.counts.submitted}</b><span>รอคัดกรอง</span></div>

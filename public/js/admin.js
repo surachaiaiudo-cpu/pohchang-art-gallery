@@ -73,7 +73,8 @@ function exEditor(e) {
       <div class="field"><span class="label">ผู้ดูแลนิทรรศการนี้</span>
         ${staffUsers.map((u) => `<label class="check"><input type="checkbox" name="staff" value="${u.id}" ${staffIds.has(u.id) ? 'checked' : ''}> ${esc(u.name)} <span class="muted small">${esc(u.email)}</span></label>`).join('') || '<p class="muted">ยังไม่มีผู้ใช้ เพิ่มได้ที่แท็บผู้ใช้</p>'}
       </div>
-      <div class="field"><span class="label">ผู้ประสานงานของนิทรรศการนี้</span>
+      ${e.kind === 'workshop' ? '' : '<p class="hint">ผู้ประสานงาน รายชื่อศิลปิน และหน้าลงนามตอบรับ ใช้กับงานประเภท "เวิร์กช็อป / กิจกรรม" เท่านั้น (ตั้งประเภทงานในหน้าจัดการ → ตั้งค่านิทรรศการ)</p>'}
+      <div class="field"${e.kind === 'workshop' ? '' : ' hidden'}><span class="label">ผู้ประสานงานของนิทรรศการนี้</span>
         <span class="hint">เห็นเฉพาะหน้า "ศิลปินที่ฉันดูแล" ของนิทรรศการนี้ ไม่เข้าหน้าจัดการ ผู้ดูแลนิทรรศการกำหนดศิลปินให้แต่ละคนในหน้า "รายชื่อศิลปิน" · ผู้ดูแลนิทรรศการเป็นผู้ประสานงานด้วยโดยอัตโนมัติ (ติ๊กให้แล้ว) — ทำได้ทั้งสองอย่าง</span>
         ${coordUsers.map((u) => `<label class="check"><input type="checkbox" name="coord" value="${u.id}" ${coordIds.has(u.id) || staffIds.has(u.id) ? 'checked' : ''}${staffIds.has(u.id) ? ' disabled' : ''}> ${esc(u.name)} <span class="muted small">${esc(u.email)}</span><span class="small muted" data-both="${u.id}"${staffIds.has(u.id) ? '' : ' hidden'}> — เป็นผู้ดูแลอยู่แล้ว จึงเป็นผู้ประสานงานด้วย</span></label>`).join('') || '<p class="muted">ยังไม่มีผู้ใช้ เพิ่มได้ที่แท็บผู้ใช้ (บทบาท "ผู้ดูแลนิทรรศการ" แล้วไม่ต้องเลือกนิทรรศการ)</p>'}
       </div>
@@ -213,7 +214,7 @@ async function main() {
     $('my-list').innerHTML = me.exhibitions.length
       ? me.exhibitions.map((e) => `<div class="card row" style="justify-content:space-between"><div><strong>${esc(e.title_th)}</strong> <span class="tag">${esc(STATUS_TH[e.status] || e.status)}</span>${e.member_role === 'coordinator' ? ' <span class="tag">ผู้ประสานงาน</span>' : ''}</div>${e.member_role === 'coordinator'
         ? `<a class="btn" href="/coord/${encodeURIComponent(e.slug)}">ศิลปินที่ฉันดูแล</a>`
-        : `<div class="row"><a class="btn btn-ghost" href="/coord/${encodeURIComponent(e.slug)}">ศิลปินที่ฉันดูแล</a><a class="btn" href="/manage/${encodeURIComponent(e.slug)}">จัดการ</a></div>`}</div>`).join('')
+        : `<div class="row">${e.kind === 'workshop' ? `<a class="btn btn-ghost" href="/coord/${encodeURIComponent(e.slug)}">ศิลปินที่ฉันดูแล</a>` : ''}<a class="btn" href="/manage/${encodeURIComponent(e.slug)}">จัดการ</a></div>`}</div>`).join('')
       : '<p class="muted">ยังไม่ได้รับมอบหมายให้ดูแลนิทรรศการ กรุณาติดต่อผู้ดูแลหอศิลป์</p>';
     return;
   }
