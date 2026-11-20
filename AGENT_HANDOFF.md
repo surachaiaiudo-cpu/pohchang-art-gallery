@@ -269,6 +269,18 @@ Loops run only while on screen (IntersectionObserver adds `.running`; strip pict
 a tap pauses the name band, reduced motion keeps them still. Strip pictures get their box from `w`/`h`, which
 `GET /api/exhibitions` now returns with each sample. lobby.css v=6, lobby-pohchang.css v=4, lobby.js v=13.
 
+**Home page in three parts (owner, 2026-11-20; branch `home-sections`):** กำลังจัดแสดง / **เวิร์กช็อป / กิจกรรม** /
+นิทรรศการที่ผ่านมา (the open-call band stays between them for ordinary exhibitions). `exhibitions.kind`
+(`exhibition` default | `workshop`) and `workshop_starts_on` / `workshop_ends_on` (migration `0021_kind`), set in
+`/manage/<slug>` → ข้อมูลนิทรรศการ → "ประเภทงาน". A workshop with status `open` and `on_view` off is listed only under
+"เวิร์กช็อป / กิจกรรม" (`#ws`, `wsCard()` in lobby.js; not repeated under open calls): its cover (`hero_url`, uploaded in
+the settings — owner: the admin uploads it) or a plain block, **never selection-round works**, the workshop days, venue,
+and a label from `workshopPhase()` (exhibitions.js): call (application open → "สมัครเข้าร่วม" button) > during > after >
+signing (acceptance page open; **the acceptance link is never shown on the home page — coordinators send it**, owner
+2026-11-20) > selecting. Switching on "จัดแสดง" moves it to "กำลังจัดแสดง" (later: automatically on the opening day,
+part F). Archived workshops show a "เวิร์กช็อป" tag in "นิทรรศการที่ผ่านมา". Tests: `tests/workshop-phase.test.js`.
+lobby.css v=7, lobby-pohchang.css v=5, lobby.js v=14, manage.js v=4.
+
 ### 6.8 Importing old events
 `/admin` → "นำเข้างานจากระบบเดิม": preview (`step: preview`), then create a DRAFT exhibition and import in chunks of
 40 (`step: create`, `step: chunk` with a double-send guard). Reads only the old site's public

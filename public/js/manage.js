@@ -414,6 +414,10 @@ function fillSettings() {
   const canArchive = S.me && S.me.role === 'admin';
   $('s-status').innerHTML = Object.keys(STATUS_TH).filter((k) => k !== 'archived' || canArchive || ex.status === 'archived')
     .map((k) => `<option value="${k}" ${k === ex.status ? 'selected' : ''}>${esc(`${STATUS_TH[k]} — ${STATUS_HINT[k]}`)}</option>`).join('');
+  $('s-kind').value = ex.kind === 'workshop' ? 'workshop' : 'exhibition';
+  $('s-ws_from').value = ex.workshop_starts_on || '';
+  $('s-ws_to').value = ex.workshop_ends_on || '';
+  $('s-ws-dates').hidden = $('s-kind').value !== 'workshop';
   $('s-on_view').checked = !!ex.on_view;
   $('s-accepting').checked = !!ex.accepting;
   $('s-starts_on').value = ex.starts_on || '';
@@ -487,6 +491,7 @@ async function saveSettings(e) {
         subtitle_th: v('s-subtitle_th'), subtitle_en: v('s-subtitle_en'), subtitle_zh: v('s-subtitle_zh'),
         venue: v('s-venue'), statement_th: v('s-statement_th'), statement_en: v('s-statement_en'), statement_zh: v('s-statement_zh'), status: v('s-status'), on_view: $('s-on_view').checked, accepting: $('s-accepting').checked,
         starts_on: v('s-starts_on'), ends_on: v('s-ends_on'),
+        kind: v('s-kind'), workshop_starts_on: v('s-ws_from'), workshop_ends_on: v('s-ws_to'),
         submission_opens_at: fromLocalInput(v('s-opens')), submission_closes_at: fromLocalInput(v('s-closes')),
         max_works_per_artist: Number(v('s-max') || 3),
         categories: v('s-categories'), techniques: v('s-techniques'),
@@ -649,6 +654,7 @@ $('cl-form').addEventListener('submit', async (e) => {
     renderStorage(d.usage, d.warning);
   } catch (err) { $('cl-err').textContent = err.message; }
 });
+$('s-kind').addEventListener('change', () => { $('s-ws-dates').hidden = $('s-kind').value !== 'workshop'; });
 $('hero-pick').addEventListener('click', () => pickImage(async (file) => {
   try {
     $('hero-state').textContent = 'กำลังอัปโหลด…';

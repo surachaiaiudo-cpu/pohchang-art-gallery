@@ -208,6 +208,7 @@ function room(e) {
   const shown = esc(works.join(' '));
   const strip = stripHtml(e, works);
   const text = `
+        ${e.kind === 'workshop' ? `<span class="room-b-tag">${esc(t('wsTag'))}</span>` : ''}
         <span class="room-b-name">${esc(title)}</span>
         ${other ? `<span class="room-b-other">${esc(other)}</span>` : ''}
         <span class="room-b-meta">${esc(roomMeta(e))}</span>
@@ -256,6 +257,39 @@ function callCard(e) {
       ${left ? `<span class="call-b-left">${esc(left)}</span>` : ''}
       <span class="call-b-when">${esc([when, e.venue, e.work_count ? t('sentSoFar', { n: e.work_count }) : ''].filter(Boolean).join(' · '))}</span>
       <a class="btn btn-lg" href="${base}/submit">${esc(t('callSubmit'))}</a>
+    </div>
+  </div></div>`;
+}
+
+// ---------- Workshops / events (owner, 2026-11-20) ----------
+// A workshop that is open but not on view yet: its poster (set by the admin in the exhibition settings), never the
+// selection-round works; a label for where it stands; the workshop days. The acceptance link is not shown here:
+// coordinators send it to the selected artists (owner, 2026-11-20).
+const dayRange = (a, b) => (a ? `${fmtDate(a)}${b && b !== a ? ` – ${fmtDate(b)}` : ''}` : '');
+function wsCard(e) {
+  const base = `/e/${encodeURIComponent(e.slug)}`;
+  const title = pick(e, 'title'), other = pickOther(e, 'title');
+  const phase = e.workshop_phase || 'selecting';
+  const days = dayRange(e.workshop_starts_on, e.workshop_ends_on);
+  let left = '';
+  if (phase === 'call') {
+    const close = Date.parse(e.submission_closes_at || '');
+    if (close) { const n = Math.floor((close - Date.now()) / DAY); left = n < 1 ? t('closesToday') : t('daysLeft', { n }); }
+  }
+  const info = [days ? t('wsDates', { d: days }) : '', e.venue].filter(Boolean).join(' · ');
+  const poster = e.hero_url
+    ? `<a href="${base}" tabindex="-1" aria-hidden="true"><img src="${esc(img(e.hero_url, 700))}" alt="" loading="lazy"></a>`
+    : `<a class="ws-b-blank" href="${base}" tabindex="-1" aria-hidden="true"><span>${esc(t('wsTag'))}</span></a>`;
+  return `<div class="call-b ws-card" data-phase="${esc(phase)}" ${look(e)}><div class="wrap call-b-in">
+    ${poster}
+    <div class="call-b-text">
+      <span class="ws-b-phase">${esc(t(`wsPhase_${phase}`))}${left ? ` · ${esc(left)}` : ''}</span>
+      <a class="call-b-name" href="${base}">${esc(title)}</a>
+      ${other ? `<span class="call-b-when">${esc(other)}</span>` : ''}
+      ${info ? `<span class="call-b-when">${esc(info)}</span>` : ''}
+      ${phase === 'call'
+        ? `<a class="btn btn-lg" href="${base}/submit">${esc(t('wsApply'))}</a>`
+        : `<a class="btn btn-lg btn-ghost" href="${base}">${esc(t('wsMore'))} →</a>`}
     </div>
   </div></div>`;
 }
@@ -382,17 +416,24 @@ async function main() {
     // Owner's order (2026-10-25): on view → open call → past. An exhibition may be in both of the
     // first two. A call that has not opened yet or has ended is not listed under "open call".
     const deadline = (e) => Date.parse(e.submission_closes_at || '') || 8.64e15;
+    // Three parts (owner, 2026-11-20): on view / workshops & events / past. A workshop not on view yet sits only under
+    // workshops (its application, if open, is on its own card), so it is not listed again under open calls.
     const now = exhibitions.filter((e) => e.status === 'open' && e.on_view);
-    const calls = exhibitions.filter((e) => e.status === 'open' && e.submission && e.submission.open).sort((a, b) => deadline(a) - deadline(b));
+    const ws = exhibitions.filter((e) => e.status === 'open' && !e.on_view && e.kind === 'workshop')
+      .sort((a, b) => (a.workshop_starts_on || '9999').localeCompare(b.workshop_starts_on || '9999'));
+    const calls = exhibitions.filter((e) => e.status === 'open' && e.submission && e.submission.open && !ws.includes(e)).sort((a, b) => deadline(a) - deadline(b));
     const past = exhibitions.filter((e) => e.status === 'archived');
-    loadFonts(lookFonts([...now, ...calls, ...past]));
+    loadFonts(lookFonts([...now, ...ws, ...calls, ...past]));
     $('now-list').innerHTML = now.map(room).join('');
+    $('ws-list').innerHTML = ws.map(wsCard).join('');
     $('call-list').innerHTML = calls.map(callCard).join('');
     $('past-list').innerHTML = past.map(room).join('');
     mountStrips([...now, ...past]);
-    pohchangExtras(now, calls, past);
+    pohchangExtras(now, calls, [...ws, ...past]);
     $('call-title').textContent = calls.length > 1 ? t('callsTitle', { n: calls.length }) : t('navCall');
     $('now').hidden = !now.length;
+    $('ws').hidden = !ws.length;
+    $('nav-ws').hidden = !ws.length;
     $('call').hidden = !calls.length;
     $('past').hidden = !past.length;
     $('nav-now').hidden = !now.length;
@@ -400,7 +441,7 @@ async function main() {
     $('nav-past').hidden = !past.length;
     $('hero-submit').hidden = !calls.length;
     $('loading').hidden = true;
-    if (!now.length && !calls.length && !past.length) { $('loading').hidden = false; $('loading').textContent = t('noNow'); }
+    if (!now.length && !ws.length && !calls.length && !past.length) { $('loading').hidden = false; $('loading').textContent = t('noNow'); }
   } catch (e) {
     $('loading').innerHTML = `<span class="error-text">${esc(localError(e.message))}</span>`;
   }

@@ -239,6 +239,19 @@ const STEPS = [
       )`,
       'CREATE INDEX IF NOT EXISTS idx_accept_ex ON acceptances(exhibition_id)'
     ]
+  },
+  {
+    // Kind of event (owner, 2026-11-20): exhibition | workshop, and the workshop's own days, for the home page sections.
+    name: '0021_kind',
+    needed: async (db) => !(await db.prepare(
+      "SELECT 1 AS x FROM pragma_table_info('exhibitions') WHERE name = 'kind'"
+    ).first()),
+    sql: [
+      'ALTER TABLE exhibitions ADD COLUMN workshop_starts_on TEXT',
+      'ALTER TABLE exhibitions ADD COLUMN workshop_ends_on TEXT',
+      // Last, because needed() looks for it.
+      "ALTER TABLE exhibitions ADD COLUMN kind TEXT NOT NULL DEFAULT 'exhibition'"
+    ]
   }
 ];
 
