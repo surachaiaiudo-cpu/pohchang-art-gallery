@@ -34,3 +34,17 @@ tr.im-skip td { background: #f6f3ee; color: var(--muted); }
 .ro-table .ro-coord select { max-width: 11em; }
 .co-sum th, .co-sum td { text-align: center; }
 .co-sum th:first-child, .co-sum td:first-child { text-align: left; }
+
+/* Acceptance (ลงนามตอบรับ) */
+.linkish { background: none; border: 0; padding: 0; color: var(--accent, #2b59c3); text-decoration: underline; cursor: pointer; font: inherit; }
+.ac-link { padding: 6px 10px; background: var(--surface-2, #f4f4f4); border-radius: 6px; word-break: break-all; }
+.ac-dialog { width: min(760px, 94vw); max-height: 90vh; border: 0; border-radius: 12px; padding: 24px; box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+.ac-dialog::backdrop { background: rgba(0,0,0,.4); }
+.ac-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+.ac-table th, .ac-table td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--line, #e5e5e5); }
+.ac-table th { width: 170px; font-weight: 600; color: var(--muted, #666); }
+.ac-table ul { margin: 0; padding-left: 1.1em; }
+.ac-photo { max-width: 160px; max-height: 160px; border-radius: 6px; }
+.ac-changes { border: 1px solid #f0d79a; background: #fff8e6; border-radius: 8px; padding: 10px 14px; margin: 10px 0; }
+.ac-changes h3 { margin: 0 0 6px; font-size: 1rem; }
+.ac-changes ul { margin: 0; padding-left: 1.1em; }

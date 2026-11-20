@@ -57,18 +57,22 @@ export async function fitForUpload(file, maxBytes = 10 * 1024 * 1024, maxPixels 
 // Resolves with the fields our server needs to verify the upload.
 export function uploadImage(file, auth, onProgress = () => {}) {
   if (auth.fake) {
-    return new Promise((resolve) => {
+    // Local testing only: report the file's real size so pixel checks behave as with Cloudinary.
+    const dims = typeof createImageBitmap === 'function'
+      ? createImageBitmap(file).then((b) => ({ width: b.width, height: b.height })).catch(() => ({ width: 1600, height: 1200 }))
+      : Promise.resolve({ width: 1600, height: 1200 });
+    return dims.then(({ width, height }) => new Promise((resolve) => {
       let p = 0;
       const t = setInterval(() => {
         p += 25; onProgress(Math.min(p, 100));
         if (p >= 100) {
           clearInterval(t);
           const id = `${auth.folder}/fake${Math.random().toString(36).slice(2, 10)}`;
-          resolve({ public_id: id, version: '1', signature: 'fake', format: 'jpg', bytes: file.size, width: 1600, height: 1200,
+          resolve({ public_id: id, version: '1', signature: 'fake', format: 'jpg', bytes: file.size, width, height,
             url: `/api/dev/placeholder?seed=${encodeURIComponent(id)}` });
         }
       }, 120);
-    });
+    }));
   }
   return new Promise((resolve, reject) => {
     const form = new FormData();

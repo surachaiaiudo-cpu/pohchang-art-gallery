@@ -6,8 +6,8 @@
   <meta name="robots" content="noindex">
   <title>รายชื่อศิลปิน</title>
   <link rel="stylesheet" href="/css/app.css?v=5">
-  <link rel="stylesheet" href="/css/roster.css?v=5">
-  <script type="module" src="/js/roster.js?v=12"></script>
+  <link rel="stylesheet" href="/css/roster.css?v=6">
+  <script type="module" src="/js/roster.js?v=14"></script>
 </head>
 <body>
   <header class="topbar" id="topbar"></header>
@@ -18,6 +18,21 @@
     </div>
 
     <div class="ro-stats" id="stats"></div>
+
+    <section class="card" id="accept-card" hidden>
+      <h2 style="margin-top:0">หน้าลงนามตอบรับ</h2>
+      <p class="small muted" style="margin-top:0">ศิลปินที่ <b>ผ่าน</b> ค้นหาชื่อตัวเองแล้วกรอกแบบตอบรับ (อังกฤษ / ไทย / จีน) ใครกรอกให้ก็ได้ ระบบบันทึกว่าใครกรอก
+        ข้อมูลที่ศิลปินแก้จะใช้ทันที และแสดงว่าแก้อะไรใน “แบบตอบรับ”</p>
+      <div class="row" style="gap:12px;align-items:flex-end;flex-wrap:wrap">
+        <label class="check"><input type="checkbox" id="ac-open"> เปิดให้ลงนาม</label>
+        <div class="field" style="margin:0"><label for="ac-closes">ลงนามได้ถึงวันที่ (สิ้นวัน เวลาไทย)</label><input id="ac-closes" type="date" style="width:auto"></div>
+        <button class="btn btn-sm" type="button" id="ac-save">บันทึก</button>
+      </div>
+      <p class="small" id="ac-state" style="margin:12px 0 6px"></p>
+      <div class="row" style="gap:8px;flex-wrap:wrap"><code id="ac-link" class="ac-link"></code>
+        <button class="btn btn-ghost btn-sm" type="button" id="ac-copy">คัดลอกลิงก์</button>
+        <a class="btn btn-ghost btn-sm" id="ac-visit" target="_blank" rel="noopener">เปิดดูหน้า</a></div>
+    </section>
 
     <section class="card" id="coord-sum" hidden></section>
 

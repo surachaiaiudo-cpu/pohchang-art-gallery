@@ -70,6 +70,9 @@ export const onRequestPut = handle(async (context) => {
   }
   if (b.on_view !== undefined) set.on_view = b.on_view ? 1 : 0;
   if (b.accepting !== undefined) set.accepting = b.accepting ? 1 : 0;
+  // Acceptance page (ลงนามตอบรับ): switch + last day (open until the end of that day, Bangkok time).
+  if (b.accept_open !== undefined) set.accept_open = b.accept_open ? 1 : 0;
+  if (b.accept_closes_on !== undefined) set.accept_closes_on = v.dateOnly(b.accept_closes_on, { field: 'วันปิดรับการลงนามตอบรับ' });
   if (b.submit_stage !== undefined) set.submit_stage = v.oneOf(b.submit_stage, STAGE_KEYS, { field: 'ประเภทผลงานที่รับผ่านฟอร์ม' });
   if (b.starts_on !== undefined) set.starts_on = v.dateOnly(b.starts_on, { field: 'วันเริ่มนิทรรศการ' });
   if (b.ends_on !== undefined) set.ends_on = v.dateOnly(b.ends_on, { field: 'วันสิ้นสุดนิทรรศการ' });

@@ -215,6 +215,30 @@ const STEPS = [
       "SELECT 1 AS x FROM pragma_table_info('users') WHERE name = 'password_enc'"
     ).first()),
     sql: ["ALTER TABLE users ADD COLUMN password_enc TEXT NOT NULL DEFAULT ''"]
+  },
+  {
+    // Acceptance page (owner, 2026-11-20): open switch + closing day on exhibitions; the reply form per artist.
+    name: '0020_acceptance',
+    needed: async (db) => !(await db.prepare(
+      "SELECT 1 AS x FROM sqlite_master WHERE type = 'table' AND name = 'acceptances'"
+    ).first()),
+    sql: [
+      'ALTER TABLE exhibitions ADD COLUMN accept_open INTEGER NOT NULL DEFAULT 0',
+      'ALTER TABLE exhibitions ADD COLUMN accept_closes_on TEXT',
+      `CREATE TABLE acceptances (
+        artist_id INTEGER PRIMARY KEY REFERENCES artists(id) ON DELETE CASCADE,
+        exhibition_id INTEGER NOT NULL REFERENCES exhibitions(id) ON DELETE CASCADE,
+        data TEXT NOT NULL DEFAULT '{}',
+        before TEXT NOT NULL DEFAULT '{}',
+        changes TEXT NOT NULL DEFAULT '[]',
+        signed_name TEXT NOT NULL DEFAULT '',
+        filled_by TEXT NOT NULL DEFAULT 'self',
+        times INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )`,
+      'CREATE INDEX IF NOT EXISTS idx_accept_ex ON acceptances(exhibition_id)'
+    ]
   }
 ];
 

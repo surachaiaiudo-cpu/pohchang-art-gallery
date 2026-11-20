@@ -1,7 +1,8 @@
 // /manage/<slug>/roster - artist roster (owner's workshop process, 2026-11-14): channel, selection status,
 // artist number (เลขที่ศิลปิน), withdrawn + note; artists added by hand; selection-round works kept private.
 import { api, esc, toast, slugFromPath } from './core.js';
-import { requireLogin } from './backoffice.js';
+import { requireLogin, copyText } from './backoffice.js';
+import { showReply } from './acceptance-view.js';
 import { flagImg, countryName, countryOptions } from './countries.js';
 import { CHANNELS, ROSTER, STAGES, formatNo } from './roster-logic.js';
 import { readSpreadsheet } from './xlsx-read.js';
@@ -9,7 +10,7 @@ import { readSpreadsheet } from './xlsx-read.js';
 const slug = slugFromPath(1);
 const M = `/api/manage/${encodeURIComponent(slug)}`;
 const $ = (id) => document.getElementById(id);
-const S = { me: null, ex: null, artists: [], coords: [], stages: { exhibit: 0, selection: 0 }, submitStage: 'exhibit', sel: new Set(), im: null, view: null };
+const S = { me: null, ex: null, artists: [], coords: [], accept: null, stages: { exhibit: 0, selection: 0 }, submitStage: 'exhibit', sel: new Set(), im: null, view: null };
 
 // Separate tables by result (owner, 2026-11-19): ยังไม่พิจารณา / ผ่าน / ไม่ผ่าน / ทั้งหมด. Ticking moves the artist to
 // the other table; withdrawn artists stay in their result's table (struck through). Last view remembered.
@@ -132,7 +133,10 @@ function views() {
 const when = (s) => (s ? new Date(`${s.replace(' ', 'T')}Z`) : null);
 const fmtDate = (d) => d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
 function progress(a) {
-  if (a.accepted_at) return `<span class="small co-signed">✓ ลงนามแล้ว ${fmtDate(when(a.accepted_at))}</span>`;
+  if (a.accepted_at) {
+    return `<span class="small co-signed">✓ ลงนามแล้ว ${fmtDate(when(a.accepted_at))}</span>${a.accept_times
+      ? ` <button class="linkish small" type="button" data-reply="${a.id}">แบบตอบรับ</button>${a.accept_changed ? ' <span class="tag">ศิลปินแก้ข้อมูล</span>' : ''}` : ''}`;
+  }
   if (a.notified_at) return `<span class="small co-wait">แจ้งแล้ว ${fmtDate(when(a.notified_at))}</span>`;
   return a.roster === 'selected' ? '<span class="small co-todo">ยังไม่แจ้ง</span>' : '';
 }
@@ -170,7 +174,23 @@ function coordSummary() {
     <p class="hint" style="margin-bottom:0">ผ่าน + ไม่ผ่าน + รอพิจารณา + ถอนตัว = ดูแลทั้งหมด · การแจ้ง / ลงนาม นับเฉพาะศิลปินที่ผ่านและไม่ถอนตัว</p>`;
 }
 
-const render = () => { stats(); stageCard(); coordSummary(); catFilter(); views(); rows(); };
+// Acceptance page settings + link (owner 2026-11-14: coordinators tell the artists to sign on the website).
+function acceptCard() {
+  const a = S.accept;
+  if (!a) return;
+  $('accept-card').hidden = false;
+  if (document.activeElement !== $('ac-closes')) $('ac-closes').value = a.closes_on || '';
+  $('ac-open').checked = a.open;
+  const url = `${location.origin}/accept/${encodeURIComponent(slug)}?lang=en`;
+  $('ac-link').textContent = url;
+  $('ac-visit').href = url;
+  const pass = S.artists.filter((x) => x.roster === 'selected' && !x.withdrawn);
+  const signed = pass.filter((x) => x.accepted_at).length;
+  $('ac-state').innerHTML = `${a.state.open ? '<b class="co-signed">● เปิดอยู่</b>' : `<b class="co-wait">● ${esc(a.state.reason)}</b>`}
+    · ลงนามแล้ว <b>${signed}</b> จาก ${pass.length} คนที่ผ่าน`;
+}
+
+const render = () => { stats(); stageCard(); acceptCard(); coordSummary(); catFilter(); views(); rows(); };
 
 async function load() {
   const d = await api(`${M}/roster`);
@@ -178,6 +198,7 @@ async function load() {
   S.stages = d.work_stages;
   S.submitStage = d.submit_stage;
   S.coords = d.coordinators || [];
+  S.accept = d.accept || null;
   const ids = new Set(S.artists.map((a) => a.id));
   for (const id of [...S.sel]) if (!ids.has(id)) S.sel.delete(id);
   render();
@@ -236,6 +257,18 @@ function wire() {
     rows();
   });
   $('f-q').addEventListener('input', rows);
+  $('ac-copy').addEventListener('click', async () => toast(await copyText($('ac-link').textContent) ? 'คัดลอกลิงก์แล้ว' : 'คัดลอกไม่ได้ กรุณาคัดลอกเอง', 'info'));
+  $('ac-save').addEventListener('click', async () => {
+    try {
+      await api(M, { method: 'PUT', body: { accept_open: $('ac-open').checked, accept_closes_on: $('ac-closes').value } });
+      toast('บันทึกแล้ว');
+      await load();
+    } catch (e) { toast(e.message, 'error'); }
+  });
+  $('rows').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-reply]');
+    if (b) showReply(slug, b.dataset.reply);
+  });
 
   $('rows').addEventListener('change', (e) => {
     const tr = e.target.closest('tr[data-id]');

@@ -6,8 +6,8 @@
   <meta name="robots" content="noindex">
   <title>ศิลปินที่ฉันดูแล</title>
   <link rel="stylesheet" href="/css/app.css?v=5">
-  <link rel="stylesheet" href="/css/roster.css?v=5">
-  <script type="module" src="/js/coord.js?v=3"></script>
+  <link rel="stylesheet" href="/css/roster.css?v=6">
+  <script type="module" src="/js/coord.js?v=5"></script>
 </head>
 <body>
   <header class="topbar" id="topbar"></header>
@@ -16,6 +16,15 @@
       <div><h1>ศิลปินที่ฉันดูแล</h1><div class="small muted" id="ex-sub">กำลังโหลด…</div></div>
       <div class="row"><a class="btn btn-ghost" id="back" hidden>รายชื่อศิลปิน (ผู้ดูแล)</a></div>
     </div>
+
+    <section class="card" id="accept-card">
+      <div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap">
+        <div><b>ลิงก์หน้าลงนามตอบรับ</b> <span class="small" id="ac-state"></span>
+          <div class="small muted">ส่งลิงก์นี้ให้ศิลปิน ศิลปินค้นหาชื่อตัวเองแล้วกรอกแบบตอบรับ (ผู้ประสานงานกรอกให้ได้)</div></div>
+        <div class="row" style="gap:8px"><code id="ac-link" class="ac-link"></code>
+          <button class="btn btn-ghost btn-sm" type="button" id="ac-copy">คัดลอกลิงก์</button></div>
+      </div>
+    </section>
 
     <section class="card co-news" id="news" hidden aria-live="polite"></section>
 

@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Invitation Reply Form</title>
+  <link rel="stylesheet" href="/css/themes.css?v=7">
+  <link rel="stylesheet" href="/css/base.css?v=12">
+  <link rel="stylesheet" href="/css/accept.css?v=1">
+  <script type="module" src="/js/accept.js?v=2"></script>
+</head>
+<body>
+  <header class="site-head">
+    <div class="wrap"><span class="back-link" id="ex-name"></span><span id="lang"></span></div>
+  </header>
+  <div class="ornament" aria-hidden="true"></div>
+  <main class="wrap form-page ac-page" id="main">
+    <h1 data-i18n="acTitle">Invitation Reply Form</h1>
+    <p class="muted" id="ex-title"></p>
+    <div id="intro"><p class="muted" data-i18n="loading">Loading…</p></div>
+
+    <section id="find" hidden>
+      <fieldset>
+        <legend data-i18n="acFind">Find your name</legend>
+        <div class="field">
+          <label for="q" data-i18n="acFindHint">Type at least 2 letters of your name.</label>
+          <input id="q" type="text" enterkeyhint="search" maxlength="100" autocomplete="off" data-i18n-ph="acFindPh">
+        </div>
+        <ul class="ac-results" id="results" aria-live="polite"></ul>
+      </fieldset>
+    </section>
+
+    <form id="form" hidden novalidate>
+      <div class="notice ac-who">
+        <span class="small muted" data-i18n="acFor">Replying for</span>
+        <strong id="who"></strong>
+        <button type="button" class="btn btn-ghost btn-sm" id="change" data-i18n="acChange">Choose another name</button>
+        <p class="small" id="again" hidden></p>
+        <p class="small muted" data-i18n="acPrefill"></p>
+      </div>
+
+      <fieldset>
+        <legend><span class="step-no">1</span><span data-i18n="acPersonal">Personal information</span></legend>
+        <div class="field"><span class="label-text" data-i18n="acTitleField">Title</span>
+          <div class="chips" role="radiogroup">
+            <label class="chip"><input type="radio" name="title" value="mr"><span data-i18n="acMr"></span></label>
+            <label class="chip"><input type="radio" name="title" value="miss"><span data-i18n="acMiss"></span></label>
+            <label class="chip"><input type="radio" name="title" value="mrs"><span data-i18n="acMrs"></span></label>
+          </div></div>
+        <div class="grid-2">
+          <div class="field"><label for="name_en"><span data-i18n="acNameEn"></span> <span class="req">*</span></label><input type="text" id="name_en" maxlength="200" lang="en" autocomplete="name"></div>
+          <div class="field"><label for="name_th" data-i18n="acNameNative"></label><input type="text" id="name_th" maxlength="200"></div>
+          <div class="field"><label for="nationality"><span data-i18n="acNationality"></span> <span class="req">*</span></label><select id="nationality"></select></div>
+          <div class="field"><label for="age" data-i18n="acAge"></label><input id="age" type="number" inputmode="numeric" min="10" max="120"></div>
+        </div>
+        <h3 class="ac-sub" data-i18n="acEducation">Highest education</h3>
+        <div class="grid-2">
+          <div class="field"><label for="edu_institution" data-i18n="acInstitution"></label><input type="text" id="edu_institution" maxlength="300"></div>
+          <div class="field"><label for="edu_field" data-i18n="acStudyField"></label><input type="text" id="edu_field" maxlength="300"></div>
+          <div class="field"><label for="edu_degree" data-i18n="acDegree"></label><input type="text" id="edu_degree" maxlength="200"></div>
+          <div class="field"><label for="affiliation" data-i18n="acAffiliation"></label><input type="text" id="affiliation" maxlength="300"></div>
+        </div>
+        <h3 class="ac-sub" data-i18n="acContact">Contact information</h3>
+        <div class="grid-2">
+          <div class="field"><label for="email"><span data-i18n="acEmail"></span> <span class="req" id="email-req">*</span></label><input id="email" type="email" maxlength="254" autocomplete="email"><span class="hint" id="email-hint"></span></div>
+          <div class="field"><label for="phone" data-i18n="acTel"></label><input id="phone" type="tel" maxlength="40" autocomplete="tel"><span class="hint" id="phone-hint"></span></div>
+        </div>
+        <div class="field"><label for="contact_address" data-i18n="acAddress"></label><textarea id="contact_address" maxlength="600" rows="3"></textarea><span class="hint" data-i18n="acAddressHint"></span></div>
+        <div class="field">
+          <span class="label-text" id="photo-label"><span data-i18n="acPhoto"></span> <span class="req" id="photo-req">*</span></span>
+          <div class="drop" id="photo" data-kind="artist" tabindex="0" role="button" aria-labelledby="photo-label"><span class="drop-text" data-i18n="tapPhoto"></span></div>
+          <span class="hint" data-i18n="acPhotoHint"></span>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend><span class="step-no">2</span><span data-i18n="acExhibitions">Selected exhibitions</span></legend>
+        <div id="exhibitions"></div>
+        <button type="button" class="add-work" id="add-ex" data-i18n="acAddEx">+ Add an exhibition</button>
+      </fieldset>
+
+      <fieldset id="work">
+        <legend><span class="step-no">3</span><span data-i18n="acWork">Artwork for the catalogue</span></legend>
+        <p class="hint" data-i18n="acWorkHint"></p>
+        <div class="grid-2">
+          <div class="field"><label for="w_title"><span data-i18n="acWorkTitle"></span> <span class="req">*</span></label><input type="text" id="w_title" maxlength="300"></div>
+          <div class="field"><label for="w_technique"><span data-i18n="acWorkTechnique"></span> <span class="req">*</span></label><input type="text" id="w_technique" maxlength="300"></div>
+          <div class="field"><label for="w_dimensions"><span data-i18n="acWorkSize"></span> <span class="req">*</span></label><input type="text" id="w_dimensions" maxlength="120" data-i18n-ph="acWorkSizePh"></div>
+          <div class="field"><label for="w_year"><span data-i18n="acWorkYear"></span> <span class="req">*</span></label><input type="text" id="w_year" maxlength="20" inputmode="numeric"></div>
+        </div>
+        <div class="field"><label for="w_concept" data-i18n="acWorkConcept"></label><textarea id="w_concept" maxlength="2000" rows="3"></textarea></div>
+        <div class="field">
+          <span class="label-text" id="wimg-label"><span data-i18n="acWorkImage"></span> <span class="req" id="wimg-req">*</span></span>
+          <div class="drop" id="wimg" data-kind="work" tabindex="0" role="button" aria-labelledby="wimg-label"><span class="drop-text" data-i18n="tapPhoto"></span></div>
+          <span class="hint" data-i18n="acPhotoHint"></span>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend><span class="step-no">4</span><span data-i18n="acTypes">Type of your artworks</span></legend>
+        <p class="hint" data-i18n="acTypesHint"></p>
+        <div class="chips ac-types" id="types">
+          <label class="chip"><input type="checkbox" name="types" value="painting"><span data-i18n="acTypePainting"></span></label>
+          <label class="chip"><input type="checkbox" name="types" value="sculpture"><span data-i18n="acTypeSculpture"></span></label>
+          <label class="chip"><input type="checkbox" name="types" value="printmaking"><span data-i18n="acTypePrint"></span></label>
+          <label class="chip"><input type="checkbox" name="types" value="thai_art"><span data-i18n="acTypeThai"></span></label>
+          <label class="chip"><input type="checkbox" name="types" value="ceramics"><span data-i18n="acTypeCeramics"></span></label>
+          <label class="chip"><input type="checkbox" name="types" value="digital_video"><span data-i18n="acTypeDigital"></span></label>
+          <label class="chip"><input type="checkbox" name="types" value="mixed_other"><span data-i18n="acTypeOther"></span></label>
+        </div>
+        <div class="field" id="type-other-wrap" hidden style="margin-top:12px"><input type="text" id="type_other" maxlength="300" data-i18n-ph="acTypeOtherPh" aria-label="Other"></div>
+
+        <div class="field" style="margin-top:20px"><span class="label-text"><span data-i18n="acPeer"></span> <span class="req">*</span></span>
+          <div class="chips" role="radiogroup" id="peer">
+            <label class="chip"><input type="radio" name="peer" value="yes"><span data-i18n="acYes"></span></label>
+            <label class="chip"><input type="radio" name="peer" value="no"><span data-i18n="acNo"></span></label>
+          </div></div>
+
+        <div class="field"><span class="label-text" data-i18n="acFood">Food restrictions</span>
+          <label class="check"><input type="checkbox" id="food_veg"><span data-i18n="acVeg"></span></label>
+          <label class="check"><input type="checkbox" id="food_halal"><span data-i18n="acHalal"></span></label>
+          <div class="grid-2">
+            <div class="field"><label for="food_allergy" data-i18n="acAllergy"></label><input type="text" id="food_allergy" maxlength="300"></div>
+            <div class="field"><label for="food_other" data-i18n="acFoodOther"></label><input type="text" id="food_other" maxlength="300"></div>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend><span class="step-no">5</span><span data-i18n="acNotes">Please note</span></legend>
+        <ol class="ac-notes">
+          <li data-i18n="acNote1"></li><li data-i18n="acNote2"></li><li data-i18n="acNote3"></li><li data-i18n="acNote4"></li>
+          <li><span data-i18n="acNote5"></span>
+            <div class="ac-followers">
+              <label for="followers" data-i18n="acFollowers"></label>
+              <input id="followers" type="number" inputmode="numeric" min="0" max="10" value="0">
+              <label class="check" id="followers-agree-wrap" hidden><input type="checkbox" id="followers_agree"><span data-i18n="acFollowersAgree"></span></label>
+            </div></li>
+          <li data-i18n="acNote6"></li><li data-i18n="acNote7"></li>
+        </ol>
+        <label class="check"><input type="checkbox" id="agree_conditions"><span data-i18n="acAgreeNotes"></span></label>
+      </fieldset>
+
+      <fieldset>
+        <legend><span class="step-no">6</span><span data-i18n="acSignSection">Sign and confirm</span></legend>
+        <div class="field"><span class="label-text" data-i18n="acFilledBy"></span>
+          <div class="chips" role="radiogroup">
+            <label class="chip"><input type="radio" name="filled_by" value="self" checked><span data-i18n="acBySelf"></span></label>
+            <label class="chip"><input type="radio" name="filled_by" value="coordinator"><span data-i18n="acByCoord"></span></label>
+            <label class="chip"><input type="radio" name="filled_by" value="friend"><span data-i18n="acByFriend"></span></label>
+          </div></div>
+        <div class="field"><label for="signed_name"><span data-i18n="acSignName"></span> <span class="req">*</span></label><input type="text" id="signed_name" maxlength="200" class="ac-signature"></div>
+        <label class="check"><input type="checkbox" id="agree_accept"><strong data-i18n="acAccept"></strong></label>
+        <div id="turnstile" style="margin-top:16px"></div>
+        <p id="form-error" class="error-text" role="alert"></p>
+        <button type="submit" class="btn btn-lg" id="send" data-i18n="acSend">Sign and send</button>
+      </fieldset>
+    </form>
+
+    <section id="done" hidden>
+      <div class="notice"><h2 style="margin-top:0" data-i18n="acDoneTitle"></h2><p id="done-text"></p></div>
+      <button type="button" class="btn btn-ghost" id="another" data-i18n="acAnother">Reply for another artist</button>
+    </section>
+  </main>
+  <input type="file" id="picker" accept="image/jpeg,image/png,image/webp" hidden>
+</body>
+</html>

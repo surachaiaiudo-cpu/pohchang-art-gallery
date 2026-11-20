@@ -1,0 +1,19 @@
+/* Acceptance page (ลงนามตอบรับ) */
+.ac-page { max-width: 860px; }
+.ac-deadline { font-weight: 600; color: var(--accent); }
+.ac-results { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.ac-hit { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; text-align: left;
+  padding: 12px 16px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--surface); color: var(--ink); font: inherit; cursor: pointer; }
+.ac-hit:hover, .ac-hit:focus-visible { border-color: var(--accent); }
+.ac-hit > span:first-child { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.ac-tag { font-size: .8rem; color: #1b7a3a; font-weight: 600; }
+.btn-sm { min-height: 36px; padding: 0 14px; font-size: .9rem; }
+.ac-who { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; }
+.ac-who strong { font-size: 1.15rem; }
+.ac-who p { flex-basis: 100%; margin: 0; }
+.ac-sub { font-size: 1rem; margin: 8px 0 12px; }
+.ac-ex { display: grid; grid-template-columns: 110px 1fr; gap: 10px; margin-bottom: 10px; }
+.ac-notes { padding-left: 1.3em; margin: 0 0 20px; display: grid; gap: 10px; line-height: 1.6; }
+.ac-followers { display: grid; gap: 8px; margin-top: 10px; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius); }
+.ac-followers input[type=number] { max-width: 120px; }
+.ac-signature { font-size: 1.2rem; font-style: italic; }
