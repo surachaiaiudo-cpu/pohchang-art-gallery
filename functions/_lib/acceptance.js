@@ -1,9 +1,10 @@
 // Acceptance page (ลงนามตอบรับ, owner 2026-11-14/20): the 20th "Invitation Reply Form" on the website.
 // - Only artists with result ผ่าน (not withdrawn) can be found (search by name) and sign.
-// - The form is pre-filled with what staff entered; the artist corrects it and the corrected values are used
-//   at once (owner 2026-11-20), while the staff-entered values and the list of changes are kept.
+// - Owner 2026-11-20 (later): artists get their number before the invitation; the form shows only the number and the
+//   name (name editable), the artist records everything else. Their values are used at once; what staff had entered
+//   before and the list of changes are kept.
 // - Anyone may fill it in for the artist (self / coordinator / friend). Signature = typed name + tick.
-// - Email and phone are never sent to the public page (only masked hints); blank = keep what is on file.
+// - Nothing but number and name goes to the public page. Blank phone / affiliation / native name keep what staff had.
 import * as v from './validate.js';
 import { bad, notFound } from './http.js';
 import { findBySlug, isPublic } from './exhibitions.js';
@@ -25,32 +26,26 @@ export function acceptWindow(ex, at = Date.now()) {
   return { open: true, reason: '' };
 }
 
-// "somchai@gmail.com" -> "so•••••@gmail.com"; "0812345678" -> "••••••5678"
-export function maskEmail(e) {
-  const [u, d] = String(e || '').split('@');
-  if (!u || !d) return '';
-  return `${u.slice(0, Math.min(2, u.length))}${'•'.repeat(Math.max(3, u.length - 2))}@${d}`;
-}
-export function maskPhone(p) {
-  const s = String(p || '').replace(/\s+/g, '');
-  if (s.length < 4) return '';
-  return `${'•'.repeat(Math.max(3, s.length - 4))}${s.slice(-4)}`;
-}
 
 // Search helpers: case-insensitive, spaces collapsed.
+// "15", "015", "No. 015" -> 15 (artist number search); otherwise null.
+export function numberQuery(q) {
+  const m = /^(?:no\.?\s*|#)?0*(\d{1,4})$/i.exec(String(q || '').trim());
+  return m ? Number(m[1]) : null;
+}
+
 export const normSearch = (s) => String(s || '').normalize('NFC').toLowerCase().replace(/\s+/g, ' ').trim();
 
 // Validate the reply form. `onFile` = what the artist already has (to decide what is required).
-export function parseReply(b, onFile = {}) {
+export function parseReply(b) {
   const core = {
     name_en: v.text(b.name_en, { field: 'Name', max: 200, required: true }),
     name_th: v.text(b.name_th, { field: 'Name in your language', max: 200 }),
-    email: v.email(b.email),
+    email: v.email(b.email, { field: 'Email', required: true }),
     phone: v.text(b.phone, { field: 'Tel. / Mobile', max: 40 }),
     nationality: v.country(b.nationality, { field: 'Nationality', required: true }),
     affiliation: v.text(b.affiliation, { field: 'Institution / workplace', max: 300 })
   };
-  if (!core.email && !onFile.email) throw bad('กรุณากรอกอีเมล (Email is required)');
   const age = b.age === '' || b.age === null || b.age === undefined ? null : v.int(b.age, { field: 'Age', min: 10, max: 120 });
   const exhibitions = (Array.isArray(b.exhibitions) ? b.exhibitions : []).slice(0, MAX_EXHIBITIONS)
     .map((x, i) => ({
@@ -106,15 +101,16 @@ export function parseReply(b, onFile = {}) {
   return { core, data, signedName, filledBy };
 }
 
-// Which core fields change (blank email / phone / native name = keep what is on file).
+// Which core fields change (blank phone / affiliation / native name = keep what is on file).
 export function coreUpdate(artist, core, photoUrl) {
   const next = {
     name_en: core.name_en,
-    name_th: core.name_th || artist.name_th || core.name_en,
+    // name_th is the main name; when it was just a copy of the English name it follows the corrected English name.
+    name_th: core.name_th || (artist.name_th && artist.name_th !== artist.name_en ? artist.name_th : core.name_en),
     email: core.email || artist.email,
     phone: core.phone || artist.phone,
     nationality: core.nationality,
-    affiliation: core.affiliation,
+    affiliation: core.affiliation || artist.affiliation,
     avatar_url: photoUrl || artist.avatar_url
   };
   const changes = [];

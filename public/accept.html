@@ -7,8 +7,8 @@
   <title>Invitation Reply Form</title>
   <link rel="stylesheet" href="/css/themes.css?v=7">
   <link rel="stylesheet" href="/css/base.css?v=12">
-  <link rel="stylesheet" href="/css/accept.css?v=1">
-  <script type="module" src="/js/accept.js?v=2"></script>
+  <link rel="stylesheet" href="/css/accept.css?v=2">
+  <script type="module" src="/js/accept.js?v=3"></script>
 </head>
 <body>
   <header class="site-head">
@@ -34,7 +34,7 @@
     <form id="form" hidden novalidate>
       <div class="notice ac-who">
         <span class="small muted" data-i18n="acFor">Replying for</span>
-        <strong id="who"></strong>
+        <span class="ac-no" id="who-no" hidden></span><strong id="who"></strong>
         <button type="button" class="btn btn-ghost btn-sm" id="change" data-i18n="acChange">Choose another name</button>
         <p class="small" id="again" hidden></p>
         <p class="small muted" data-i18n="acPrefill"></p>
@@ -63,8 +63,8 @@
         </div>
         <h3 class="ac-sub" data-i18n="acContact">Contact information</h3>
         <div class="grid-2">
-          <div class="field"><label for="email"><span data-i18n="acEmail"></span> <span class="req" id="email-req">*</span></label><input id="email" type="email" maxlength="254" autocomplete="email"><span class="hint" id="email-hint"></span></div>
-          <div class="field"><label for="phone" data-i18n="acTel"></label><input id="phone" type="tel" maxlength="40" autocomplete="tel"><span class="hint" id="phone-hint"></span></div>
+          <div class="field"><label for="email"><span data-i18n="acEmail"></span> <span class="req">*</span></label><input id="email" type="email" maxlength="254" autocomplete="email"></div>
+          <div class="field"><label for="phone" data-i18n="acTel"></label><input id="phone" type="tel" maxlength="40" autocomplete="tel"></div>
         </div>
         <div class="field"><label for="contact_address" data-i18n="acAddress"></label><textarea id="contact_address" maxlength="600" rows="3"></textarea><span class="hint" data-i18n="acAddressHint"></span></div>
         <div class="field">

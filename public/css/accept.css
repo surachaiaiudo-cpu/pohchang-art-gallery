@@ -17,3 +17,4 @@
 .ac-followers { display: grid; gap: 8px; margin-top: 10px; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius); }
 .ac-followers input[type=number] { max-width: 120px; }
 .ac-signature { font-size: 1.2rem; font-style: italic; }
+.ac-no { display: inline-block; min-width: 3.2em; margin-right: 8px; padding: 2px 8px; border-radius: 6px; background: var(--ink); color: var(--bg); font-weight: 700; font-variant-numeric: tabular-nums; text-align: center; }

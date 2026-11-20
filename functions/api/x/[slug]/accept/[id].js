@@ -4,7 +4,7 @@ import { verifyUploadedFile, deleteFile } from '../../../../_lib/storage.js';
 import { checkTicket } from '../../../../_lib/ticket.js';
 import { enforce } from '../../../../_lib/ratelimit.js';
 import {
-  loadAcceptExhibition, acceptWindow, parseReply, coreUpdate, parseJson, maskEmail, maskPhone,
+  loadAcceptExhibition, acceptWindow, parseReply, coreUpdate, parseJson,
   MIN_PHOTO_PIXELS, SIGNABLE
 } from '../../../../_lib/acceptance.js';
 
@@ -16,9 +16,8 @@ async function signable(db, ex, id) {
   return a;
 }
 
-// GET /api/x/:slug/accept/:id - what staff entered, to pre-fill the form.
-// Email and phone are private: only a masked hint is sent ("so•••@gmail.com"); blank in the form = keep.
-// A previous reply is never sent back (anyone can find the name), the form starts from the artist record.
+// GET /api/x/:slug/accept/:id - only the artist number and name (owner 2026-11-20: the artist records the rest).
+// A previous reply is never sent back (anyone can find the name); only whether its images can be kept.
 export const onRequestGet = handle(async ({ env, params }) => {
   const ex = await loadAcceptExhibition(env.DB, params.slug);
   const win = acceptWindow(ex);
@@ -28,9 +27,9 @@ export const onRequestGet = handle(async ({ env, params }) => {
   return json({
     ok: true,
     artist: {
-      id: a.id, name_th: a.name_th, name_en: a.name_en, nationality: a.nationality, affiliation: a.affiliation,
-      photo: a.avatar_url || '', email_hint: maskEmail(a.email), phone_hint: maskPhone(a.phone),
+      id: a.id, artist_no: a.artist_no, name_th: a.name_th, name_en: a.name_en,
       signed_at: done ? done.updated_at : '',
+      has_photo: !!(done && a.avatar_url),
       has_work_image: !!(done && (parseJson(done.data, {}).work || {}).image_url)
     }
   });
@@ -46,7 +45,7 @@ export const onRequestPost = handle(async ({ request, env, params }) => {
   await checkTicket(env, request, `${ex.slug}#accept`, b.ticket);
   await enforce(db, `accept:${clientIp(request)}`, { limit: 60, windowSec: 3600 });
   const a = await signable(db, ex, params.id);
-  const { core, data, signedName, filledBy } = parseReply(b, a);
+  const { core, data, signedName, filledBy } = parseReply(b);
 
   let photo = null;
   if (b.photo_file && b.photo_file.public_id) {
@@ -55,11 +54,10 @@ export const onRequestPost = handle(async ({ request, env, params }) => {
       await deleteFile(ex, env, photo.fileId);
       throw bad('รูปศิลปินต้องมีความละเอียดอย่างน้อย 5 ล้านพิกเซล (Photo must be at least 5 megapixels)', { photoSmall: true });
     }
-  } else if (!a.avatar_url) {
-    throw bad('กรุณาแนบรูปศิลปิน (Please attach your photo)');
   }
-
   const prev = await db.prepare('SELECT data, before, changes, times FROM acceptances WHERE artist_id = ?').bind(a.id).first();
+  // The artist sends their own photo; signing again may keep the one sent before.
+  if (!photo && !(prev && a.avatar_url)) throw bad('กรุณาแนบรูปศิลปิน (Please attach your photo)');
   // Catalogue artwork image: a new upload, else the one sent with an earlier reply.
   let workFile = null;
   if (b.work_file && b.work_file.public_id) {
