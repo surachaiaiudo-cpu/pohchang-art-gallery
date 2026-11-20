@@ -3,6 +3,7 @@ import { actorOf } from '../../../_lib/auth.js';
 import { requireCoordinator, audit } from '../../../_lib/exhibitions.js';
 import * as v from '../../../_lib/validate.js';
 import { coordinatorsOf } from '../../../_lib/roster.js';
+import { acceptWindow } from '../../../_lib/acceptance.js';
 
 // Coordinators (ผู้ประสานงาน, owner 2026-11-19): each selected artist has one coordinator, who contacts them and
 // follows whether they have signed the acceptance on the website. Coordinators see every selected artist (to help
@@ -16,7 +17,9 @@ export const onRequestGet = handle(async (context) => {
   const { results } = await db.prepare(
     `SELECT a.id, a.artist_no, a.name_th, a.name_en, a.academic_title_th, a.nationality, a.affiliation, a.email, a.phone,
             a.channel, a.roster, a.withdrawn, a.roster_note, a.coordinator_id, a.notified_at, a.notified_by, a.accepted_at, a.accepted_by,
-            n.name AS notified_by_name
+            n.name AS notified_by_name,
+            (SELECT c.times FROM acceptances c WHERE c.artist_id = a.id) AS accept_times,
+            (SELECT c.changes != '[]' FROM acceptances c WHERE c.artist_id = a.id) AS accept_changed
        FROM artists a LEFT JOIN users n ON n.id = a.notified_by
       WHERE a.exhibition_id = ?
       ORDER BY CASE a.roster WHEN 'selected' THEN 0 WHEN '' THEN 1 ELSE 2 END, a.artist_no IS NULL, a.artist_no, a.id`
@@ -24,6 +27,7 @@ export const onRequestGet = handle(async (context) => {
   return json({
     ok: true,
     exhibition: { slug: ex.slug, title_th: ex.title_th },
+    accept: { closes_on: ex.accept_closes_on || '', state: acceptWindow(ex) },
     me: { id: user.id, name: user.name, role },
     coordinators: (await coordinatorsOf(db, ex.id)).map((c) => ({ id: c.id, name: c.name, manager: c.manager })),
     artists: results || []

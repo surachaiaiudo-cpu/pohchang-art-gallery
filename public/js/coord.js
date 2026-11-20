@@ -2,7 +2,8 @@
 // exhibition's managers; the coordinator marks "แจ้งแล้ว" after sending the invitation and sees who has signed.
 // Notices are on this page only: artists who signed since the last visit (remembered in this browser).
 import { api, esc, toast, slugFromPath } from './core.js';
-import { requireLogin } from './backoffice.js';
+import { requireLogin, copyText } from './backoffice.js';
+import { showReply } from './acceptance-view.js';
 import { flagImg, countryName } from './countries.js';
 import { formatNo } from './roster-logic.js';
 
@@ -78,7 +79,8 @@ function rows() {
     const n = when(a.notified_at);
     const acc = when(a.accepted_at);
     const state = s === 'na' ? '<span class="small muted">— (แจ้งได้เมื่อผ่าน)</span>' : s === 'signed'
-      ? `<span class="co-state co-signed">✓ ลงนามแล้ว</span><div class="small muted">${fmt(acc)}${a.accepted_by ? ` · ${esc(ACCEPTED_BY[a.accepted_by] || a.accepted_by)}` : ''}</div>`
+      ? `<span class="co-state co-signed">✓ ลงนามแล้ว</span><div class="small muted">${fmt(acc)}${a.accepted_by ? ` · ${esc(ACCEPTED_BY[a.accepted_by] || a.accepted_by)}` : ''}</div>${a.accept_times
+        ? `<button class="linkish small" type="button" data-reply="${a.id}">ดูแบบตอบรับ</button>${a.accept_changed ? ' <span class="tag">ศิลปินแก้ข้อมูล</span>' : ''}` : ''}`
       : s === 'waiting'
         ? `<span class="co-state co-wait">แจ้งแล้ว รอลงนาม</span><div class="small muted">แจ้งเมื่อ ${fmt(n)} (${daysAgo(n)} วันก่อน)${a.notified_by_name ? ` · ${esc(a.notified_by_name)}` : ''}</div>`
         : '<span class="co-state co-todo">ยังไม่แจ้ง</span>';
@@ -104,6 +106,11 @@ async function load() {
   S.me = d.me;
   S.coords = d.coordinators;
   S.artists = d.artists;
+  $('ac-link').textContent = `${location.origin}/accept/${encodeURIComponent(S.ex.slug)}?lang=en`;
+  const st = d.accept.state;
+  $('ac-state').innerHTML = st.open
+    ? `<span class="co-signed">● เปิดอยู่${d.accept.closes_on ? ` ถึง ${esc(new Date(`${d.accept.closes_on}T12:00:00`).toLocaleDateString('th-TH', { dateStyle: 'medium' }))}` : ''}</span>`
+    : `<span class="co-wait">● ${esc(st.reason)}</span>`;
 }
 
 function wire() {
@@ -123,7 +130,10 @@ function wire() {
     rows();
   });
   $('f-q').addEventListener('input', rows);
+  $('ac-copy').addEventListener('click', async () => toast(await copyText($('ac-link').textContent) ? 'คัดลอกลิงก์แล้ว' : 'คัดลอกไม่ได้ กรุณาคัดลอกเอง'));
   $('rows').addEventListener('click', async (e) => {
+    const r = e.target.closest('[data-reply]');
+    if (r) { showReply(slug, r.dataset.reply); return; }
     const b = e.target.closest('[data-notify]');
     if (!b) return;
     const a = S.artists.find((x) => x.id === Number(b.closest('tr').dataset.id));

@@ -53,7 +53,10 @@ export const onRequestDelete = handle(async (context) => {
   const artist = await loadArtist(db, ex, id);
   const w = await db.prepare('SELECT COUNT(*) AS n FROM works WHERE artist_id = ?').bind(id).first();
   if (w.n > 0) throw bad('ศิลปินท่านนี้มีผลงานในระบบ ลบออกจากรายชื่อไม่ได้');
-  await db.prepare('DELETE FROM artists WHERE id = ? AND exhibition_id = ?').bind(id, ex.id).run();
+  await db.batch([
+    db.prepare('DELETE FROM acceptances WHERE artist_id = ?').bind(id),
+    db.prepare('DELETE FROM artists WHERE id = ? AND exhibition_id = ?').bind(id, ex.id)
+  ]);
   await audit(db, ex.id, actorOf(user), 'roster.delete', { artistId: id, name: artist.name_th });
   return json({ ok: true });
 });

@@ -6,6 +6,7 @@ import * as v from '../../../../_lib/validate.js';
 import { STAGE_KEYS, planNumbers } from '../../../../../public/js/roster-logic.js';
 import { ROSTER_ARTIST_TEXT, channelOf, rosterOf, parseImport, IMPORT_MAX_ROWS, coordinatorsOf, coordinatorOf } from '../../../../_lib/roster.js';
 import { matchCountry } from '../../../../_lib/import-old.js';
+import { acceptWindow } from '../../../../_lib/acceptance.js';
 import { isCountryCode } from '../../../../../public/js/countries.js';
 
 
@@ -17,6 +18,8 @@ export const onRequestGet = handle(async (context) => {
     `SELECT a.id, a.name_th, a.name_en, a.name_zh, a.academic_title_th, a.email, a.phone, a.nationality, a.affiliation,
             a.channel, a.roster, a.artist_no, a.withdrawn, a.roster_note, a.created_at,
             a.coordinator_id, a.notified_at, a.accepted_at, a.accepted_by,
+            (SELECT c.times FROM acceptances c WHERE c.artist_id = a.id) AS accept_times,
+            (SELECT c.changes != '[]' FROM acceptances c WHERE c.artist_id = a.id) AS accept_changed,
             (SELECT COUNT(*) FROM works w WHERE w.artist_id = a.id AND w.deleted_at IS NULL AND w.stage = 'selection') AS works_selection,
             (SELECT COUNT(*) FROM works w WHERE w.artist_id = a.id AND w.deleted_at IS NULL AND w.stage != 'selection') AS works_exhibit,
             (SELECT COUNT(*) FROM works w WHERE w.artist_id = a.id AND w.deleted_at IS NULL AND w.stage = 'selection'
@@ -43,7 +46,8 @@ export const onRequestGet = handle(async (context) => {
   const workStages = { exhibit: 0, selection: 0 };
   for (const r of stages.results || []) workStages[r.stage === 'selection' ? 'selection' : 'exhibit'] += r.n;
   const coordinators = await coordinatorsOf(context.env.DB, ex.id);
-  return json({ ok: true, artists: results || [], work_stages: workStages, submit_stage: ex.submit_stage || 'exhibit', coordinators });
+  return json({ ok: true, artists: results || [], work_stages: workStages, submit_stage: ex.submit_stage || 'exhibit', coordinators,
+    accept: { open: !!ex.accept_open, closes_on: ex.accept_closes_on || '', state: acceptWindow(ex) } });
 });
 
 // Sheet rows from the browser: at most IMPORT_MAX_ROWS + 10 rows of 30 cells, each cell text up to 600 characters.

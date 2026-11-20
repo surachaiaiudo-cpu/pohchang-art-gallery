@@ -398,6 +398,27 @@ Migration `0018_coordinators` (columns only): `exhibition_members.member_role` '
 - Preview note: preview shares the production D1. Until this is merged, production code treats any membership as manager,
   so do not create coordinators before merging.
 
+### 6.14 Acceptance page (ลงนามตอบรับ) (owner, 2026-11-14/20; branch `acceptance`)
+Owner: coordinators tell the artists to sign on the website; one form for everyone (the 20th "Invitation Reply Form");
+search by name, no personal link; anyone may fill it in and the system records who (self / coordinator / friend);
+signature = typed name + tick; English first, also Thai and Chinese; open until the closing day (20th: 15 Dec 2026).
+2026-11-20: the artist's corrected values are used at once (staff see what changed); no home address, a "contact address"
+(workplace / university is fine); peer review YES/NO is answered in the form.
+- Migration `0020_acceptance`: `exhibitions.accept_open`, `accept_closes_on` ('YYYY-MM-DD', open to the end of that day,
+  Bangkok); table `acceptances` (one row per artist: `data` JSON of the form, `before` = staff values before the first
+  reply, `changes` = [{field, from, to, at}], `signed_name`, `filled_by`, `times`).
+- `functions/_lib/acceptance.js`: window, validation (`parseReply`), `coreUpdate` (blank email / phone / native name = keep),
+  masking. Signable = `roster='selected' AND withdrawn=0`. The page works for a draft exhibition while the switch is on.
+- Public: `/accept/<slug>` (`accept.html`, `js/accept.js`, `css/accept.css`, i18n keys `ac*`); API `/api/x/:slug/accept`
+  (`?q=` name search, ≤8, rate-limited), `/ticket` (Turnstile, ticket scoped `<slug>#accept`), `/upload-auth` (artist
+  photo), `/:id` GET (prefill; email/phone only masked; a previous reply is never returned) and POST (sign; again until
+  closing = replaces the reply, `times`+1). Photo required if none on file; ≥5 MP checked in the browser and the server.
+  Saving updates the artist row (name_en, name_th, email, phone, nationality, affiliation, avatar), sets `accepted_at`
+  (first time) and `accepted_by` = filled_by.
+- Back office: roster page card (switch, closing date, link + copy, signed count), "แบบตอบรับ" dialog
+  (`js/acceptance-view.js`, API `/api/coord/:slug/acceptance/:id`, any admin/manager/coordinator) with "ศิลปินแก้ข้อมูล";
+  coordinator page shows the link and the dialog. The 7 notes (dates, fees, airports) are 20th-specific text in i18n.js.
+
 ## 7. API (all JSON; writes require same-origin)
 
 | Route | Who | Purpose |
