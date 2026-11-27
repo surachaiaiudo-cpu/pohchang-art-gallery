@@ -5,14 +5,16 @@ import { t, pick, pickOther, fmtDate, fmtTime, applyStatic, mountSwitcher, local
 // Lobby, design B (owner's choice 2026-10-29): one work hangs on the wall with its label, the
 // gallery's name runs across the whole width underneath, each exhibition is a stretch of wall,
 // open calls sit on one field of the accent colour. Works are always shown whole.
-loadFonts(['IBM Plex Sans Thai', 'Anuphan']);
+const root = document.documentElement;
+const isPohchang = () => root.dataset.design === 'pohchang';
+// Only the fonts of the look being shown (design-early.js has already put back the last look):
+// the Poh-Chang look never shows Anuphan, design B never shows Chonburi/Sarabun.
+loadFonts(['IBM Plex Sans Thai', ...(isPohchang() ? ['Chonburi', 'Sarabun'] : ['Anuphan'])]);
 applyStatic();
 mountSwitcher(document.getElementById('lang'));
 mountSwitcher(document.getElementById('foot-lang'));
 const $ = (id) => document.getElementById(id);
 const DAY = 86400000;
-const root = document.documentElement;
-const isPohchang = () => root.dataset.design === 'pohchang';
 
 // ---------- The look chosen in /admin ----------
 // 'b' = design B; 'pohchang' = the poster design in Poh-Chang Academy colours (owner's request
@@ -29,8 +31,8 @@ function applyLook(site, name) {
   if (design === 'pohchang') root.dataset.design = design; else delete root.dataset.design;
   if (mood) root.dataset.mood = mood; else delete root.dataset.mood;
   if (!preview) try { localStorage.setItem('home-look', JSON.stringify({ design, mood })); } catch { /* ignore */ }
-  if (design !== 'pohchang') return;
-  loadFonts(['Chonburi', 'Sarabun']);
+  if (design !== 'pohchang') { loadFonts(['IBM Plex Sans Thai', 'Anuphan']); return; }
+  loadFonts(['IBM Plex Sans Thai', 'Chonburi', 'Sarabun']);
   const org = pick(site, 'org_name');
   $('pc-org').textContent = org || name;
   if (site.website) { $('pc-site').href = site.website; $('pc-site').hidden = false; }
@@ -56,6 +58,10 @@ const realTitle = (w) => { const s = pick(w, 'title'); return s && s !== '-' ? s
 // order, one work from each in turn. One hangs at a time, 4 seconds each; it pauses while pointed
 // at, focused or in a hidden tab, and stays still when the system asks for reduced motion.
 const HERO_SLIDES = 8, HERO_MS = 4000;
+// The hung work is at most 760 px wide on screen (lobby.css), so ask Cloudinary for that width
+// times the screen density (capped at 2): phones and ordinary screens get 800 px, sharp
+// (retina) desktop screens 1600 px. Was 1600 px for every device (up to ~1.2 MB a picture).
+const heroWidth = () => Math.min(760, window.innerWidth || 760) * Math.min(window.devicePixelRatio || 1, 2);
 function fairPick(exhibitions, n) {
   const queues = shuffle(exhibitions.filter((e) => (e.samples || []).length))
     .map((e) => shuffle(e.samples).map((w) => ({ ...w, from: pick(e, 'title'), slug: e.slug })));
@@ -84,7 +90,7 @@ function hero(site, name, exhibitions) {
     const w = works[k];
     const title = realTitle(w), artist = pick(w, 'name');
     const pic = new Image();
-    pic.src = img(w.url, 1600);
+    pic.src = img(w.url, heroWidth());
     pic.alt = title && artist ? t('by', { title, artist }) : (title || artist || '');
     pic.decoding = 'async';
     if (!first) {
@@ -103,7 +109,7 @@ function hero(site, name, exhibitions) {
     $('hero-pos').textContent = t('heroPos', { n: k + 1, total });
     // Fetch the next work early so it arrives without a gap.
     const next = works[(k + 1) % total];
-    if (next) { const pre = new Image(); pre.src = img(next.url, 1600); }
+    if (next) { const pre = new Image(); pre.src = img(next.url, heroWidth()); }
   }
   show(0, true);
   if (total < 2) return;
